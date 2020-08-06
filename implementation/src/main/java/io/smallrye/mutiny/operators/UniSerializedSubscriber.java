@@ -23,7 +23,7 @@ public class UniSerializedSubscriber<T> implements UniSubscriber<T>, UniSubscrip
     private final AbstractUni<T> source;
     private final UniSubscriber<? super T> downstream;
     private UniSubscription upstream;
-    private AtomicReference<Throwable> collectedFailure = new AtomicReference<>();
+    private final AtomicReference<Throwable> collectedFailure = new AtomicReference<>();
 
     private UniSerializedSubscriber(AbstractUni<T> source, UniSubscriber<? super T> subscriber) {
         this.source = ParameterValidation.nonNull(source, "source");
