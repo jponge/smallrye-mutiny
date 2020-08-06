@@ -8,15 +8,17 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
+import io.smallrye.mutiny.subscription.UniEmitter;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import io.smallrye.mutiny.CompositeException;
 import io.smallrye.mutiny.Uni;
 
-public class UniOnFailureMapToTest {
+public class UniOnFailureTransformTest {
 
     private Uni<Integer> failure;
 
@@ -32,7 +34,7 @@ public class UniOnFailureMapToTest {
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testThatSourceMustNotBeNull() {
-        new UniOnFailureMap<>(null, t -> true, Function.identity());
+        new UniOnFailureTransform<>(null, t -> true, Function.identity());
     }
 
     @Test
@@ -148,7 +150,45 @@ public class UniOnFailureMapToTest {
         assertThat(called).isFalse();
     }
 
-    private class BoomException extends Exception {
+    @Test
+    public void verifyThatTheMapperIsNotCalledAfterCancellationWithEmitter() {
+        AtomicReference<UniEmitter<? super Integer>> emitter = new AtomicReference<>();
+        AtomicBoolean called = new AtomicBoolean();
+        UniAssertSubscriber<Integer> subscriber = Uni.createFrom()
+                .emitter((Consumer<UniEmitter<? super Integer>>) emitter::set)
+                .onFailure().transform(failure -> {
+                    called.set(true);
+                    return new ArithmeticException(failure.getMessage());
+                })
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        assertThat(called).isFalse();
+        subscriber.assertNotCompleted().assertNoFailure().assertSubscribed();
+        subscriber.cancel();
+        emitter.get().fail(new IOException("boom"));
+        assertThat(called).isFalse();
+    }
+
+    @Test
+    public void verifyThatTheMapperIsNotCalledAfterImmediateCancellationWithEmitter() {
+        AtomicReference<UniEmitter<? super Integer>> emitter = new AtomicReference<>();
+        AtomicBoolean called = new AtomicBoolean();
+        UniAssertSubscriber<Integer> subscriber = Uni.createFrom()
+                .emitter((Consumer<UniEmitter<? super Integer>>) emitter::set)
+                .onFailure().transform(failure -> {
+                    called.set(true);
+                    return new ArithmeticException(failure.getMessage());
+                })
+                .subscribe().withSubscriber(new UniAssertSubscriber<>(true));
+
+        assertThat(called).isFalse();
+        subscriber.assertNotCompleted().assertNoFailure().assertSubscribed();
+        subscriber.cancel();
+        emitter.get().fail(new IOException("boom"));
+        assertThat(called).isFalse();
+    }
+
+    private static class BoomException extends Exception {
         BoomException() {
             super("BoomException");
         }

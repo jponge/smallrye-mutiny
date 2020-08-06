@@ -7,15 +7,17 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
+import io.smallrye.mutiny.subscription.UniEmitter;
 import org.testng.annotations.Test;
 
 import io.smallrye.mutiny.Uni;
 
 public class UniOnItemTransformTest {
 
-    private Uni<Integer> one = Uni.createFrom().item(1);
+    private final Uni<Integer> one = Uni.createFrom().item(1);
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testThatMapperMustNotBeNull() {
@@ -124,6 +126,43 @@ public class UniOnItemTransformTest {
                 }).subscribe().withSubscriber(ts);
 
         ts.assertFailure(Exception.class, "boom");
+        assertThat(called).isFalse();
+    }
+
+    @Test
+    public void verifyThatTheMapperIsNotCalledAfterCancellationWithEmitter() {
+        AtomicReference<UniEmitter<? super Integer>> emitter = new AtomicReference<>();
+        AtomicBoolean called = new AtomicBoolean();
+        UniAssertSubscriber<Integer> subscriber = Uni.createFrom()
+                .emitter((Consumer<UniEmitter<? super Integer>>) emitter::set)
+                .onItem().transform(i -> {
+                    called.set(true);
+                    return i + 1;
+                })
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        assertThat(called).isFalse();
+        subscriber.assertNotCompleted().assertNoFailure().assertSubscribed();
+        subscriber.cancel();
+        emitter.get().complete(1);
+        assertThat(called).isFalse();
+    }
+
+    @Test
+    public void verifyThatTheMapperIsNotCalledAfterImmediateCancellationWithEmitter() {
+        AtomicReference<UniEmitter<? super Integer>> emitter = new AtomicReference<>();
+        AtomicBoolean called = new AtomicBoolean();
+        UniAssertSubscriber<Integer> subscriber = Uni.createFrom()
+                .emitter((Consumer<UniEmitter<? super Integer>>) emitter::set)
+                .onItem().transform(i -> {
+                    called.set(true);
+                    return i + 1;
+                })
+                .subscribe().withSubscriber(new UniAssertSubscriber<>(true));
+
+        assertThat(called).isFalse();
+        subscriber.assertNotCompleted().assertNoFailure().assertSubscribed();
+        emitter.get().complete(1);
         assertThat(called).isFalse();
     }
 }
