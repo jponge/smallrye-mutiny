@@ -19,6 +19,15 @@ public class UniInterceptorTest {
         Infrastructure.clearInterceptors();
     }
 
+    @Test
+    public void testDefaultOrdinal() {
+        UniInterceptor interceptor = new UniInterceptor() {
+
+        };
+
+        assertThat(interceptor.ordinal()).isEqualTo(UniInterceptor.INTERCEPTOR_DEFAULT_ORDINAL);
+    }
+
     // Test on events
 
     @Test
