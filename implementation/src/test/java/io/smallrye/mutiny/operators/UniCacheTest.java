@@ -1,18 +1,16 @@
 package io.smallrye.mutiny.operators;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.awaitility.Awaitility;
+import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Test;
 
 import io.reactivex.Flowable;
@@ -273,6 +271,28 @@ public class UniCacheTest {
         test.assertCompletedSuccessfully().assertItem(23);
 
         uni.subscribe().withSubscriber(subscriber);
+    }
+
+    @Test
+    public void anotherSubscriberRace() throws InterruptedException {
+        ExecutorService pool = Executors.newFixedThreadPool(4);
+        Uni<Integer> uni = Uni.createFrom().deferred(() -> Uni.createFrom().item(0)).cache();
+
+        ConcurrentLinkedDeque<UniAssertSubscriber<Integer>> subscribers = new ConcurrentLinkedDeque<>();
+        AtomicInteger counter = new AtomicInteger();
+        Runnable work = () -> {
+            UniAssertSubscriber<Integer> subscriber = new UniAssertSubscriber<>(false);
+            subscribers.add(subscriber);
+            uni.onItem().invoke(counter::incrementAndGet).subscribe().withSubscriber(subscriber);
+        };
+        for (int i = 0; i < 10_000; i++) {
+            pool.execute(work);
+        }
+        pool.shutdown();
+        pool.awaitTermination(10, TimeUnit.SECONDS);
+
+        assertThat(subscribers).hasSize(10_000);
+        subscribers.forEach(UniAssertSubscriber::assertCompletedSuccessfully);
     }
 
 }
