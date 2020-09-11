@@ -2,138 +2,124 @@ package io.smallrye.mutiny.operators;
 
 import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
 
-public class UniCache<I> extends UniOperator<I, I> implements UniSubscriber<I> {
+public class UniCache<T> extends UniOperator<T, T> implements UniSubscriber<T> {
 
-    private static final int NOT_INITIALIZED = 0;
+    private static final int INIT = 0;
     private static final int SUBSCRIBING = 1;
     private static final int SUBSCRIBED = 2;
-    private static final int COMPLETED = 3;
-    private final AtomicReference<UniSubscription> subscription = new AtomicReference<>();
-    private final List<UniSubscriber<? super I>> subscribers = new ArrayList<>();
-    private int state = 0;
-    private I item;
-    private Throwable failure;
+    private static final int RESOLVED = 3;
 
-    UniCache(Uni<? extends I> upstream) {
+    private final AtomicInteger state = new AtomicInteger(INIT);
+    private final AtomicReference<UniSubscription> upstreamSubscription = new AtomicReference<>();
+    private final HashSet<UniSubscriber<? super T>> subscribers = new HashSet<>();
+
+    private volatile T item;
+    private volatile Throwable failure;
+
+    public UniCache(Uni<? extends T> upstream) {
         super(nonNull(upstream, "upstream"));
     }
 
     @Override
-    protected void subscribing(UniSerializedSubscriber<? super I> subscriber) {
-        Runnable action = null;
-        synchronized (this) {
-            switch (state) {
-                case NOT_INITIALIZED:
-                    // First subscriber,
-                    state = SUBSCRIBING;
-                    action = () -> AbstractUni.subscribe(upstream(), this);
-                    subscribers.add(subscriber);
-                    break;
-                case SUBSCRIBING:
-                    // Subscription pending
-                    subscribers.add(subscriber);
-                    break;
-                case SUBSCRIBED:
-                    // No item yet, but we can provide a Subscription
-                    subscribers.add(subscriber);
-                    action = () -> subscriber.onSubscribe(() -> onCancellation(subscriber));
-                    break;
-                case COMPLETED:
-                    // Result already computed
-                    subscribers.add(subscriber);
-                    action = () -> {
-                        // We must first pass a subscription
-                        subscriber.onSubscribe(() -> onCancellation(subscriber));
-                        replay(subscriber);
-                    };
-                    break;
-                default:
-                    throw new IllegalStateException("Unknown state: " + state);
-            }
+    protected void subscribing(UniSerializedSubscriber<? super T> subscriber) {
+        synchronized (state) {
+            subscribers.add(subscriber);
         }
-
-        // Execute outside of the synchronized await
-        if (action != null) {
-            action.run();
-        }
-    }
-
-    private synchronized void onCancellation(UniSubscriber<? super I> subscriber) {
-        subscribers.remove(subscriber);
-    }
-
-    private void replay(UniSubscriber<? super I> subscriber) {
-        synchronized (this) {
-            if (state != COMPLETED) {
-                throw new IllegalStateException(
-                        "Invalid state - expected being in the COMPLETED state, but is in state: " + state);
-            }
-        }
-        if (failure != null) {
-            subscriber.onFailure(failure);
+        if (state.compareAndSet(INIT, SUBSCRIBING)) {
+            AbstractUni.subscribe(upstream(), this);
+        } else if (state.get() == SUBSCRIBED) {
+            passSubscription(subscriber);
+        } else if (state.get() == RESOLVED) {
+            passSubscriptionAndForward(subscriber);
         } else {
-            subscriber.onItem(item);
+            throw new IllegalStateException("Unknown state " + state.get());
+        }
+    }
+
+    private void forwardResultToSubscribers() {
+        synchronized (state) {
+            for (UniSubscriber<? super T> subscriber : subscribers) {
+                forwardResult(subscriber);
+            }
+            subscribers.clear();
+        }
+    }
+
+    private void forwardResult(UniSubscriber<? super T> subscriber) {
+        if (subscribers.contains(subscriber)) {
+            if (failure != null) {
+                subscriber.onFailure(failure);
+            } else {
+                subscriber.onItem(item);
+            }
+        }
+    }
+
+    private void passSubscriptionAndForward(UniSerializedSubscriber<? super T> subscriber) {
+        synchronized (state) {
+            passSubscription(subscriber);
+            forwardResult(subscriber);
+            subscribers.remove(subscriber);
+        }
+    }
+
+    private void dispatchSubscriptions() {
+        synchronized (state) {
+            for (UniSubscriber<? super T> subscriber : subscribers) {
+                passSubscription(subscriber);
+            }
+        }
+    }
+
+    private void passSubscription(UniSubscriber<? super T> subscriber) {
+        synchronized (state) {
+            subscriber.onSubscribe(() -> {
+                synchronized (state) {
+                    subscribers.remove(subscriber);
+                }
+            });
         }
     }
 
     @Override
     public void onSubscribe(UniSubscription subscription) {
-        List<UniSubscriber<? super I>> list;
-        synchronized (this) {
-            if (!this.subscription.compareAndSet(null, subscription)) {
-                throw new IllegalStateException("Invalid state - received a second subscription from source");
+        if (upstreamSubscription.compareAndSet(null, subscription)) {
+            if (!state.compareAndSet(SUBSCRIBING, SUBSCRIBED)) {
+                throw new IllegalStateException("Invalid state " + state.get() + " - should be SUBSCRIBING");
             }
-            state = SUBSCRIBED;
-            list = new ArrayList<>(subscribers);
+            dispatchSubscriptions();
+        } else {
+            throw new IllegalStateException("Invalid state " + state.get() + " - received a second subscription from source");
         }
-        list.forEach(s -> s.onSubscribe(() -> onCancellation(s)));
     }
 
     @Override
-    public void onItem(I item) {
-        List<UniSubscriber<? super I>> list;
-        synchronized (this) {
-            if (state != SUBSCRIBED) {
-                throw new IllegalStateException(
-                        "Invalid state - received item while we where not in the SUBSCRIBED state, current state is: "
-                                + state);
-            }
-            state = COMPLETED;
-            this.item = item;
-            list = new ArrayList<>(subscribers);
-            // Clear the list
-            this.subscribers.clear();
+    public void onItem(T item) {
+        if (state.get() != SUBSCRIBED) {
+            throw new IllegalStateException(
+                    "Invalid state " + state.get() + " - received item while we where not in the SUBSCRIBED state");
         }
-        // Here we may notify a subscriber that would have cancelled its subscription just after the synchronized await
-        // we consider it as pending cancellation.
-        list.forEach(s -> s.onItem(item));
+        state.set(RESOLVED);
+        this.item = item;
+        forwardResultToSubscribers();
     }
 
     @Override
     public void onFailure(Throwable failure) {
-        List<UniSubscriber<? super I>> list;
-        synchronized (this) {
-            if (state != SUBSCRIBED) {
-                throw new IllegalStateException(
-                        "Invalid state - received item while we where not in the SUBSCRIBED state, current state is: "
-                                + state);
-            }
-            state = COMPLETED;
-            this.failure = failure;
-            list = new ArrayList<>(subscribers);
-            // Clear the list
-            this.subscribers.clear();
+        if (state.get() != SUBSCRIBED) {
+            throw new IllegalStateException(
+                    "Invalid state " + state.get() + " - received failure while we where not in the SUBSCRIBED state");
         }
-        // Here we may notify a subscriber that would have cancelled its subscription just after the synchronized await
-        // we consider it as pending cancellation.
-        list.forEach(s -> s.onFailure(failure));
+        state.set(RESOLVED);
+        this.failure = failure;
+        forwardResultToSubscribers();
     }
 }
