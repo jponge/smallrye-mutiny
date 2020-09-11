@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.awaitility.Awaitility;
 import org.hamcrest.CoreMatchers;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 import io.reactivex.Flowable;
@@ -275,7 +276,7 @@ public class UniCacheTest {
 
     @Test
     public void anotherSubscriberRace() throws InterruptedException {
-        ExecutorService pool = Executors.newFixedThreadPool(4);
+        ExecutorService pool = Executors.newFixedThreadPool(32);
         Uni<Integer> uni = Uni.createFrom().deferred(() -> Uni.createFrom().item(0)).cache();
 
         ConcurrentLinkedDeque<UniAssertSubscriber<Integer>> subscribers = new ConcurrentLinkedDeque<>();
@@ -291,6 +292,29 @@ public class UniCacheTest {
         pool.shutdown();
         pool.awaitTermination(10, TimeUnit.SECONDS);
 
+        assertThat(subscribers).hasSize(10_000);
+        subscribers.forEach(UniAssertSubscriber::assertCompletedSuccessfully);
+    }
+
+    @RepeatedTest(100)
+    public void yetAnotherSubscriberRace() {
+        ExecutorService pool = Executors.newFixedThreadPool(32);
+        Uni<Integer> uni = Uni.createFrom().deferred(() -> Uni.createFrom().item(0)).cache().emitOn(pool).runSubscriptionOn(pool);
+
+        ConcurrentLinkedDeque<UniAssertSubscriber<Integer>> subscribers = new ConcurrentLinkedDeque<>();
+        AtomicInteger counter = new AtomicInteger();
+
+        Runnable work = () -> {
+            UniAssertSubscriber<Integer> subscriber = new UniAssertSubscriber<>(false);
+            subscribers.add(subscriber);
+            uni.onItem().invoke(counter::incrementAndGet).subscribe().withSubscriber(subscriber);
+        };
+        for (int i = 0; i < 10_000; i++) {
+            pool.execute(work);
+            counter.incrementAndGet();
+        }
+
+        Awaitility.await().atMost(10, TimeUnit.SECONDS).and().untilAtomic(counter, CoreMatchers.is(20_000));
         assertThat(subscribers).hasSize(10_000);
         subscribers.forEach(UniAssertSubscriber::assertCompletedSuccessfully);
     }
