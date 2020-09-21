@@ -3,6 +3,7 @@ package io.smallrye.mutiny.operators;
 import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 
 import java.util.HashSet;
+import java.util.function.BooleanSupplier;
 
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.subscription.UniSubscriber;
@@ -24,8 +25,15 @@ public class UniCache<T> extends UniOperator<T, T> implements UniSubscriber<T> {
     private volatile T item;
     private volatile Throwable failure;
 
-    public UniCache(Uni<? extends T> upstream) {
+    private final BooleanSupplier invalidationGuard;
+
+    public UniCache(Uni<? extends T> upstream, BooleanSupplier invalidationGuard) {
         super(nonNull(upstream, "upstream"));
+        this.invalidationGuard = nonNull(invalidationGuard, "invalidationGuard");
+    }
+
+    public UniCache(Uni<? extends T> upstream) {
+        this(upstream, () -> true);
     }
 
     @Override
@@ -33,6 +41,13 @@ public class UniCache<T> extends UniOperator<T, T> implements UniSubscriber<T> {
         synchronized (this) {
             subscribers.add(subscriber);
             switch (state) {
+                case RESOLVED:
+                    if (invalidationGuard.getAsBoolean()) {
+                        passSubscriptionAndForward(subscriber);
+                        break;
+                    } else {
+                        state = State.INIT;
+                    }
                 case INIT:
                     state = State.SUBSCRIBING;
                     AbstractUni.subscribe(upstream(), this);
@@ -41,10 +56,6 @@ public class UniCache<T> extends UniOperator<T, T> implements UniSubscriber<T> {
                     break;
                 case SUBSCRIBED:
                     passSubscription(subscriber);
-                    break;
-                case RESOLVED:
-                    passSubscriptionAndForward(subscriber);
-                    break;
                 default:
                     throw new IllegalStateException("We are in state " + state);
             }
@@ -119,6 +130,7 @@ public class UniCache<T> extends UniOperator<T, T> implements UniSubscriber<T> {
         for (UniSubscriber<? super T> subscriber : subscribers) {
             passSubscription(subscriber);
         }
+        this.upstreamSubscription = null;
     }
 
     private void passSubscription(UniSubscriber<? super T> subscriber) {

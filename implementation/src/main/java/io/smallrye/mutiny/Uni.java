@@ -389,6 +389,11 @@ public interface Uni<T> {
     Uni<T> cache();
 
     /**
+     * TODO: temporary for POC purposes
+     */
+    Uni<T> cacheWhilst(BooleanSupplier invalidationGuard);
+
+    /**
      * Transforms the item (potentially null) emitted by this {@link Uni} by applying a (synchronous) function to it.
      * This method is equivalent to {@code uni.onItem().apply(x -> ...)}
      * For asynchronous composition, look at flatMap.

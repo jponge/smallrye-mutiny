@@ -1,5 +1,6 @@
 package io.smallrye.mutiny.operators;
 
+import static java.util.function.Predicate.isEqual;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -7,7 +8,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 
 import org.awaitility.Awaitility;
 import org.hamcrest.CoreMatchers;
@@ -299,7 +302,8 @@ public class UniCacheTest {
     @RepeatedTest(100)
     public void yetAnotherSubscriberRace() {
         ExecutorService pool = Executors.newFixedThreadPool(32);
-        Uni<Integer> uni = Uni.createFrom().deferred(() -> Uni.createFrom().item(0)).cache().emitOn(pool).runSubscriptionOn(pool);
+        Uni<Integer> uni = Uni.createFrom().deferred(() -> Uni.createFrom().item(0)).cache().emitOn(pool)
+                .runSubscriptionOn(pool);
 
         ConcurrentLinkedDeque<UniAssertSubscriber<Integer>> subscribers = new ConcurrentLinkedDeque<>();
         AtomicInteger counter = new AtomicInteger();
@@ -319,4 +323,67 @@ public class UniCacheTest {
         subscribers.forEach(UniAssertSubscriber::assertCompletedSuccessfully);
     }
 
+    @Test
+    public void guardInvalidation() {
+        AtomicBoolean condition = new AtomicBoolean(true);
+        AtomicInteger subscriptionCount = new AtomicInteger();
+
+        Uni<Integer> uni = Uni.createFrom().item(69)
+                .onSubscribe().invoke(subscriptionCount::incrementAndGet)
+                .cacheWhilst(condition::get);
+
+        UniAssertSubscriber<Integer> subscriber = UniAssertSubscriber.create();
+        uni.subscribe().withSubscriber(subscriber);
+        subscriber.assertCompletedSuccessfully().assertItem(69);
+        assertThat(subscriptionCount.get()).isEqualTo(1);
+
+        subscriber = UniAssertSubscriber.create();
+        uni.subscribe().withSubscriber(subscriber);
+        subscriber.assertCompletedSuccessfully().assertItem(69);
+        assertThat(subscriptionCount.get()).isEqualTo(1);
+
+        condition.set(false);
+        subscriber = UniAssertSubscriber.create();
+        uni.subscribe().withSubscriber(subscriber);
+        subscriber.assertCompletedSuccessfully().assertItem(69);
+        assertThat(subscriptionCount.get()).isEqualTo(2);
+
+        condition.set(true);
+        subscriber = UniAssertSubscriber.create();
+        uni.subscribe().withSubscriber(subscriber);
+        subscriber.assertCompletedSuccessfully().assertItem(69);
+        assertThat(subscriptionCount.get()).isEqualTo(2);
+    }
+
+    @RepeatedTest(100)
+    public void yetAnotherSubscriberRaceWithGuardInvalidations() {
+        ExecutorService pool = Executors.newFixedThreadPool(32);
+        AtomicBoolean guard = new AtomicBoolean(true);
+
+        ConcurrentLinkedDeque<UniAssertSubscriber<Integer>> subscribers = new ConcurrentLinkedDeque<>();
+        AtomicInteger counter = new AtomicInteger();
+        AtomicInteger invalidationCount = new AtomicInteger();
+
+        Uni<Integer> uni = Uni.createFrom().deferred(() -> Uni.createFrom().item(0))
+                .onSubscribe().invoke(invalidationCount::incrementAndGet)
+                .cacheWhilst(guard::get)
+                .emitOn(pool)
+                .runSubscriptionOn(pool);
+
+        Runnable work = () -> {
+            UniAssertSubscriber<Integer> subscriber = new UniAssertSubscriber<>(false);
+            subscribers.add(subscriber);
+            uni.onItem().invoke(counter::incrementAndGet).subscribe().withSubscriber(subscriber);
+            guard.set(ThreadLocalRandom.current().nextBoolean());
+        };
+        for (int i = 0; i < 10_000; i++) {
+            pool.execute(work);
+            counter.incrementAndGet();
+        }
+
+        Awaitility.await().atMost(10, TimeUnit.SECONDS).and().untilAtomic(counter, CoreMatchers.is(20_000));
+        assertThat(subscribers).hasSize(10_000);
+        subscribers.forEach(UniAssertSubscriber::assertCompletedSuccessfully);
+        assertThat(invalidationCount.get()).isBetween(2, 9999);
+    }
 }
