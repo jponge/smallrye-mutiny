@@ -2,6 +2,7 @@ package io.smallrye.mutiny.operators;
 
 import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 import io.smallrye.mutiny.Uni;
@@ -26,14 +27,18 @@ public class UniOnCancellationCall<I> extends UniOperator<I, I> {
             public void onSubscribe(UniSubscription subscription) {
                 subscriber.onSubscribe(new UniSubscription() {
 
+                    private final AtomicBoolean called = new AtomicBoolean();
+
                     @Override
                     public void cancel() {
-                        execute().subscribe().with(
-                                ignoredItem -> subscription.cancel(),
-                                ignoredException -> {
-                                    Infrastructure.handleDroppedException(ignoredException);
-                                    subscription.cancel();
-                                });
+                        if (called.compareAndSet(false, true)) {
+                            execute().subscribe().with(
+                                    ignoredItem -> subscription.cancel(),
+                                    ignoredException -> {
+                                        Infrastructure.handleDroppedException(ignoredException);
+                                        subscription.cancel();
+                                    });
+                        }
                     }
 
                     private Uni<?> execute() {

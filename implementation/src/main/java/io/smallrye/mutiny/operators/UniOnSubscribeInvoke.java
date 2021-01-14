@@ -26,9 +26,9 @@ public class UniOnSubscribeInvoke<T> extends UniOperator<T, T> {
                 // Invoke callback
                 try {
                     callback.accept(subscription);
-                } catch (Throwable e) {
-                    super.onSubscribe(EmptyUniSubscription.CANCELLED);
-                    super.onFailure(e);
+                } catch (Throwable err) {
+                    subscription.cancel();
+                    subscriber.onFailure(err);
                     return;
                 }
 

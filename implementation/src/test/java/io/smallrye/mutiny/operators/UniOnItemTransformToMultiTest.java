@@ -116,9 +116,10 @@ public class UniOnItemTransformToMultiTest {
                 .assertNotTerminated()
                 .assertHasNotReceivedAnyItem()
                 .run(() -> assertThat(called).isFalse())
+                .run(() -> assertThat(calledUni).isFalse())
                 .cancel()
                 .run(() -> assertThat(called).isTrue())
-                .run(() -> assertThat(calledUni).isFalse())
+                .run(() -> assertThat(calledUni).isTrue()) // TODO previously it was expected to be false but it seems counter-intuitive to me
                 .assertNotTerminated();
     }
 }
