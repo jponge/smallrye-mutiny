@@ -3,7 +3,6 @@ package io.smallrye.mutiny.operators;
 import java.util.function.Consumer;
 
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.helpers.EmptyUniSubscription;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;

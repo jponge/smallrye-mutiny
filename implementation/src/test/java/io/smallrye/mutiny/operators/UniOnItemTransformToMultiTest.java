@@ -119,7 +119,7 @@ public class UniOnItemTransformToMultiTest {
                 .run(() -> assertThat(calledUni).isFalse())
                 .cancel()
                 .run(() -> assertThat(called).isTrue())
-                .run(() -> assertThat(calledUni).isTrue()) // TODO previously it was expected to be false but it seems counter-intuitive to me
+                .run(() -> assertThat(calledUni).isFalse())
                 .assertNotTerminated();
     }
 }
