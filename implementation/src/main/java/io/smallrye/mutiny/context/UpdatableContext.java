@@ -6,8 +6,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import io.smallrye.mutiny.Context;
+import io.smallrye.mutiny.ContextUpdater;
 
-public class ContextImpl implements Context, Context.Updater {
+public class UpdatableContext implements Context, ContextUpdater {
 
     private volatile ConcurrentHashMap<String, Object> entries;
 
@@ -22,11 +23,11 @@ public class ContextImpl implements Context, Context.Updater {
         return entries;
     }
 
-    public ContextImpl() {
+    public UpdatableContext() {
         // Nothing to do, keep _entries null
     }
 
-    public ContextImpl(Map<String, Object> initialEntries) {
+    public UpdatableContext(Map<String, Object> initialEntries) {
         entries = new ConcurrentHashMap<>(initialEntries);
     }
 
@@ -66,20 +67,24 @@ public class ContextImpl implements Context, Context.Updater {
     }
 
     @Override
-    public Updater put(String key, Object value) {
+    public ContextUpdater put(String key, Object value) {
         getEntries().put(key, value);
         return this;
     }
 
     @Override
-    public Updater delete(String key) {
+    public ContextUpdater delete(String key) {
         getEntries().remove(key);
         return this;
     }
 
+    public ContextView toContextView() {
+        return new ContextView(this);
+    }
+
     @Override
     public String toString() {
-        return "ContextImpl{" +
+        return "Context{" +
                 "entries=" + entries +
                 '}';
     }

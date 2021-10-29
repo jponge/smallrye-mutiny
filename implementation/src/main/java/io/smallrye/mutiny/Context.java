@@ -6,16 +6,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import io.smallrye.mutiny.context.ContextImpl;
+import io.smallrye.mutiny.context.UpdatableContext;
 
 public interface Context {
-
-    interface Updater {
-
-        Updater put(String key, Object value);
-
-        Updater delete(String key);
-    }
 
     boolean contains(String key);
 
@@ -24,7 +17,7 @@ public interface Context {
     <T> T getOrElse(String key, Supplier<T> alternativeSupplier);
 
     static Context empty() {
-        return new ContextImpl();
+        return new UpdatableContext().toContextView();
     }
 
     static Context of(Object... entries) {
@@ -37,10 +30,10 @@ public interface Context {
             Object value = nonNull(entries[i + 1], "value");
             map.put(key.toString(), value);
         }
-        return new ContextImpl(map);
+        return new UpdatableContext(map).toContextView();
     }
 
     static Context from(Map<String, Object> entries) {
-        return new ContextImpl(nonNull(entries, "entries"));
+        return new UpdatableContext(nonNull(entries, "entries")).toContextView();
     }
 }

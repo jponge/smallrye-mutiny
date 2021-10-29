@@ -5,6 +5,7 @@ import static io.smallrye.mutiny.helpers.ParameterValidation.*;
 import java.util.Objects;
 import java.util.function.*;
 
+import io.smallrye.mutiny.ContextUpdater;
 import org.reactivestreams.Publisher;
 
 import io.smallrye.common.annotation.CheckReturnValue;
@@ -316,7 +317,7 @@ public class UniOnItem<T> {
     }
 
     // TODO
-    public Uni<T> updateContext(BiConsumer<Context.Updater, ? super T> updater) {
+    public Uni<T> updateContext(BiConsumer<ContextUpdater, ? super T> updater) {
         return new UniContextUpdater<>(upstream, nonNull(updater, "updater"));
     }
 }
