@@ -2,6 +2,7 @@ package io.smallrye.mutiny.subscription;
 
 import java.util.concurrent.Executor;
 
+import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.UniSubscribe;
 
@@ -23,6 +24,11 @@ import io.smallrye.mutiny.groups.UniSubscribe;
  * @param <T> the expected type of item
  */
 public interface UniSubscriber<T> {
+
+    default Context context() {
+        // TODO
+        throw new UnsupportedOperationException("Marker exception / default method to be removed later");
+    }
 
     /**
      * Event handler called once the subscribed {@link Uni} has taken into account the subscription. The {@link Uni}

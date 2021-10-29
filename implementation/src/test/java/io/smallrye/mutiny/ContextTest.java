@@ -1,0 +1,28 @@
+package io.smallrye.mutiny;
+
+import java.util.Objects;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
+// TODO
+class ContextTest {
+
+    @Nested
+    @DisplayName("Tests in progress")
+    class InProgress {
+
+        @Test
+        void smoke() {
+            Context context = Context.of("abc", 123, "def", true);
+
+            Uni.createFrom().item(58)
+                    .onItem().transform(Objects::toString)
+                    .onItem().updateContext((updater, str) -> updater.put("yolo_1", str).put("yolo_2", str + "!"))
+                    .subscribe().with(context, System.out::println);
+
+            System.out.println(context);
+        }
+    }
+}
