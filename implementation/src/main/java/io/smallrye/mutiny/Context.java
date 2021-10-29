@@ -3,6 +3,7 @@ package io.smallrye.mutiny;
 import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import io.smallrye.mutiny.context.ContextImpl;
@@ -37,5 +38,9 @@ public interface Context {
             map.put(key.toString(), value);
         }
         return new ContextImpl(map);
+    }
+
+    static Context from(Map<String, Object> entries) {
+        return new ContextImpl(nonNull(entries, "entries"));
     }
 }

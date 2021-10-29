@@ -9,17 +9,17 @@ import io.smallrye.mutiny.Context;
 
 public class ContextImpl implements Context, Context.Updater {
 
-    private volatile ConcurrentHashMap<String, Object> _entries;
+    private volatile ConcurrentHashMap<String, Object> entries;
 
-    private ConcurrentHashMap<String, Object> entries() {
-        if (_entries == null) {
+    private ConcurrentHashMap<String, Object> getEntries() {
+        if (entries == null) {
             synchronized (this) {
-                if (_entries == null) {
-                    _entries = new ConcurrentHashMap<>(4);
+                if (entries == null) {
+                    entries = new ConcurrentHashMap<>(4);
                 }
             }
         }
-        return _entries;
+        return entries;
     }
 
     public ContextImpl() {
@@ -27,18 +27,24 @@ public class ContextImpl implements Context, Context.Updater {
     }
 
     public ContextImpl(Map<String, Object> initialEntries) {
-        _entries = new ConcurrentHashMap<>(initialEntries);
+        entries = new ConcurrentHashMap<>(initialEntries);
     }
 
     @Override
     public boolean contains(String key) {
-        return entries().containsKey(key);
+        if (entries == null) {
+            return false;
+        }
+        return getEntries().containsKey(key);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <T> T get(String key) {
-        Object value = entries().get(key);
+        if (entries == null) {
+            throw new NoSuchElementException("There is no context entry for key " + key);
+        }
+        Object value = getEntries().get(key);
         if (value == null) {
             throw new NoSuchElementException("There is no context entry for key " + key);
         }
@@ -48,7 +54,10 @@ public class ContextImpl implements Context, Context.Updater {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T getOrElse(String key, Supplier<T> alternativeSupplier) {
-        Object value = entries().get(key);
+        if (entries == null) {
+            return alternativeSupplier.get();
+        }
+        Object value = getEntries().get(key);
         if (value == null) {
             return alternativeSupplier.get();
         } else {
@@ -58,20 +67,20 @@ public class ContextImpl implements Context, Context.Updater {
 
     @Override
     public Updater put(String key, Object value) {
-        entries().put(key, value);
+        getEntries().put(key, value);
         return this;
     }
 
     @Override
     public Updater delete(String key) {
-        entries().remove(key);
+        getEntries().remove(key);
         return this;
     }
 
     @Override
     public String toString() {
         return "ContextImpl{" +
-                "_entries=" + _entries +
+                "entries=" + entries +
                 '}';
     }
 }
