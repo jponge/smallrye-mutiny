@@ -53,5 +53,29 @@ class ContextTest {
 
             System.out.println(context);
         }
+
+        @Test
+        void smoke3() {
+            Context context = Context.of("foo", "bar", "baz", "baz");
+
+            Uni<? extends Integer> a = Uni.createFrom().item(58)
+                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
+
+            Uni<? extends Integer> b = Uni.createFrom().item(63)
+                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
+
+            Uni<? extends Integer> c = Uni.createFrom().item(69)
+                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
+
+            Uni.join().all(a, b, c).andFailFast()
+                    .attachContext()
+                    .onItem().transform(contextAndItem -> {
+                        Context ctx = contextAndItem.context();
+                        return contextAndItem.item() + " => " + ctx.get("58") + " :: " + ctx.get("63") + " :: " + ctx.get("69");
+                    })
+                    .subscribe().with(context, System.out::println);
+
+            System.out.println(context);
+        }
     }
 }

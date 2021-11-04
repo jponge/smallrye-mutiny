@@ -809,4 +809,9 @@ public interface Uni<T> {
     // TODO
     // WARNING: this gets called at subscription time, so the context hasn't received updates from upstream yet
     <R> Uni<R> withContext(BiFunction<Uni<? extends T>, Context, Uni<R>> builder);
+
+    // TODO
+    default Uni<ContextAndItem<T>> attachContext() {
+        return this.withContext((uni, ctx) -> uni.onItem().transform(item -> new ContextAndItem<>(ctx, item)));
+    }
 }
