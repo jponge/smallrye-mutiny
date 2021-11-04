@@ -3,17 +3,21 @@ package io.smallrye.mutiny.groups;
 import static io.smallrye.mutiny.helpers.ParameterValidation.*;
 
 import java.util.Objects;
-import java.util.function.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
-import io.smallrye.mutiny.ContextUpdater;
 import org.reactivestreams.Publisher;
 
 import io.smallrye.common.annotation.CheckReturnValue;
-import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
-import io.smallrye.mutiny.operators.uni.*;
+import io.smallrye.mutiny.operators.uni.UniOnItemConsume;
+import io.smallrye.mutiny.operators.uni.UniOnItemTransform;
+import io.smallrye.mutiny.operators.uni.UniOnItemTransformToMulti;
+import io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni;
 import io.smallrye.mutiny.subscription.UniEmitter;
 
 public class UniOnItem<T> {
@@ -314,10 +318,5 @@ public class UniOnItem<T> {
     public <O> Multi<O> disjoint() {
         return upstream.toMulti()
                 .onItem().disjoint();
-    }
-
-    // TODO
-    public Uni<T> updateContext(BiConsumer<ContextUpdater, ? super T> updater) {
-        return new UniContextUpdater<>(upstream, nonNull(updater, "updater"));
     }
 }

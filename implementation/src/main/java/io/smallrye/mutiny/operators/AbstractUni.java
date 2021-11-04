@@ -1,8 +1,10 @@
 package io.smallrye.mutiny.operators;
 
 import java.util.concurrent.Executor;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
+import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.converters.uni.UniToMultiPublisher;
@@ -141,5 +143,10 @@ public abstract class AbstractUni<T> implements Uni<T> {
     @Override
     public Uni<T> log() {
         return log("Uni." + this.getClass().getSimpleName());
+    }
+
+    @Override
+    public <R> Uni<R> withContext(BiFunction<Uni<? extends T>, Context, Uni<R>> builder) {
+        return new UniWithContext<>(this, builder);
     }
 }

@@ -805,4 +805,7 @@ public interface Uni<T> {
     static UniJoin join() {
         return UniJoin.SHARED_INSTANCE;
     }
+
+    // TODO
+    <R> Uni<R> withContext(BiFunction<Uni<? extends T>, Context, Uni<R>> builder);
 }
