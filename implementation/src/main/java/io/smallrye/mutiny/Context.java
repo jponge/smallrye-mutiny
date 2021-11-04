@@ -12,6 +12,27 @@ import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 // TODO
 public final class Context {
 
+    public static Context empty() {
+        return new Context();
+    }
+
+    public static Context of(Object... entries) {
+        if (entries.length % 2 != 0) {
+            throw new IllegalArgumentException("Arguments must be balanced to form (key, value) pairs");
+        }
+        HashMap<String, Object> map = new HashMap<>();
+        for (int i = 0; i < entries.length; i = i + 2) {
+            String key = nonNull(entries[i], "key").toString();
+            Object value = nonNull(entries[i + 1], "value");
+            map.put(key, value);
+        }
+        return new Context(map);
+    }
+
+    public static Context from(Map<String, Object> entries) {
+        return new Context(entries);
+    }
+
     private volatile ConcurrentHashMap<String, Object> entries;
 
     private Context() {
@@ -31,7 +52,7 @@ public final class Context {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T get(String key) {
+    public <T> T get(String key) throws NoSuchElementException {
         if (entries == null) {
             throw new NoSuchElementException("The context is empty");
         }
@@ -73,10 +94,14 @@ public final class Context {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Context context = (Context) o;
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (other == null || getClass() != other.getClass()) {
+            return false;
+        }
+        Context context = (Context) other;
         return Objects.equals(entries, context.entries);
     }
 
@@ -90,26 +115,5 @@ public final class Context {
         return "Context{" +
                 "entries=" + entries +
                 '}';
-    }
-
-    public static Context empty() {
-        return new Context();
-    }
-
-    public static Context of(Object... entries) {
-        if (entries.length % 2 != 0) {
-            throw new IllegalArgumentException("Arguments must be balanced to form (key, value) pairs");
-        }
-        HashMap<String, Object> map = new HashMap<>();
-        for (int i = 0; i < entries.length; i = i + 2) {
-            String key = nonNull(entries[i], "key").toString();
-            Object value = nonNull(entries[i + 1], "value");
-            map.put(key, value);
-        }
-        return new Context(map);
-    }
-
-    public static Context from(Map<String, Object> entries) {
-        return new Context(entries);
     }
 }

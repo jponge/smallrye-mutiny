@@ -16,7 +16,11 @@ class ContextTest {
             Context context = Context.of("abc", 123, "def", true);
 
             Uni.createFrom().item(58)
-                    .withContext((uni, ctx) -> uni.onItem().transform(n -> n + " :: " + ctx.get("abc") + " :: " + ctx.get("def")))
+                    .withContext((uni, ctx) -> {
+                        ctx.put("foo", "bar");
+                        return uni;
+                    })
+                    .withContext((uni, ctx) -> uni.onItem().transform(n -> n + " :: " + ctx.get("abc") + " :: " + ctx.get("def") + " :: " + ctx.get("foo")))
                     .subscribe().with(context, System.out::println);
 
 
