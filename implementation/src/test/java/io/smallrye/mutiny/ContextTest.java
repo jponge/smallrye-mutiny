@@ -23,14 +23,6 @@ class ContextTest {
                     .withContext((uni, ctx) -> uni.onItem().transform(n -> n + " :: " + ctx.get("abc") + " :: " + ctx.get("def") + " :: " + ctx.get("foo")))
                     .subscribe().with(context, System.out::println);
 
-
-//                        Uni.createFrom().item(58)
-//                                .onItem().updateContext((updater, n) -> updater.put("original", n))
-//                                .onItem().transformToUni(n -> Uni.createFrom().item(63))
-//                                .onItem().transform(Objects::toString)
-//                                .onItem().updateContext((updater, str) -> updater.put("yolo_1", str).put("yolo_2", str + "!"))
-//                                .subscribe().with(context, System.out::println);
-
             System.out.println(context);
         }
 

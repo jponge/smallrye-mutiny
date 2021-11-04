@@ -25,6 +25,16 @@ import io.smallrye.mutiny.groups.UniSubscribe;
  */
 public interface UniSubscriber<T> {
 
+    // TODO test coverage
+    // - UniJoin first/all
+    // - UniAndCombination
+    // - UniTransformToMulti
+    // - UniToMultiPublisher
+    // - UniSerializedPublisher
+    // - UniAssertSubscribver <-- make it nice for testing!
+    // - UniMemoize
+    // - UniDelegatingSubscriber
+    // - UniBlockingAwait
     default Context context() {
         // TODO
         throw new UnsupportedOperationException("Marker exception / default method to be removed later");
