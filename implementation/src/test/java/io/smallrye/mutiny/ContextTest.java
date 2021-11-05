@@ -1,8 +1,12 @@
 package io.smallrye.mutiny;
 
+import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 // TODO
 class ContextTest {
@@ -70,6 +74,26 @@ class ContextTest {
                     .subscribe().with(context, System.out::println);
 
             System.out.println(context);
+        }
+
+        @Test
+        void smoke4() {
+            Context context = Context.of("foo", "bar", "baz", "baz");
+
+            UniAssertSubscriber<String> pipeline = Uni.createFrom().item(63)
+                    .withContext((uni, ctx) -> {
+                        ctx.put("abc", 123);
+                        return uni;
+                    })
+                    .onItem().transform(Object::toString)
+                    .subscribe().withSubscriber(UniAssertSubscriber.create(context));
+
+            assertThat(context.contains("abc")).isTrue();
+            assertThat(context.contains("foo")).isTrue();
+            assertThat(context.<Integer>get("abc")).isEqualTo(123);
+            assertThat(context.<String>get("foo")).isEqualTo("bar");
+
+            pipeline.assertCompleted().assertItem("63");
         }
     }
 }
