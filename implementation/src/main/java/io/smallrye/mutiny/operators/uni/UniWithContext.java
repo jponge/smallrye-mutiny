@@ -1,5 +1,7 @@
 package io.smallrye.mutiny.operators.uni;
 
+import java.util.function.BiFunction;
+
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.EmptyUniSubscription;
@@ -7,8 +9,6 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.UniSubscriber;
-
-import java.util.function.BiFunction;
 
 public class UniWithContext<I, O> extends UniOperator<I, O> {
 

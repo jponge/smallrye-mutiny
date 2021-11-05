@@ -1,13 +1,13 @@
 package io.smallrye.mutiny;
 
+import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
-
-import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 
 // TODO
 public final class Context {

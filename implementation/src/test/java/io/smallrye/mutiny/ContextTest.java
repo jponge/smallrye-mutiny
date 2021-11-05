@@ -20,7 +20,8 @@ class ContextTest {
                         ctx.put("foo", "bar");
                         return uni;
                     })
-                    .withContext((uni, ctx) -> uni.onItem().transform(n -> n + " :: " + ctx.get("abc") + " :: " + ctx.get("def") + " :: " + ctx.get("foo")))
+                    .withContext((uni, ctx) -> uni.onItem()
+                            .transform(n -> n + " :: " + ctx.get("abc") + " :: " + ctx.get("def") + " :: " + ctx.get("foo")))
                     .subscribe().with(context, System.out::println);
 
             System.out.println(context);
@@ -40,7 +41,8 @@ class ContextTest {
                     .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
 
             Uni.join().all(a, b, c).andFailFast()
-                    .withContext((uni, ctx) -> uni.replaceWith(() -> ctx.get("58") + " :: " + ctx.get("63") + " :: " + ctx.get("69")))
+                    .withContext((uni, ctx) -> uni
+                            .replaceWith(() -> ctx.get("58") + " :: " + ctx.get("63") + " :: " + ctx.get("69")))
                     .subscribe().with(context, System.out::println);
 
             System.out.println(context);

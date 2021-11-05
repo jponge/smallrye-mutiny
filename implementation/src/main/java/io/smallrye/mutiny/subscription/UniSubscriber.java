@@ -31,7 +31,7 @@ public interface UniSubscriber<T> {
     // - UniTransformToMulti
     // - UniToMultiPublisher
     // - UniSerializedPublisher
-    // - UniAssertSubscribver <-- make it nice for testing!
+    // - UniAssertSubscriber <-- make it nice for testing!
     // - UniMemoize
     // - UniDelegatingSubscriber
     // - UniBlockingAwait
