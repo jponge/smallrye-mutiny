@@ -2,10 +2,7 @@ package io.smallrye.mutiny;
 
 import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -91,6 +88,22 @@ public final class Context {
             entries.remove(key);
         }
         return this;
+    }
+
+    public boolean isEmpty() {
+        return (this.entries == null) || (entries.isEmpty());
+    }
+
+    public Set<String> keys() {
+        if (this.entries == null) {
+            return Collections.emptySet();
+        }
+        HashSet<String> set = new HashSet<>();
+        Enumeration<String> enumeration = entries.keys();
+        while (enumeration.hasMoreElements()) {
+            set.add(enumeration.nextElement());
+        }
+        return set;
     }
 
     @Override

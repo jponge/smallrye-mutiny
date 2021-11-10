@@ -6,6 +6,7 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.subscription.UniSubscriber;
@@ -36,6 +37,7 @@ public final class UniToMultiPublisher<T> implements Publisher<T> {
         }
 
         private volatile UniSubscription upstream;
+        private volatile Context context;
         private volatile State state = State.INIT;
 
         private static final AtomicReferenceFieldUpdater<UniToMultiSubscription, State> STATE_UPDATER = AtomicReferenceFieldUpdater
@@ -44,6 +46,12 @@ public final class UniToMultiPublisher<T> implements Publisher<T> {
         private UniToMultiSubscription(Uni<T> uni, Subscriber<? super T> downstream) {
             this.uni = uni;
             this.downstream = downstream;
+        }
+
+        // TODO propagate to Multi
+        @Override
+        public Context context() {
+            return context;
         }
 
         @Override
@@ -68,6 +76,7 @@ public final class UniToMultiPublisher<T> implements Publisher<T> {
         public void onSubscribe(UniSubscription subscription) {
             if (upstream == null) {
                 upstream = subscription;
+                this.context = context;
             } else {
                 subscription.cancel();
                 downstream.onError(new IllegalStateException(
