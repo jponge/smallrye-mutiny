@@ -9,6 +9,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.TimeoutException;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
@@ -23,6 +24,10 @@ public class UniBlockingAwait {
     }
 
     public static <T> T await(Uni<T> upstream, Duration duration) {
+        return await(upstream, duration, Context.empty());
+    }
+
+    public static <T> T await(Uni<T> upstream, Duration duration, Context context) {
         nonNull(upstream, "upstream");
         validate(duration);
 
@@ -34,6 +39,12 @@ public class UniBlockingAwait {
         AtomicReference<T> reference = new AtomicReference<>();
         AtomicReference<Throwable> referenceToFailure = new AtomicReference<>();
         UniSubscriber<T> subscriber = new UniSubscriber<T>() {
+
+            @Override
+            public Context context() {
+                return context;
+            }
+
             @Override
             public void onSubscribe(UniSubscription subscription) {
                 // Do nothing.

@@ -1,14 +1,13 @@
 package io.smallrye.mutiny;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.concurrent.atomic.AtomicBoolean;
-
+import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 // TODO
 class ContextTest {
@@ -92,8 +91,8 @@ class ContextTest {
 
             assertThat(context.contains("abc")).isTrue();
             assertThat(context.contains("foo")).isTrue();
-            assertThat(context.<Integer> get("abc")).isEqualTo(123);
-            assertThat(context.<String> get("foo")).isEqualTo("bar");
+            assertThat(context.<Integer>get("abc")).isEqualTo(123);
+            assertThat(context.<String>get("foo")).isEqualTo("bar");
 
             pipeline.assertCompleted().assertItem("63");
         }
@@ -116,8 +115,8 @@ class ContextTest {
 
             assertThat(firstContext.contains("abc")).isTrue();
             assertThat(firstContext.contains("foo")).isTrue();
-            assertThat(firstContext.<Integer> get("abc")).isEqualTo(123);
-            assertThat(firstContext.<String> get("foo")).isEqualTo("bar");
+            assertThat(firstContext.<Integer>get("abc")).isEqualTo(123);
+            assertThat(firstContext.<String>get("foo")).isEqualTo("bar");
             sub.assertCompleted().assertItem("63");
 
             Context secondContext = Context.empty();
@@ -132,8 +131,32 @@ class ContextTest {
             sub = pipeline.subscribe().withSubscriber(UniAssertSubscriber.create(thirdContext));
 
             sub.assertCompleted().assertItem("63");
-            assertThat(thirdContext.<Integer> get("abc")).isEqualTo(123);
+            assertThat(thirdContext.<Integer>get("abc")).isEqualTo(123);
             assertThat(thirdContext.contains("foo")).isFalse();
+        }
+
+        @Test
+        void smoke6() {
+            Context context = Context.of("foo", "bar", "baz", "baz");
+
+            Uni<? extends Integer> a = Uni.createFrom().item(58)
+                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
+
+            Uni<? extends Integer> b = Uni.createFrom().item(63)
+                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
+
+            Uni<? extends Integer> c = Uni.createFrom().item(69)
+                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
+
+            Uni.combine().all().unis(a, b, c).asTuple()
+                    .attachContext()
+                    .onItem().transform(contextAndItem -> {
+                        Context ctx = contextAndItem.context();
+                        return contextAndItem.item() + " => " + ctx.get("58") + " :: " + ctx.get("63") + " :: " + ctx.get("69");
+                    })
+                    .subscribe().with(context, System.out::println);
+
+            System.out.println(context);
         }
     }
 }

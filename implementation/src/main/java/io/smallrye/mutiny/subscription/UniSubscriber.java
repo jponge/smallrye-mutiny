@@ -35,10 +35,11 @@ public interface UniSubscriber<T> {
     // - UniMemoize
     // - UniDelegatingSubscriber
     // - UniBlockingAwait
-    default Context context() {
-        // TODO
-        throw new UnsupportedOperationException("Marker exception / default method to be removed later");
-    }
+    Context context();
+    //    default Context context() {
+    //        // TODO
+    //        throw new UnsupportedOperationException("Marker exception / default method to be removed later");
+    //    }
 
     /**
      * Event handler called once the subscribed {@link Uni} has taken into account the subscription. The {@link Uni}

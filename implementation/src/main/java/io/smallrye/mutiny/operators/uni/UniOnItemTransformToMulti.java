@@ -10,6 +10,7 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.EmptyUniSubscription;
 import io.smallrye.mutiny.helpers.Subscriptions;
@@ -81,6 +82,12 @@ public class UniOnItemTransformToMulti<I, O> extends AbstractMulti<O> {
                 subscription.cancel();
             }
             Subscriptions.cancel(secondUpstream);
+        }
+
+        @Override
+        public Context context() {
+            // TODO get the context from the Multi subscriber
+            return Context.empty();
         }
 
         /**
