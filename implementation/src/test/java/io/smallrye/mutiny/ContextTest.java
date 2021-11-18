@@ -140,13 +140,13 @@ class ContextTest {
         void smoke6() {
             Context context = Context.of("foo", "bar", "baz", "baz");
 
-            Uni<? extends Integer> a = Uni.createFrom().item(58)
+            Uni<Integer> a = Uni.createFrom().item(58)
                     .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
 
-            Uni<? extends Integer> b = Uni.createFrom().item(63)
+            Uni<Integer> b = Uni.createFrom().item(63)
                     .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
 
-            Uni<? extends Integer> c = Uni.createFrom().item(69)
+            Uni<Integer> c = Uni.createFrom().item(69)
                     .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
 
             Uni.combine().all().unis(a, b, c).asTuple()
