@@ -1,5 +1,6 @@
 package io.smallrye.mutiny.subscription;
 
+import io.smallrye.mutiny.Context;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -26,6 +27,11 @@ import org.reactivestreams.Subscription;
  * @param <T> the type of item.
  */
 public interface MultiSubscriber<T> extends Subscriber<T> {
+
+    default Context context() {
+        // TODO
+        throw new UnsupportedOperationException("Marker exception / default method to be removed later");
+    }
 
     /**
      * Method called when the upstream emits an {@code item} event, in response to to requests to
