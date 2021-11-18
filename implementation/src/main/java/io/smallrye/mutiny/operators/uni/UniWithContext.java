@@ -12,10 +12,12 @@ import io.smallrye.mutiny.subscription.UniSubscriber;
 
 public class UniWithContext<I, O> extends UniOperator<I, O> {
 
-    private final BiFunction<Uni<? extends I>, Context, Uni<O>> builder;
+    private final Uni<I> upstream;
+    private final BiFunction<Uni<I>, Context, Uni<O>> builder;
 
-    public UniWithContext(Uni<? extends I> upstream, BiFunction<Uni<? extends I>, Context, Uni<O>> builder) {
+    public UniWithContext(Uni<I> upstream, BiFunction<Uni<I>, Context, Uni<O>> builder) {
         super(upstream);
+        this.upstream = upstream;
         this.builder = builder;
     }
 
@@ -24,7 +26,7 @@ public class UniWithContext<I, O> extends UniOperator<I, O> {
         Context context = downstream.context();
         Uni<O> uni;
         try {
-            uni = builder.apply(upstream(), context);
+            uni = builder.apply(upstream, context);
             if (uni == null) {
                 downstream.onSubscribe(EmptyUniSubscription.DONE);
                 downstream.onFailure(new NullPointerException("The builder function returned null"));

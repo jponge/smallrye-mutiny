@@ -146,7 +146,7 @@ public abstract class AbstractUni<T> implements Uni<T> {
     }
 
     @Override
-    public <R> Uni<R> withContext(BiFunction<Uni<? extends T>, Context, Uni<R>> builder) {
+    public <R> Uni<R> withContext(BiFunction<Uni<T>, Context, Uni<R>> builder) {
         return new UniWithContext<>(this, builder);
     }
 }

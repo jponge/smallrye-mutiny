@@ -1,9 +1,10 @@
 package io.smallrye.mutiny.subscription;
 
-import io.smallrye.mutiny.Context;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+
+import io.smallrye.mutiny.Context;
 
 /**
  * A {@link Subscriber} receiving calls to {@link #onSubscribe(Subscription)} once after passing an instance of
