@@ -18,20 +18,22 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import io.smallrye.mutiny.Context;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.BackPressureFailure;
+import io.smallrye.mutiny.subscription.MultiSubscriber;
 
 public class BlockingIterable<T> implements Iterable<T> {
 
-    private final Publisher<? extends T> upstream;
+    private final Multi<? extends T> upstream;
     private final Supplier<Queue<T>> supplier;
     private final int batchSize;
 
-    public BlockingIterable(Publisher<? extends T> upstream, int batchSize, Supplier<Queue<T>> supplier) {
+    public BlockingIterable(Multi<? extends T> upstream, int batchSize, Supplier<Queue<T>> supplier) {
         this.upstream = nonNull(upstream, "upstream");
         this.batchSize = positive(batchSize, "batchSize");
         this.supplier = nonNull(supplier, "supplier");
@@ -87,7 +89,7 @@ public class BlockingIterable<T> implements Iterable<T> {
     }
 
     @SuppressWarnings("ReactiveStreamsSubscriberImplementation")
-    private static final class SubscriberIterator<T> implements Subscriber<T>, Iterator<T> {
+    private static final class SubscriberIterator<T> implements MultiSubscriber<T>, Iterator<T> {
 
         private final Queue<T> queue;
 
@@ -204,6 +206,11 @@ public class BlockingIterable<T> implements Iterable<T> {
         }
 
         @Override
+        public Context context() {
+            return Context.empty();
+        }
+
+        @Override
         public void onSubscribe(Subscription s) {
             if (subscription.compareAndSet(null, s)) {
                 s.request(batchSize);
@@ -211,7 +218,7 @@ public class BlockingIterable<T> implements Iterable<T> {
         }
 
         @Override
-        public void onNext(T t) {
+        public void onItem(T t) {
             if (!queue.offer(t)) {
                 subscription.getAndSet(EmptyUniSubscription.CANCELLED).cancel();
                 onError(new BackPressureFailure("Buffer is full, cannot deliver the item"));
@@ -221,14 +228,14 @@ public class BlockingIterable<T> implements Iterable<T> {
         }
 
         @Override
-        public void onError(Throwable t) {
+        public void onFailure(Throwable t) {
             failure = t;
             done.set(true);
             fire();
         }
 
         @Override
-        public void onComplete() {
+        public void onCompletion() {
             done.set(true);
             fire();
         }

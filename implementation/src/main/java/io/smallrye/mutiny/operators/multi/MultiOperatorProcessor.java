@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 import org.reactivestreams.Subscription;
 
+import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
@@ -59,6 +60,11 @@ public abstract class MultiOperatorProcessor<I, O> implements MultiSubscriber<I>
 
     protected boolean isCancelled() {
         return cancellationRequested == 1;
+    }
+
+    @Override
+    public Context context() {
+        return downstream.context();
     }
 
     @Override
