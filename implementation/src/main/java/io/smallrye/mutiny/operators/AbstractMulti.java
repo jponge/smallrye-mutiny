@@ -4,8 +4,11 @@ import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
+import io.smallrye.mutiny.Context;
+import io.smallrye.mutiny.operators.multi.*;
 import org.reactivestreams.Subscriber;
 
 import io.smallrye.mutiny.Multi;
@@ -13,10 +16,6 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.*;
 import io.smallrye.mutiny.helpers.StrictMultiSubscriber;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
-import io.smallrye.mutiny.operators.multi.MultiCacheOp;
-import io.smallrye.mutiny.operators.multi.MultiEmitOnOp;
-import io.smallrye.mutiny.operators.multi.MultiLogger;
-import io.smallrye.mutiny.operators.multi.MultiSubscribeOnOp;
 import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 
@@ -176,4 +175,8 @@ public abstract class AbstractMulti<T> implements Multi<T> {
         return log("Multi." + this.getClass().getSimpleName());
     }
 
+    @Override
+    public <R> Multi<R> withContext(BiFunction<Multi<T>, Context, Multi<R>> builder) {
+        return new MultiWithContext<>(this, nonNull(builder, "builder"));
+    }
 }

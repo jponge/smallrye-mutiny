@@ -3,10 +3,7 @@ package io.smallrye.mutiny;
 import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 
 import java.util.concurrent.Executor;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -602,4 +599,15 @@ public interface Multi<T> extends Publisher<T> {
      */
     @CheckReturnValue
     Multi<T> log();
+
+    // TODO
+    // WARNING: this gets called at subscription time, so the context hasn't received updates from upstream yet
+    @CheckReturnValue
+    <R> Multi<R> withContext(BiFunction<Multi<T>, Context, Multi<R>> builder);
+
+    // TODO
+    @CheckReturnValue
+    default Multi<ContextAndItem<T>> attachContext() {
+        return this.withContext((multi, ctx) -> multi.onItem().transform(item -> new ContextAndItem<>(ctx, item)));
+    }
 }

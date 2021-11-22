@@ -1,24 +1,69 @@
 package io.smallrye.mutiny;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.concurrent.atomic.AtomicBoolean;
-
+import io.smallrye.mutiny.helpers.test.AssertSubscriber;
+import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 // TODO
 class ContextTest {
 
     @Nested
-    @DisplayName("Tests in progress")
-    class InProgress {
+    @DisplayName("Multi smoke tests (in progress)")
+    class MultiInProgress {
 
         @Test
-        void smoke() {
+        void smoke1() {
+            Context context = Context.of("foo", "bar", "baz", "baz");
+
+            AssertSubscriber<String> sub = Multi.createFrom().range(1, 10)
+                    .withContext((multi, ctx) -> {
+                        System.out.println(ctx);
+                        return multi.onItem().transform(n -> {
+                            ctx.put("count", ctx.getOrElse("count", () -> 0) + 1);
+                            return n + " :: " + ctx.getOrElse("foo", () -> "!!!") + " @" + ctx.get("count");
+                        });
+                    })
+                    .attachContext().onItem().transform(contextAndItem -> {
+                        System.out.println(contextAndItem.item() + " -> " + contextAndItem.context());
+                        return contextAndItem.item();
+                    })
+                    .subscribe().withSubscriber(AssertSubscriber.create(context, Long.MAX_VALUE));
+
+            System.out.println(sub.getItems());
+            sub.assertCompleted();
+            assertThat(sub.getItems()).contains("2 :: bar @2", "7 :: bar @7");
+        }
+
+        @Test
+        void smoke2() {
+            Context context = Context.of("foo", "bar", "baz", "baz");
+
+            AssertSubscriber<String> sub = Multi.createFrom().range(1, 10)
+                    .withContext((multi, ctx) -> multi.onItem().transformToUniAndMerge(n -> {
+                        ctx.put("count", ctx.getOrElse("count", () -> 0) + 1);
+                        return Uni.createFrom().item(n).withContext((uni, ctx2) ->
+                                uni.onItem().transform(m -> m + " :: " + ctx2.getOrElse("foo", () -> "!!!") + " @" + ctx2.get("count")));
+                    }))
+                    .subscribe().withSubscriber(AssertSubscriber.create(context, Long.MAX_VALUE));
+
+            System.out.println(sub.getItems());
+            sub.assertCompleted();
+            assertThat(sub.getItems()).contains("2 :: bar @2", "7 :: bar @7");
+        }
+    }
+
+    @Nested
+    @DisplayName("Uni smoke tests (in progress)")
+    class UniInProgress {
+
+        @Test
+        void smoke1() {
             Context context = Context.of("abc", 123, "def", true);
 
             Uni.createFrom().item(58)
@@ -92,8 +137,8 @@ class ContextTest {
 
             assertThat(context.contains("abc")).isTrue();
             assertThat(context.contains("foo")).isTrue();
-            assertThat(context.<Integer> get("abc")).isEqualTo(123);
-            assertThat(context.<String> get("foo")).isEqualTo("bar");
+            assertThat(context.<Integer>get("abc")).isEqualTo(123);
+            assertThat(context.<String>get("foo")).isEqualTo("bar");
 
             pipeline.assertCompleted().assertItem("63");
         }
@@ -116,8 +161,8 @@ class ContextTest {
 
             assertThat(firstContext.contains("abc")).isTrue();
             assertThat(firstContext.contains("foo")).isTrue();
-            assertThat(firstContext.<Integer> get("abc")).isEqualTo(123);
-            assertThat(firstContext.<String> get("foo")).isEqualTo("bar");
+            assertThat(firstContext.<Integer>get("abc")).isEqualTo(123);
+            assertThat(firstContext.<String>get("foo")).isEqualTo("bar");
             sub.assertCompleted().assertItem("63");
 
             Context secondContext = Context.empty();
@@ -132,7 +177,7 @@ class ContextTest {
             sub = pipeline.subscribe().withSubscriber(UniAssertSubscriber.create(thirdContext));
 
             sub.assertCompleted().assertItem("63");
-            assertThat(thirdContext.<Integer> get("abc")).isEqualTo(123);
+            assertThat(thirdContext.<Integer>get("abc")).isEqualTo(123);
             assertThat(thirdContext.contains("foo")).isFalse();
         }
 

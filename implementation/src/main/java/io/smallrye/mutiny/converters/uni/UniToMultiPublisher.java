@@ -2,6 +2,7 @@ package io.smallrye.mutiny.converters.uni;
 
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
+import io.smallrye.mutiny.subscription.ContextSupport;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -25,7 +26,7 @@ public final class UniToMultiPublisher<T> implements Publisher<T> {
         downstream.onSubscribe(new UniToMultiSubscription<>(uni, downstream));
     }
 
-    private static class UniToMultiSubscription<T> implements UniSubscription, Subscription, UniSubscriber<T> {
+    private static class UniToMultiSubscription<T> implements UniSubscription, Subscription, UniSubscriber<T>, ContextSupport {
 
         private final Uni<T> uni;
         private final Subscriber<? super T> downstream;
@@ -37,7 +38,6 @@ public final class UniToMultiPublisher<T> implements Publisher<T> {
         }
 
         private volatile UniSubscription upstream;
-        private volatile Context context;
         private volatile State state = State.INIT;
 
         private static final AtomicReferenceFieldUpdater<UniToMultiSubscription, State> STATE_UPDATER = AtomicReferenceFieldUpdater
@@ -51,7 +51,11 @@ public final class UniToMultiPublisher<T> implements Publisher<T> {
         // TODO propagate to Multi
         @Override
         public Context context() {
-            return context;
+            if (downstream instanceof ContextSupport) {
+                return ((ContextSupport) downstream).context();
+            } else {
+                return Context.empty();
+            }
         }
 
         @Override
@@ -76,7 +80,6 @@ public final class UniToMultiPublisher<T> implements Publisher<T> {
         public void onSubscribe(UniSubscription subscription) {
             if (upstream == null) {
                 upstream = subscription;
-                this.context = context;
             } else {
                 subscription.cancel();
                 downstream.onError(new IllegalStateException(

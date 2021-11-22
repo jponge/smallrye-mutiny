@@ -14,6 +14,8 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.uni.*;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 
+import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
+
 public abstract class AbstractUni<T> implements Uni<T> {
 
     public abstract void subscribe(UniSubscriber<? super T> subscriber);
@@ -91,7 +93,7 @@ public abstract class AbstractUni<T> implements Uni<T> {
     @Override
     public Uni<T> emitOn(Executor executor) {
         return Infrastructure.onUniCreation(
-                new UniEmitOn<>(this, ParameterValidation.nonNull(executor, "executor")));
+                new UniEmitOn<>(this, nonNull(executor, "executor")));
     }
 
     @Override
@@ -147,6 +149,6 @@ public abstract class AbstractUni<T> implements Uni<T> {
 
     @Override
     public <R> Uni<R> withContext(BiFunction<Uni<T>, Context, Uni<R>> builder) {
-        return new UniWithContext<>(this, builder);
+        return new UniWithContext<>(this,  nonNull(builder, "builder"));
     }
 }
