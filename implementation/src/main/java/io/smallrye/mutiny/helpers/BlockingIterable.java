@@ -25,7 +25,7 @@ import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.BackPressureFailure;
-import io.smallrye.mutiny.subscription.MultiSubscriber;
+import io.smallrye.mutiny.subscription.ContextSupport;
 
 public class BlockingIterable<T> implements Iterable<T> {
 
@@ -89,7 +89,7 @@ public class BlockingIterable<T> implements Iterable<T> {
     }
 
     @SuppressWarnings("ReactiveStreamsSubscriberImplementation")
-    private static final class SubscriberIterator<T> implements MultiSubscriber<T>, Iterator<T> {
+    private static final class SubscriberIterator<T> implements Subscriber<T>, Iterator<T>, ContextSupport {
 
         private final Queue<T> queue;
 
@@ -218,7 +218,7 @@ public class BlockingIterable<T> implements Iterable<T> {
         }
 
         @Override
-        public void onItem(T t) {
+        public void onNext(T t) {
             if (!queue.offer(t)) {
                 subscription.getAndSet(EmptyUniSubscription.CANCELLED).cancel();
                 onError(new BackPressureFailure("Buffer is full, cannot deliver the item"));
@@ -228,14 +228,14 @@ public class BlockingIterable<T> implements Iterable<T> {
         }
 
         @Override
-        public void onFailure(Throwable t) {
+        public void onError(Throwable t) {
             failure = t;
             done.set(true);
             fire();
         }
 
         @Override
-        public void onCompletion() {
+        public void onComplete() {
             done.set(true);
             fire();
         }

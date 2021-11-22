@@ -26,7 +26,7 @@ public class Subscribers {
         return new CallbackBasedSubscriber<>(context, onItem, onFailure, onCompletion, onSubscription);
     }
 
-    public static class CallbackBasedSubscriber<T> implements CancellableSubscriber<T>, Subscription {
+    public static class CallbackBasedSubscriber<T> implements CancellableSubscriber<T>, Subscription, ContextSupport {
 
         private volatile Subscription subscription;
         private static final AtomicReferenceFieldUpdater<CallbackBasedSubscriber, Subscription> SUBSCRIPTION_UPDATER = AtomicReferenceFieldUpdater

@@ -4,8 +4,6 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
-import io.smallrye.mutiny.Context;
-
 /**
  * A {@link Subscriber} receiving calls to {@link #onSubscribe(Subscription)} once after passing an instance of
  * {@link Subscriber} to {@link Publisher#subscribe(Subscriber)}.
@@ -28,11 +26,6 @@ import io.smallrye.mutiny.Context;
  * @param <T> the type of item.
  */
 public interface MultiSubscriber<T> extends Subscriber<T> {
-
-    default Context context() {
-        // TODO
-        throw new UnsupportedOperationException("Marker exception / default method to be removed later");
-    }
 
     /**
      * Method called when the upstream emits an {@code item} event, in response to to requests to

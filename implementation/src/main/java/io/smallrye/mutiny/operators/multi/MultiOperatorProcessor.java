@@ -10,9 +10,10 @@ import org.reactivestreams.Subscription;
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
+import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 
-public abstract class MultiOperatorProcessor<I, O> implements MultiSubscriber<I>, Subscription {
+public abstract class MultiOperatorProcessor<I, O> implements MultiSubscriber<I>, Subscription, ContextSupport {
 
     /*
      * We used to have an interpretation of the RS TCK that it had to be null on cancellation to release the subscriber.
@@ -64,7 +65,11 @@ public abstract class MultiOperatorProcessor<I, O> implements MultiSubscriber<I>
 
     @Override
     public Context context() {
-        return downstream.context();
+        if (downstream instanceof ContextSupport) {
+            return ((ContextSupport) downstream).context();
+        } else {
+            return Context.empty();
+        }
     }
 
     @Override
