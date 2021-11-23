@@ -207,6 +207,7 @@ public class BlockingIterable<T> implements Iterable<T> {
 
         @Override
         public Context context() {
+            // TODO have some context
             return Context.empty();
         }
 
