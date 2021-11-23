@@ -2,7 +2,6 @@ package io.smallrye.mutiny.converters.uni;
 
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
-import io.smallrye.mutiny.subscription.ContextSupport;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -10,6 +9,7 @@ import org.reactivestreams.Subscription;
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.AbstractUni;
+import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
 

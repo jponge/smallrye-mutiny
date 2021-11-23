@@ -12,10 +12,11 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
-import io.smallrye.mutiny.Context;
-import io.smallrye.mutiny.subscription.ContextSupport;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+
+import io.smallrye.mutiny.Context;
+import io.smallrye.mutiny.subscription.ContextSupport;
 
 /**
  * A {@link io.smallrye.mutiny.Multi} {@link Subscriber} for testing purposes that comes with useful assertion helpers.
@@ -147,7 +148,6 @@ public class AssertSubscriber<T> implements Subscriber<T>, ContextSupport {
     public static <T> AssertSubscriber<T> create(long requested) {
         return new AssertSubscriber<>(requested);
     }
-
 
     /**
      * Creates a new {@link AssertSubscriber} with 0 requested items and no upfront cancellation.

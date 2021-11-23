@@ -1,5 +1,7 @@
 package io.smallrye.mutiny.operators.multi;
 
+import java.util.function.BiFunction;
+
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.ParameterValidation;
@@ -7,8 +9,6 @@ import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
-
-import java.util.function.BiFunction;
 
 public class MultiWithContext<I, O> extends AbstractMultiOperator<I, O> {
 

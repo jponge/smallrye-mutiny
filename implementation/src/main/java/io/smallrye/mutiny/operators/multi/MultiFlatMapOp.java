@@ -6,17 +6,17 @@ import java.util.concurrent.atomic.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import io.smallrye.mutiny.Context;
-import io.smallrye.mutiny.subscription.ContextSupport;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 
+import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.helpers.queues.Queues;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.BackPressureFailure;
+import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 
 public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {

@@ -1,5 +1,7 @@
 package io.smallrye.mutiny.operators;
 
+import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
+
 import java.util.concurrent.Executor;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
@@ -9,12 +11,9 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.converters.uni.UniToMultiPublisher;
 import io.smallrye.mutiny.groups.*;
-import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.uni.*;
 import io.smallrye.mutiny.subscription.UniSubscriber;
-
-import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 
 public abstract class AbstractUni<T> implements Uni<T> {
 
@@ -149,6 +148,6 @@ public abstract class AbstractUni<T> implements Uni<T> {
 
     @Override
     public <R> Uni<R> withContext(BiFunction<Uni<T>, Context, Uni<R>> builder) {
-        return new UniWithContext<>(this,  nonNull(builder, "builder"));
+        return new UniWithContext<>(this, nonNull(builder, "builder"));
     }
 }
