@@ -45,6 +45,8 @@ class ContextTest {
             Context context = Context.of("foo", "bar", "baz", "baz");
 
             AssertSubscriber<String> sub = Multi.createFrom().range(1, 10)
+                    .select().where(n -> n % 2 == 0)
+                    .onItem().transform(n -> n * 10)
                     .withContext((multi, ctx) -> multi.onItem().transformToUniAndMerge(n -> {
                         ctx.put("count", ctx.getOrElse("count", () -> 0) + 1);
                         return Uni.createFrom().item(n).withContext((uni, ctx2) ->
@@ -54,7 +56,7 @@ class ContextTest {
 
             System.out.println(sub.getItems());
             sub.assertCompleted();
-            assertThat(sub.getItems()).contains("2 :: bar @2", "7 :: bar @7");
+            assertThat(sub.getItems()).contains("20 :: bar @1", "80 :: bar @4");
         }
     }
 
