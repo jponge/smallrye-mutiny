@@ -59,6 +59,19 @@ class ContextTest {
             sub.assertCompleted();
             assertThat(sub.getItems()).contains("20 :: bar @1", "80 :: bar @4");
         }
+
+        @Test
+        void smoke3() {
+            Context context = Context.of("foo", "bar", "baz", "baz");
+
+            AssertSubscriber<String> sub = Multi.createFrom().range(1, 10).withContext((multi, ctx) ->
+                            multi.onItem().transformToMultiAndMerge(n -> Multi.createFrom().items(n.toString(), ctx.get("foo"), ctx.get("baz"))))
+                    .onFailure().retry().atMost(5)
+                    .subscribe().withSubscriber(AssertSubscriber.create(context, Long.MAX_VALUE));
+
+            System.out.println(sub.getItems());
+            sub.assertCompleted();
+        }
     }
 
     @Nested
