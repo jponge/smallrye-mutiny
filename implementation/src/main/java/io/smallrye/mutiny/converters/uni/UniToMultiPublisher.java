@@ -48,7 +48,6 @@ public final class UniToMultiPublisher<T> implements Publisher<T> {
             this.downstream = downstream;
         }
 
-        // TODO propagate to Multi
         @Override
         public Context context() {
             if (downstream instanceof ContextSupport) {
