@@ -1,14 +1,8 @@
 package io.smallrye.mutiny.helpers;
 
-import static io.smallrye.mutiny.helpers.ParameterValidation.SUPPLIER_PRODUCED_NULL;
-import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
-import static io.smallrye.mutiny.helpers.ParameterValidation.positive;
+import static io.smallrye.mutiny.helpers.ParameterValidation.*;
 
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Queue;
-import java.util.Spliterator;
-import java.util.Spliterators;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
@@ -32,11 +26,14 @@ public class BlockingIterable<T> implements Iterable<T> {
     private final Multi<? extends T> upstream;
     private final Supplier<Queue<T>> supplier;
     private final int batchSize;
+    private final Supplier<Context> contextSupplier;
 
-    public BlockingIterable(Multi<? extends T> upstream, int batchSize, Supplier<Queue<T>> supplier) {
+    public BlockingIterable(Multi<? extends T> upstream, int batchSize, Supplier<Queue<T>> queueSupplier,
+            Supplier<Context> contextSupplier) {
         this.upstream = nonNull(upstream, "upstream");
         this.batchSize = positive(batchSize, "batchSize");
-        this.supplier = nonNull(supplier, "supplier");
+        this.supplier = nonNull(queueSupplier, "queueSupplier");
+        this.contextSupplier = nonNull(contextSupplier, "contextSupplier");
     }
 
     @Override
@@ -77,7 +74,18 @@ public class BlockingIterable<T> implements Iterable<T> {
             throw new IllegalStateException(SUPPLIER_PRODUCED_NULL);
         }
 
-        return new SubscriberIterator<>(queue, batchSize);
+        Context context = null;
+        try {
+            context = contextSupplier.get();
+        } catch (Throwable e) {
+            propagateFailure(e);
+        }
+
+        if (context == null) {
+            throw new IllegalStateException(SUPPLIER_PRODUCED_NULL);
+        }
+
+        return new SubscriberIterator<>(queue, batchSize, context);
     }
 
     private static void propagateFailure(Throwable e) {
@@ -101,6 +109,8 @@ public class BlockingIterable<T> implements Iterable<T> {
 
         private final Condition condition;
 
+        private final Context context;
+
         long produced;
 
         AtomicReference<Subscription> subscription = new AtomicReference<>();
@@ -109,10 +119,11 @@ public class BlockingIterable<T> implements Iterable<T> {
 
         Throwable failure;
 
-        SubscriberIterator(Queue<T> queue, int batchSize) {
+        SubscriberIterator(Queue<T> queue, int batchSize, Context context) {
             this.queue = queue;
             this.batchSize = batchSize;
             this.limit = batchSize;
+            this.context = context;
             this.lock = new ReentrantLock();
             this.condition = lock.newCondition();
         }
@@ -207,8 +218,7 @@ public class BlockingIterable<T> implements Iterable<T> {
 
         @Override
         public Context context() {
-            // TODO have some context
-            return Context.empty();
+            return this.context;
         }
 
         @Override

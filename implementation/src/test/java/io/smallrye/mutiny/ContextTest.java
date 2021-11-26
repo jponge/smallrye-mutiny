@@ -2,7 +2,9 @@ package io.smallrye.mutiny;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -64,13 +66,26 @@ class ContextTest {
         void smoke3() {
             Context context = Context.of("foo", "bar", "baz", "baz");
 
-            AssertSubscriber<String> sub = Multi.createFrom().range(1, 10).withContext((multi, ctx) ->
-                            multi.onItem().transformToMultiAndMerge(n -> Multi.createFrom().items(n.toString(), ctx.get("foo"), ctx.get("baz"))))
+            AssertSubscriber<String> sub = Multi.createFrom().range(1, 10)
+                    .withContext((multi, ctx) -> multi.onItem().transformToMultiAndMerge(
+                            n -> Multi.createFrom().items(n.toString(), ctx.get("foo"), ctx.get("baz"))))
                     .onFailure().retry().atMost(5)
                     .subscribe().withSubscriber(AssertSubscriber.create(context, Long.MAX_VALUE));
 
             System.out.println(sub.getItems());
             sub.assertCompleted();
+        }
+
+        @Test
+        void smoke4() {
+            List<String> list = Multi.createFrom().range(1, 10)
+                    .attachContext()
+                    .subscribe().asStream(() -> Context.of("foo", "bar", "baz", "baz"))
+                    .map(cai -> cai.item() + " -> " + cai.context().keys())
+                    .collect(Collectors.toList());
+
+            assertThat(list).hasSize(9).contains("6 -> [foo, baz]");
+            System.out.println(list);
         }
     }
 
