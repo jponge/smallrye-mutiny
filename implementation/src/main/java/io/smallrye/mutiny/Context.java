@@ -15,6 +15,7 @@ public final class Context {
     }
 
     public static Context of(Object... entries) {
+        requireNonNull(entries, "The entries array cannot be null");
         if (entries.length % 2 != 0) {
             throw new IllegalArgumentException("Arguments must be balanced to form (key, value) pairs");
         }

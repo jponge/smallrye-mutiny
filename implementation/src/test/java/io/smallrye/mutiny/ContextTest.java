@@ -46,6 +46,13 @@ class ContextTest {
         }
 
         @Test
+        void nullOf() {
+            assertThatThrownBy(() -> Context.of((Object[]) null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("The entries array cannot be null");
+        }
+
+        @Test
         void unbalancedOf() {
             assertThatThrownBy(() -> Context.of("foo", "bar", "baz"))
                     .isInstanceOf(IllegalArgumentException.class)
