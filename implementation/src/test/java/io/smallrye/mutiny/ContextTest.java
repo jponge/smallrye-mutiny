@@ -1,8 +1,12 @@
 package io.smallrye.mutiny;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -16,6 +20,124 @@ import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 
 // TODO
 class ContextTest {
+
+    @Nested
+    @DisplayName("Context factory methods")
+    class ContextFactoryMethods {
+
+        @Test
+        void empty() {
+            Context context = Context.empty();
+            assertThat(context.keys()).isEmpty();
+        }
+
+        @Test
+        void balancedOf() {
+            Context context = Context.of("foo", "bar", "abc", "def");
+            assertThat(context.keys())
+                    .hasSize(2)
+                    .contains("foo", "abc");
+        }
+
+        @Test
+        void emptyOf() {
+            Context context = Context.of();
+            assertThat(context.keys()).isEmpty();
+        }
+
+        @Test
+        void unbalancedOf() {
+            assertThatThrownBy(() -> Context.of("foo", "bar", "baz"))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("Arguments must be balanced to form (key, value) pairs");
+        }
+
+        @Test
+        void from() {
+            HashMap<String, String> map = new HashMap<String, String>() {
+                {
+                    put("foo", "bar");
+                    put("abc", "def");
+                }
+            };
+
+            Context context = Context.from(map);
+            assertThat(context.keys())
+                    .hasSize(2)
+                    .contains("foo", "abc");
+
+            map.put("123", "456");
+            assertThat(map).hasSize(3);
+            assertThat(context.keys()).hasSize(2);
+        }
+
+        @Test
+        void fromNull() {
+            assertThatThrownBy(() -> Context.from(null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("The entries map cannot be null");
+        }
+    }
+
+    @Nested
+    @DisplayName("Context methods")
+    class ContextMethods {
+
+        @Test
+        void sanityChecks() {
+            Context context = Context.of("foo", "bar", "123", 456);
+
+            assertThat(context.keys())
+                    .hasSize(2)
+                    .contains("foo", "123");
+
+            assertThat(context.contains("foo")).isTrue();
+            assertThat(context.contains("bar")).isFalse();
+            assertThat(context.isEmpty()).isFalse();
+
+            assertThat(context.<String> get("foo")).isEqualTo("bar");
+            assertThat(context.getOrElse("bar", () -> "666")).isEqualTo("666");
+
+            context.put("bar", 123);
+            assertThat(context.keys()).hasSize(3);
+            assertThat(context.getOrElse("bar", () -> 666)).isEqualTo(123);
+
+            context.delete("foo").delete("123").delete("bar");
+            assertThat(context.contains("foo")).isFalse();
+            assertThat(context.isEmpty()).isTrue();
+            assertThat(context.keys()).isEmpty();
+        }
+
+        @Test
+        void containsOnEmptyContext() {
+            assertThat(Context.empty().contains("foo")).isFalse();
+        }
+
+        @Test
+        void getOnEmptyContext() {
+            assertThatThrownBy(() -> Context.empty().get("foo"))
+                    .isInstanceOf(NoSuchElementException.class)
+                    .hasMessage("The context is empty");
+
+            assertThat(Context.empty().getOrElse("foo", () -> "bar")).isEqualTo("bar");
+        }
+
+        @Test
+        void getOnMissingKey() {
+            assertThatThrownBy(() -> Context.of("foo", "bar").get("yolo"))
+                    .isInstanceOf(NoSuchElementException.class)
+                    .hasMessage("The context does not have a value for key yolo");
+        }
+
+        @Test
+        void keysetIsACopy() {
+            Context context = Context.of("foo", "bar", "123", 456);
+            Set<String> k1 = context.keys();
+            context.put("bar", "baz");
+            Set<String> k2 = context.keys();
+            assertThat(k1).isNotSameAs(k2);
+        }
+    }
 
     @Nested
     @DisplayName("Multi smoke tests (in progress)")

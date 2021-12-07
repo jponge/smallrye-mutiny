@@ -1,6 +1,7 @@
 package io.smallrye.mutiny;
 
 import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
+import static java.util.Objects.requireNonNull;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,8 +27,8 @@ public final class Context {
         return new Context(map);
     }
 
-    public static Context from(Map<String, Object> entries) {
-        return new Context(entries);
+    public static Context from(Map<String, ?> entries) {
+        return new Context(requireNonNull(entries, "The entries map cannot be null"));
     }
 
     private volatile ConcurrentHashMap<String, Object> entries;
@@ -36,7 +37,7 @@ public final class Context {
         this.entries = null;
     }
 
-    private Context(Map<String, Object> initialEntries) {
+    private Context(Map<String, ?> initialEntries) {
         this.entries = new ConcurrentHashMap<>(initialEntries);
     }
 
