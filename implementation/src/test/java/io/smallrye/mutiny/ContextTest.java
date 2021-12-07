@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.DisplayName;
@@ -234,6 +235,30 @@ class ContextTest {
                     .subscribe().with(context, System.out::println);
 
             System.out.println(context);
+        }
+
+        @Test
+        void smoke7() {
+            Context context = Context.of("foo", "bar", "baz", "baz");
+            AtomicInteger counter = new AtomicInteger();
+
+            UniAssertSubscriber<Integer> sub = Uni.createFrom().item(1)
+                    .withContext((uni, ctx) -> uni
+                            .onItem().transform(n -> n + "!")
+                            .onItem().transform(s -> "[" + s + "]"))
+                    .onItem().transform(String::toUpperCase)
+                    .onItem().transform(String::length)
+                    .withContext((uni, ctx) -> uni)
+                    .subscribe().withSubscriber(new UniAssertSubscriber<Integer>() {
+                        @Override
+                        public Context context() {
+                            counter.incrementAndGet();
+                            return context;
+                        }
+                    });
+
+            sub.assertCompleted().assertItem(4);
+            assertThat(counter.get()).isEqualTo(2);
         }
     }
 }
