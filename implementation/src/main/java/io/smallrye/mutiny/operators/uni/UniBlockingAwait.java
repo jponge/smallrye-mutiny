@@ -1,7 +1,6 @@
 package io.smallrye.mutiny.operators.uni;
 
 import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
-import static io.smallrye.mutiny.helpers.ParameterValidation.validate;
 
 import java.time.Duration;
 import java.util.concurrent.CompletionException;
@@ -23,10 +22,6 @@ public class UniBlockingAwait {
         // Avoid direct instantiation.
     }
 
-    public static <T> T await(Uni<T> upstream, Duration duration) {
-        return await(upstream, duration, Context.empty());
-    }
-
     public static <T> T await(Uni<T> upstream, Duration duration, Context context) {
         nonNull(upstream, "upstream");
         validate(duration);
@@ -42,7 +37,7 @@ public class UniBlockingAwait {
 
             @Override
             public Context context() {
-                return context;
+                return (context != null) ? context : Context.empty();
             }
 
             @Override

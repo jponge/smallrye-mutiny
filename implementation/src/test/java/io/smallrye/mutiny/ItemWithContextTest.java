@@ -11,7 +11,7 @@ class ItemWithContextTest {
         ItemWithContext<Integer> itemWithContext = new ItemWithContext<>(Context.of("foo", "bar"), 123);
 
         assertThat(itemWithContext.context().<String> get("foo")).isEqualTo("bar");
-        assertThat(itemWithContext.item()).isEqualTo(123);
+        assertThat(itemWithContext.get()).isEqualTo(123);
 
         ItemWithContext<Integer> copy = new ItemWithContext<>(Context.of("foo", "bar"), 123);
         ItemWithContext<Integer> diff1 = new ItemWithContext<>(Context.of("foo", "baz"), 123);

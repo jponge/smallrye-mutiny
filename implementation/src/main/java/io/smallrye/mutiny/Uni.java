@@ -142,6 +142,12 @@ public interface Uni<T> {
         return subscribe().asCompletionStage();
     }
 
+    // TODO
+    @CheckReturnValue
+    default CompletableFuture<T> subscribeAsCompletionStage(Context context) {
+        return subscribe().asCompletionStage(context);
+    }
+
     /**
      * Awaits (blocking the caller thread) until the item or a failure is emitted by the observed {@link Uni}.
      * If the observed uni fails, the failure is thrown. In the case of a checked exception, the exception is wrapped
@@ -164,6 +170,10 @@ public interface Uni<T> {
      */
     @CheckReturnValue
     UniAwait<T> await();
+
+    // TODO
+    @CheckReturnValue
+    UniAwait<T> awaitUsing(Context context);
 
     /**
      * Configures the action to execute when the observed {@link Uni} emits the item (potentially {@code null}).

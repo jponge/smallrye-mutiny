@@ -3,12 +3,11 @@ package io.smallrye.mutiny;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.io.IOException;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.DisplayName;
@@ -147,6 +146,294 @@ class ContextTest {
     }
 
     @Nested
+    @DisplayName("Uni with context")
+    class UniAndContext {
+
+        @Test
+        void noContextShallBeEmpty() {
+            UniAssertSubscriber<String> sub = Uni.createFrom().item(63)
+                    .withContext((uni, ctx) -> uni.onItem().transform(n -> n + "::" + ctx.getOrElse("foo", () -> "yolo")))
+                    .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+            sub.assertCompleted().assertItem("63::yolo");
+        }
+
+        @Test
+        void transformWithContext() {
+            Context context = Context.of("foo", "bar");
+
+            UniAssertSubscriber<String> sub = Uni.createFrom().item(63)
+                    .withContext((uni, ctx) -> uni.onItem().transform(n -> n + "::" + ctx.getOrElse("foo", () -> "yolo")))
+                    .subscribe().withSubscriber(UniAssertSubscriber.create(context));
+
+            sub.assertCompleted().assertItem("63::bar");
+        }
+
+        @Test
+        void callbacksPropagateContext() {
+            Context context = Context.of("foo", "bar");
+            AtomicReference<String> result = new AtomicReference<>();
+
+            Uni.createFrom().item(63)
+                    .withContext((uni, ctx) -> uni.onItem().transform(n -> n + "::" + ctx.getOrElse("foo", () -> "yolo")))
+                    .subscribe().with(context, result::set);
+
+            assertThat(result.get())
+                    .isNotNull()
+                    .isEqualTo("63::bar");
+        }
+
+        @Test
+        void asCompletableStagePropagateContext() {
+            Context context = Context.of("foo", "bar");
+            AtomicReference<String> result = new AtomicReference<>();
+
+            Uni.createFrom().item(63)
+                    .withContext((uni, ctx) -> uni.onItem().transform(n -> n + "::" + ctx.getOrElse("foo", () -> "yolo")))
+                    .subscribe().asCompletionStage(context)
+                    .whenComplete((str, err) -> {
+                        assertThat(err).isNull();
+                        assertThat(str).isEqualTo("63::bar");
+                    });
+        }
+
+        @Test
+        void callbacksWithoutContextPropagateEmptyContext() {
+            AtomicReference<String> result = new AtomicReference<>();
+
+            Uni.createFrom().item(63)
+                    .withContext((uni, ctx) -> uni.onItem().transform(n -> n + "::" + ctx.getOrElse("foo", () -> "yolo")))
+                    .subscribe().with(result::set);
+
+            assertThat(result.get())
+                    .isNotNull()
+                    .isEqualTo("63::yolo");
+        }
+
+        @Test
+        void contextDoesPropagate() {
+            Context context = Context.of("foo", "bar");
+
+            UniAssertSubscriber<String> sub = Uni.createFrom().item(63)
+                    .withContext((uni, ctx) -> uni.onItem().invoke(() -> ctx.put("counter", ctx.<Integer> get("counter") + 1)))
+                    .withContext((uni, ctx) -> uni
+                            .onItem().invoke(() -> ctx.put("counter", ctx.<Integer> get("counter") + 1)))
+                    .withContext((uni, ctx) -> uni
+                            .onItem().invoke(() -> ctx.put("counter", ctx.<Integer> get("counter") + 1)))
+                    .withContext((uni, ctx) -> uni
+                            .onItem().transform(Object::toString)
+                            .onItem().transform(s -> s + "::" + ctx.get("counter")))
+                    .withContext((uni, ctx) -> {
+                        ctx.put("counter", 0);
+                        return uni;
+                    })
+                    .subscribe().withSubscriber(UniAssertSubscriber.create(context));
+
+            sub.assertCompleted().assertItem("63::3");
+            assertThat(context.<Integer> get("counter")).isEqualTo(3);
+        }
+
+        @Test
+        void uniOperatorSubclassesPropagateContext() {
+            Context context = Context.of("foo", "bar");
+
+            UniAssertSubscriber<String> sub = Uni.createFrom().failure(new IOException("boom"))
+                    .withContext((uni, ctx) -> uni
+                            .onItem().transformToUni(obj -> Uni.createFrom().item("Yolo"))
+                            .onFailure().recoverWithItem(ctx.<String> get("foo")))
+                    .subscribe().withSubscriber(UniAssertSubscriber.create(context));
+
+            sub.assertCompleted().assertItem("bar");
+        }
+
+        @Test
+        void joinAllAndAttachContext() {
+            Context context = Context.of("foo", "bar", "baz", "baz");
+
+            Uni<Integer> a = Uni.createFrom().item(58)
+                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
+
+            Uni<Integer> b = Uni.createFrom().item(63)
+                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
+
+            Uni<Integer> c = Uni.createFrom().item(69)
+                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
+
+            UniAssertSubscriber<String> sub = Uni.join().all(a, b, c).andFailFast()
+                    .attachContext()
+                    .onItem().transform(itemsWithContext -> {
+                        Context ctx = itemsWithContext.context();
+                        return itemsWithContext.get().toString() + "::" + ctx.get("58") + "::" + ctx.get("63") + "::"
+                                + ctx.get("69");
+                    })
+                    .subscribe().withSubscriber(UniAssertSubscriber.create(context));
+
+            sub.assertCompleted().assertItem("[58, 63, 69]::58::63::69");
+        }
+
+        @Test
+        void joinFirstAndAttachContext() {
+            Context context = Context.of("foo", "bar", "baz", "baz");
+
+            Uni<Integer> a = Uni.createFrom().item(58)
+                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
+
+            Uni<Integer> b = Uni.createFrom().item(63)
+                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
+
+            Uni<Integer> c = Uni.createFrom().item(69)
+                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
+
+            UniAssertSubscriber<String> sub = Uni.join().first(a, b, c).withItem()
+                    .attachContext()
+                    .onItem().transform(item -> {
+                        Context ctx = item.context();
+                        return item.get().toString() + "::" + ctx.get("58");
+                    })
+                    .subscribe().withSubscriber(UniAssertSubscriber.create(context));
+
+            sub.assertCompleted().assertItem("58::58");
+        }
+
+        @Test
+        void combineAllAndAttachContext() {
+            Context context = Context.of("foo", "bar", "baz", "baz");
+
+            Uni<Integer> a = Uni.createFrom().item(58)
+                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
+
+            Uni<Integer> b = Uni.createFrom().item(63)
+                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
+
+            Uni<Integer> c = Uni.createFrom().item(69)
+                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
+
+            UniAssertSubscriber<String> sub = Uni.combine().all().unis(a, b, c).asTuple()
+                    .attachContext()
+                    .onItem().transform(itemsWithContext -> {
+                        Context ctx = itemsWithContext.context();
+                        return itemsWithContext.get().toString() + "::" + ctx.get("58") + "::" + ctx.get("63") + "::"
+                                + ctx.get("69");
+                    })
+                    .subscribe().withSubscriber(UniAssertSubscriber.create(context));
+
+            sub.assertCompleted().assertItem("Tuple{item1=58,item2=63,item3=69}::58::63::69");
+        }
+
+        @Test
+        void combineAnyAndAttachContext() {
+            Context context = Context.of("foo", "bar", "baz", "baz");
+
+            Uni<Integer> a = Uni.createFrom().item(58)
+                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
+
+            Uni<Integer> b = Uni.createFrom().item(63)
+                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
+
+            Uni<Integer> c = Uni.createFrom().item(69)
+                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
+
+            UniAssertSubscriber<String> sub = Uni.combine().any().of(a, b, c)
+                    .attachContext()
+                    .onItem().transform(item -> {
+                        Context ctx = item.context();
+                        return item.get().toString() + "::" + ctx.get("58");
+                    })
+                    .subscribe().withSubscriber(UniAssertSubscriber.create(context));
+
+            sub.assertCompleted().assertItem("58::58");
+        }
+
+        @Test
+        void memoization() {
+            AtomicBoolean invalidator = new AtomicBoolean(false);
+
+            Context firstContext = Context.of("foo", "bar", "baz", "baz");
+
+            Uni<String> pipeline = Uni.createFrom().item(63)
+                    .withContext((uni, ctx) -> {
+                        ctx.put("abc", 123);
+                        return uni;
+                    })
+                    .onItem().transform(Object::toString)
+                    .memoize().until(invalidator::get);
+
+            UniAssertSubscriber<String> sub = pipeline.subscribe().withSubscriber(UniAssertSubscriber.create(firstContext));
+
+            assertThat(firstContext.contains("abc")).isTrue();
+            assertThat(firstContext.contains("foo")).isTrue();
+            assertThat(firstContext.<Integer> get("abc")).isEqualTo(123);
+            assertThat(firstContext.<String> get("foo")).isEqualTo("bar");
+            sub.assertCompleted().assertItem("63");
+
+            Context secondContext = Context.empty();
+            sub = pipeline.subscribe().withSubscriber(UniAssertSubscriber.create(secondContext));
+
+            sub.assertCompleted().assertItem("63");
+            assertThat(secondContext.isEmpty()).isTrue();
+
+            invalidator.set(true);
+
+            Context thirdContext = Context.empty();
+            sub = pipeline.subscribe().withSubscriber(UniAssertSubscriber.create(thirdContext));
+
+            sub.assertCompleted().assertItem("63");
+            assertThat(thirdContext.<Integer> get("abc")).isEqualTo(123);
+            assertThat(thirdContext.contains("foo")).isFalse();
+        }
+
+        @Test
+        void numberOfCallsToContextMethod() {
+            Context context = Context.of("foo", "bar", "baz", "baz");
+            AtomicInteger counter = new AtomicInteger();
+
+            UniAssertSubscriber<Integer> sub = Uni.createFrom().item(1)
+                    .withContext((uni, ctx) -> uni
+                            .onItem().transform(n -> n + "!")
+                            .onItem().transform(s -> "[" + s + "]"))
+                    .onItem().transform(String::toUpperCase)
+                    .onItem().transform(String::length)
+                    .withContext((uni, ctx) -> uni)
+                    .subscribe().withSubscriber(new UniAssertSubscriber<Integer>() {
+                        @Override
+                        public Context context() {
+                            counter.incrementAndGet();
+                            return context;
+                        }
+                    });
+
+            sub.assertCompleted().assertItem(4);
+            assertThat(counter.get()).isEqualTo(2);
+        }
+
+        @Test
+        void blockingAwait() {
+            Context context = Context.of("foo", "bar", "baz", "baz");
+
+            String res = Uni.createFrom().item(63)
+                    .attachContext()
+                    .onItem().transform(item -> item.get() + "::" + item.context().get("foo"))
+                    .awaitUsing(context).indefinitely();
+
+            assertThat(res).isEqualTo("63::bar");
+        }
+
+        @Test
+        void blockingAwaitOptional() {
+            Context context = Context.of("foo", "bar", "baz", "baz");
+
+            Optional<String> res = Uni.createFrom().item(63)
+                    .attachContext()
+                    .onItem().transform(item -> item.get() + "::" + item.context().get("foo"))
+                    .awaitUsing(context).asOptional().indefinitely();
+
+            assertThat(res)
+                    .isPresent()
+                    .hasValue("63::bar");
+        }
+    }
+
+    @Nested
     @DisplayName("Multi smoke tests (in progress)")
     class MultiInProgress {
 
@@ -163,8 +450,8 @@ class ContextTest {
                         });
                     })
                     .attachContext().onItem().transform(contextAndItem -> {
-                        System.out.println(contextAndItem.item() + " -> " + contextAndItem.context());
-                        return contextAndItem.item();
+                        System.out.println(contextAndItem.get() + " -> " + contextAndItem.context());
+                        return contextAndItem.get();
                     })
                     .subscribe().withSubscriber(AssertSubscriber.create(context, Long.MAX_VALUE));
 
@@ -211,183 +498,11 @@ class ContextTest {
             List<String> list = Multi.createFrom().range(1, 10)
                     .attachContext()
                     .subscribe().asStream(() -> Context.of("foo", "bar", "baz", "baz"))
-                    .map(cai -> cai.item() + " -> " + cai.context().keys())
+                    .map(cai -> cai.get() + " -> " + cai.context().keys())
                     .collect(Collectors.toList());
 
             assertThat(list).hasSize(9).contains("6 -> [foo, baz]");
             System.out.println(list);
-        }
-    }
-
-    @Nested
-    @DisplayName("Uni smoke tests (in progress)")
-    class UniInProgress {
-
-        @Test
-        void smoke1() {
-            Context context = Context.of("abc", 123, "def", true);
-
-            Uni.createFrom().item(58)
-                    .withContext((uni, ctx) -> {
-                        ctx.put("foo", "bar");
-                        return uni;
-                    })
-                    .withContext((uni, ctx) -> uni.onItem()
-                            .transform(n -> n + " :: " + ctx.get("abc") + " :: " + ctx.get("def") + " :: " + ctx.get("foo")))
-                    .subscribe().with(context, System.out::println);
-
-            System.out.println(context);
-        }
-
-        @Test
-        void smoke2() {
-            Context context = Context.of("foo", "bar", "baz", "baz");
-
-            Uni<Integer> a = Uni.createFrom().item(58)
-                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
-
-            Uni<Integer> b = Uni.createFrom().item(63)
-                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
-
-            Uni<Integer> c = Uni.createFrom().item(69)
-                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
-
-            Uni.join().all(a, b, c).andFailFast()
-                    .withContext((uni, ctx) -> uni
-                            .replaceWith(() -> ctx.get("58") + " :: " + ctx.get("63") + " :: " + ctx.get("69")))
-                    .subscribe().with(context, System.out::println);
-
-            System.out.println(context);
-        }
-
-        @Test
-        void smoke3() {
-            Context context = Context.of("foo", "bar", "baz", "baz");
-
-            Uni<Integer> a = Uni.createFrom().item(58)
-                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
-
-            Uni<Integer> b = Uni.createFrom().item(63)
-                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
-
-            Uni<Integer> c = Uni.createFrom().item(69)
-                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
-
-            Uni.join().all(a, b, c).andFailFast()
-                    .attachContext()
-                    .onItem().transform(contextAndItem -> {
-                        Context ctx = contextAndItem.context();
-                        return contextAndItem.item() + " => " + ctx.get("58") + " :: " + ctx.get("63") + " :: " + ctx.get("69");
-                    })
-                    .subscribe().with(context, System.out::println);
-
-            System.out.println(context);
-        }
-
-        @Test
-        void smoke4() {
-            Context context = Context.of("foo", "bar", "baz", "baz");
-
-            UniAssertSubscriber<String> pipeline = Uni.createFrom().item(63)
-                    .withContext((uni, ctx) -> {
-                        ctx.put("abc", 123);
-                        return uni;
-                    })
-                    .onItem().transform(Object::toString)
-                    .subscribe().withSubscriber(UniAssertSubscriber.create(context));
-
-            assertThat(context.contains("abc")).isTrue();
-            assertThat(context.contains("foo")).isTrue();
-            assertThat(context.<Integer> get("abc")).isEqualTo(123);
-            assertThat(context.<String> get("foo")).isEqualTo("bar");
-
-            pipeline.assertCompleted().assertItem("63");
-        }
-
-        @Test
-        void smoke5() {
-            AtomicBoolean invalidator = new AtomicBoolean(false);
-
-            Context firstContext = Context.of("foo", "bar", "baz", "baz");
-
-            Uni<String> pipeline = Uni.createFrom().item(63)
-                    .withContext((uni, ctx) -> {
-                        ctx.put("abc", 123);
-                        return uni;
-                    })
-                    .onItem().transform(Object::toString)
-                    .memoize().until(invalidator::get);
-
-            UniAssertSubscriber<String> sub = pipeline.subscribe().withSubscriber(UniAssertSubscriber.create(firstContext));
-
-            assertThat(firstContext.contains("abc")).isTrue();
-            assertThat(firstContext.contains("foo")).isTrue();
-            assertThat(firstContext.<Integer> get("abc")).isEqualTo(123);
-            assertThat(firstContext.<String> get("foo")).isEqualTo("bar");
-            sub.assertCompleted().assertItem("63");
-
-            Context secondContext = Context.empty();
-            sub = pipeline.subscribe().withSubscriber(UniAssertSubscriber.create(secondContext));
-
-            sub.assertCompleted().assertItem("63");
-            assertThat(secondContext.isEmpty()).isTrue();
-
-            invalidator.set(true);
-
-            Context thirdContext = Context.empty();
-            sub = pipeline.subscribe().withSubscriber(UniAssertSubscriber.create(thirdContext));
-
-            sub.assertCompleted().assertItem("63");
-            assertThat(thirdContext.<Integer> get("abc")).isEqualTo(123);
-            assertThat(thirdContext.contains("foo")).isFalse();
-        }
-
-        @Test
-        void smoke6() {
-            Context context = Context.of("foo", "bar", "baz", "baz");
-
-            Uni<Integer> a = Uni.createFrom().item(58)
-                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
-
-            Uni<Integer> b = Uni.createFrom().item(63)
-                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
-
-            Uni<Integer> c = Uni.createFrom().item(69)
-                    .withContext((uni, ctx) -> uni.onItem().invoke(n -> ctx.put(n.toString(), n)));
-
-            Uni.combine().all().unis(a, b, c).asTuple()
-                    .attachContext()
-                    .onItem().transform(contextAndItem -> {
-                        Context ctx = contextAndItem.context();
-                        return contextAndItem.item() + " => " + ctx.get("58") + " :: " + ctx.get("63") + " :: " + ctx.get("69");
-                    })
-                    .subscribe().with(context, System.out::println);
-
-            System.out.println(context);
-        }
-
-        @Test
-        void smoke7() {
-            Context context = Context.of("foo", "bar", "baz", "baz");
-            AtomicInteger counter = new AtomicInteger();
-
-            UniAssertSubscriber<Integer> sub = Uni.createFrom().item(1)
-                    .withContext((uni, ctx) -> uni
-                            .onItem().transform(n -> n + "!")
-                            .onItem().transform(s -> "[" + s + "]"))
-                    .onItem().transform(String::toUpperCase)
-                    .onItem().transform(String::length)
-                    .withContext((uni, ctx) -> uni)
-                    .subscribe().withSubscriber(new UniAssertSubscriber<Integer>() {
-                        @Override
-                        public Context context() {
-                            counter.incrementAndGet();
-                            return context;
-                        }
-                    });
-
-            sub.assertCompleted().assertItem(4);
-            assertThat(counter.get()).isEqualTo(2);
         }
     }
 }

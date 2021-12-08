@@ -54,7 +54,7 @@ public class UniOrCombination<T> extends UniOperator<Void, T> {
 
         List<CompletableFuture<? super T>> futures = new ArrayList<>();
         challengers.forEach(uni -> {
-            CompletableFuture<? super T> future = uni.subscribe().asCompletionStage();
+            CompletableFuture<? super T> future = uni.subscribe().asCompletionStage(subscriber.context());
             futures.add(future);
         });
 

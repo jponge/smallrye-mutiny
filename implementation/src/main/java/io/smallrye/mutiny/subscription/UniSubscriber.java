@@ -34,6 +34,7 @@ public interface UniSubscriber<T> extends ContextSupport {
     // - UniMemoize
     // - UniDelegatingSubscriber
     // - UniBlockingAwait
+    // - Uni.subscribe().asCompletionStage
 
     // Context context();
     //    default Context context() {

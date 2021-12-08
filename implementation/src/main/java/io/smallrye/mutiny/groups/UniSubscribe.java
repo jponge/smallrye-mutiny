@@ -159,7 +159,12 @@ public class UniSubscribe<T> {
      *         failure. The returned {@link CompletableFuture} can also be used to cancel the computation.
      */
     public CompletableFuture<T> asCompletionStage() {
-        return UniSubscribeToCompletionStage.subscribe(upstream);
+        return asCompletionStage(Context.empty());
+    }
+
+    // TODO
+    public CompletableFuture<T> asCompletionStage(Context context) {
+        return UniSubscribeToCompletionStage.subscribe(upstream, context);
     }
 
 }

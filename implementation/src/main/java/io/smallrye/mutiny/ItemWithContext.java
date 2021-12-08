@@ -17,13 +17,13 @@ public final class ItemWithContext<T> {
         return context;
     }
 
-    public T item() {
+    public T get() {
         return item;
     }
 
     @Override
     public String toString() {
-        return "ContextAndItem{" +
+        return "ItemWithContext{" +
                 "context=" + context +
                 ", item=" + item +
                 '}';
