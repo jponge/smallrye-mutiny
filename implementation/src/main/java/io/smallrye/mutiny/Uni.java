@@ -813,7 +813,7 @@ public interface Uni<T> {
 
     // TODO
     @CheckReturnValue
-    default Uni<ContextAndItem<T>> attachContext() {
-        return this.withContext((uni, ctx) -> uni.onItem().transform(item -> new ContextAndItem<>(ctx, item)));
+    default Uni<ItemWithContext<T>> attachContext() {
+        return this.withContext((uni, ctx) -> uni.onItem().transform(item -> new ItemWithContext<>(ctx, item)));
     }
 }

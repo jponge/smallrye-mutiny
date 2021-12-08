@@ -607,7 +607,7 @@ public interface Multi<T> extends Publisher<T> {
 
     // TODO
     @CheckReturnValue
-    default Multi<ContextAndItem<T>> attachContext() {
-        return this.withContext((multi, ctx) -> multi.onItem().transform(item -> new ContextAndItem<>(ctx, item)));
+    default Multi<ItemWithContext<T>> attachContext() {
+        return this.withContext((multi, ctx) -> multi.onItem().transform(item -> new ItemWithContext<>(ctx, item)));
     }
 }

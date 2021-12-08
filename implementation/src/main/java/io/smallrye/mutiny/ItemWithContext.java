@@ -3,12 +3,12 @@ package io.smallrye.mutiny;
 import java.util.Objects;
 
 // TODO
-public final class ContextAndItem<T> {
+public final class ItemWithContext<T> {
 
     private final Context context;
     private final T item;
 
-    public ContextAndItem(Context context, T item) {
+    public ItemWithContext(Context context, T item) {
         this.context = context;
         this.item = item;
     }
@@ -37,7 +37,7 @@ public final class ContextAndItem<T> {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        ContextAndItem<?> that = (ContextAndItem<?>) o;
+        ItemWithContext<?> that = (ItemWithContext<?>) o;
         return Objects.equals(context, that.context) && Objects.equals(item, that.item);
     }
 
