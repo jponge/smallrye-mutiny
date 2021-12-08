@@ -1,7 +1,10 @@
 package io.smallrye.mutiny;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import io.smallrye.mutiny.helpers.test.AssertSubscriber;
+import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.*;
@@ -10,12 +13,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-
-import io.smallrye.mutiny.helpers.test.AssertSubscriber;
-import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 // TODO
 class ContextTest {
@@ -101,7 +100,7 @@ class ContextTest {
             assertThat(context.contains("bar")).isFalse();
             assertThat(context.isEmpty()).isFalse();
 
-            assertThat(context.<String> get("foo")).isEqualTo("bar");
+            assertThat(context.<String>get("foo")).isEqualTo("bar");
             assertThat(context.getOrElse("bar", () -> "666")).isEqualTo("666");
 
             context.put("bar", 123);
@@ -215,11 +214,11 @@ class ContextTest {
             Context context = Context.of("foo", "bar");
 
             UniAssertSubscriber<String> sub = Uni.createFrom().item(63)
-                    .withContext((uni, ctx) -> uni.onItem().invoke(() -> ctx.put("counter", ctx.<Integer> get("counter") + 1)))
+                    .withContext((uni, ctx) -> uni.onItem().invoke(() -> ctx.put("counter", ctx.<Integer>get("counter") + 1)))
                     .withContext((uni, ctx) -> uni
-                            .onItem().invoke(() -> ctx.put("counter", ctx.<Integer> get("counter") + 1)))
+                            .onItem().invoke(() -> ctx.put("counter", ctx.<Integer>get("counter") + 1)))
                     .withContext((uni, ctx) -> uni
-                            .onItem().invoke(() -> ctx.put("counter", ctx.<Integer> get("counter") + 1)))
+                            .onItem().invoke(() -> ctx.put("counter", ctx.<Integer>get("counter") + 1)))
                     .withContext((uni, ctx) -> uni
                             .onItem().transform(Object::toString)
                             .onItem().transform(s -> s + "::" + ctx.get("counter")))
@@ -230,7 +229,7 @@ class ContextTest {
                     .subscribe().withSubscriber(UniAssertSubscriber.create(context));
 
             sub.assertCompleted().assertItem("63::3");
-            assertThat(context.<Integer> get("counter")).isEqualTo(3);
+            assertThat(context.<Integer>get("counter")).isEqualTo(3);
         }
 
         @Test
@@ -240,7 +239,7 @@ class ContextTest {
             UniAssertSubscriber<String> sub = Uni.createFrom().failure(new IOException("boom"))
                     .withContext((uni, ctx) -> uni
                             .onItem().transformToUni(obj -> Uni.createFrom().item("Yolo"))
-                            .onFailure().recoverWithItem(ctx.<String> get("foo")))
+                            .onFailure().recoverWithItem(ctx.<String>get("foo")))
                     .subscribe().withSubscriber(UniAssertSubscriber.create(context));
 
             sub.assertCompleted().assertItem("bar");
@@ -362,8 +361,8 @@ class ContextTest {
 
             assertThat(firstContext.contains("abc")).isTrue();
             assertThat(firstContext.contains("foo")).isTrue();
-            assertThat(firstContext.<Integer> get("abc")).isEqualTo(123);
-            assertThat(firstContext.<String> get("foo")).isEqualTo("bar");
+            assertThat(firstContext.<Integer>get("abc")).isEqualTo(123);
+            assertThat(firstContext.<String>get("foo")).isEqualTo("bar");
             sub.assertCompleted().assertItem("63");
 
             Context secondContext = Context.empty();
@@ -378,7 +377,7 @@ class ContextTest {
             sub = pipeline.subscribe().withSubscriber(UniAssertSubscriber.create(thirdContext));
 
             sub.assertCompleted().assertItem("63");
-            assertThat(thirdContext.<Integer> get("abc")).isEqualTo(123);
+            assertThat(thirdContext.<Integer>get("abc")).isEqualTo(123);
             assertThat(thirdContext.contains("foo")).isFalse();
         }
 
@@ -430,6 +429,41 @@ class ContextTest {
             assertThat(res)
                     .isPresent()
                     .hasValue("63::bar");
+        }
+    }
+
+    @Nested
+    @DisplayName("{Uni,Multi} <-> {Multi,Uni} bridges")
+    class UniMultiBridges {
+
+        @Test
+        void uniToUni() {
+            Context context = Context.of("foo", "bar");
+
+            UniAssertSubscriber<String> sub = Uni.createFrom().item("abc")
+                    .withContext((uni, ctx) -> uni
+                            .onItem().transformToUni(s -> Uni.createFrom().item(s + "::" + ctx.get("foo"))))
+                    .onFailure().recoverWithItem(() -> "woops")
+                    .subscribe().withSubscriber(UniAssertSubscriber.create(context));
+
+            sub.assertCompleted().assertItem("abc::bar");
+        }
+
+        @Test
+        void uniToMulti() {
+            Context context = Context.of("foo", "bar");
+
+            AssertSubscriber<String> sub = Uni.createFrom().item("abc")
+                    .withContext((uni, ctx) -> uni
+                            .onItem().transformToUni(s -> Uni.createFrom().item(s + "::" + ctx.get("foo"))))
+                    .toMulti()
+                    .onFailure().recoverWithItem(() -> "woops")
+                    .subscribe().withSubscriber(AssertSubscriber.create(context, 10));
+
+            List<String> items = sub.assertCompleted().getItems();
+            assertThat(items)
+                    .hasSize(1)
+                    .contains("abc::bar");
         }
     }
 
