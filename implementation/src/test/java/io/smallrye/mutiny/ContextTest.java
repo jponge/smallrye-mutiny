@@ -9,11 +9,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import io.smallrye.mutiny.helpers.BlockingIterable;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 
@@ -533,6 +535,127 @@ class ContextTest {
                     .subscribe().withSubscriber(UniAssertSubscriber.create(context));
 
             sub.assertCompleted().assertItem("1@bar::bar");
+        }
+    }
+
+    @Nested
+    @DisplayName("Uni with context")
+    class MultiAndContext {
+
+        @Test
+        void noContextShallBeEmpty() {
+            AssertSubscriber<String> sub = Multi.createFrom().items(58, 63, 69)
+                    .withContext((multi, ctx) -> multi.onItem().transform(n -> n + "::" + ctx.getOrElse("foo", () -> "yolo")))
+                    .subscribe().withSubscriber(AssertSubscriber.create(10L));
+
+            sub.assertCompleted();
+            assertThat(sub.getItems())
+                    .hasSize(3)
+                    .containsExactly("58::yolo", "63::yolo", "69::yolo");
+        }
+
+        @Test
+        void transformWithContext() {
+            Context context = Context.of("foo", "bar");
+
+            AssertSubscriber<String> sub = Multi.createFrom().items(58, 63, 69)
+                    .withContext((multi, ctx) -> multi.onItem().transform(n -> n + "::" + ctx.getOrElse("foo", () -> "yolo")))
+                    .subscribe().withSubscriber(AssertSubscriber.create(context, 10L));
+
+            sub.assertCompleted();
+            assertThat(sub.getItems())
+                    .hasSize(3)
+                    .containsExactly("58::bar", "63::bar", "69::bar");
+        }
+
+        @Test
+        void withContextRejectsNullBuilder() {
+            assertThatThrownBy(() -> Multi.createFrom().item(1).withContext(null))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("`builder` must not be `null`");
+        }
+
+        @Test
+        void withContextRejectsNullReturningBuilder() {
+            AssertSubscriber<Object> sub = Multi.createFrom().items(58, 63, 69)
+                    .withContext((multi, ctx) -> null)
+                    .subscribe().withSubscriber(AssertSubscriber.create(10L));
+
+            sub.assertFailedWith(NullPointerException.class, "The builder function returned null");
+        }
+
+        @Test
+        void withContextRejectsThrowingBuilder() {
+            AssertSubscriber<Object> sub = Multi.createFrom().items(58, 63, 69)
+                    .withContext((multi, ctx) -> {
+                        throw new RuntimeException("boom");
+                    })
+                    .subscribe().withSubscriber(AssertSubscriber.create(10L));
+
+            sub.assertFailedWith(RuntimeException.class, "boom");
+        }
+
+        @Test
+        void callbacksPropagateContext() {
+            Context context = Context.of("foo", "bar");
+            ArrayList<String> list = new ArrayList<>();
+
+            Multi.createFrom().items(58, 63, 69)
+                    .withContext((multi, ctx) -> multi.onItem().transform(n -> n + "::" + ctx.getOrElse("foo", () -> "yolo")))
+                    .subscribe().with(context, list::add);
+
+            assertThat(list)
+                    .hasSize(3)
+                    .containsExactly("58::bar", "63::bar", "69::bar");
+        }
+
+        @Test
+        void callbacksWithoutContextPropagateEmptyContext() {
+            ArrayList<String> list = new ArrayList<>();
+
+            Multi.createFrom().items(58, 63, 69)
+                    .withContext((multi, ctx) -> multi.onItem().transform(n -> n + "::" + ctx.getOrElse("foo", () -> "yolo")))
+                    .subscribe().with(list::add);
+
+            assertThat(list)
+                    .hasSize(3)
+                    .containsExactly("58::yolo", "63::yolo", "69::yolo");
+        }
+
+        @Test
+        void asIterableWithoutContext() {
+            BlockingIterable<String> iter = Multi.createFrom().items(58, 63, 69)
+                    .withContext((multi, ctx) -> multi.onItem().transform(n -> n + "::" + ctx.getOrElse("foo", () -> "yolo")))
+                    .subscribe().asIterable();
+
+            assertThat(iter).containsExactly("58::yolo", "63::yolo", "69::yolo");
+        }
+
+        @Test
+        void asIterableWithContext() {
+            BlockingIterable<String> iter = Multi.createFrom().items(58, 63, 69)
+                    .withContext((multi, ctx) -> multi.onItem().transform(n -> n + "::" + ctx.getOrElse("foo", () -> "yolo")))
+                    .subscribe().asIterable(() -> Context.of("foo", "bar"));
+
+            assertThat(iter).containsExactly("58::bar", "63::bar", "69::bar");
+        }
+
+        @Test
+        void asStreamWithoutContext() {
+            Stream<String> stream = Multi.createFrom().items(58, 63, 69)
+                    .withContext((multi, ctx) -> multi.onItem().transform(n -> n + "::" + ctx.getOrElse("foo", () -> "yolo")))
+                    .subscribe().asStream();
+
+            assertThat(stream).containsExactly("58::yolo", "63::yolo", "69::yolo");
+        }
+
+        @Test
+        void asStreamWithContext() {
+            Stream<String> stream = Multi.createFrom().items(58, 63, 69)
+                    .withContext((multi, ctx) -> multi.onItem().transform(n -> n + "::" + ctx.getOrElse("foo", () -> "yolo")))
+                    .subscribe().asStream(() -> Context.of("foo", "bar"));
+
+            assertThat(stream).containsExactly("58::bar", "63::bar", "69::bar");
         }
     }
 

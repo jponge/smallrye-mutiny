@@ -426,7 +426,7 @@ public class MultiSubscribe<T> {
      */
     @CheckReturnValue
     public BlockingIterable<T> asIterable() {
-        return asIterable(256, () -> new ArrayBlockingQueue<>(256));
+        return asIterable(() -> new ArrayBlockingQueue<>(256), 256);
     }
 
     /**
@@ -435,31 +435,31 @@ public class MultiSubscribe<T> {
      */
     @CheckReturnValue
     public BlockingIterable<T> asIterable(Supplier<Context> contextSupplier) {
-        return asIterable(256, () -> new ArrayBlockingQueue<>(256), contextSupplier);
+        return asIterable(contextSupplier, 256, () -> new ArrayBlockingQueue<>(256));
     }
 
     /**
      * Consumes the upstream {@link Multi} as an iterable.
      *
-     * @param batchSize the number of elements stored in the queue
      * @param supplier the supplier of queue used internally, must not be {@code null}, must not return {@code null}
+     * @param batchSize the number of elements stored in the queue
      * @return a blocking iterable used to consume the items emitted by the upstream {@link Multi}.
      */
     @CheckReturnValue
-    public BlockingIterable<T> asIterable(int batchSize, Supplier<Queue<T>> supplier) {
-        return asIterable(batchSize, supplier, Context::empty);
+    public BlockingIterable<T> asIterable(Supplier<Queue<T>> supplier, int batchSize) {
+        return asIterable(Context::empty, batchSize, supplier);
     }
 
     /**
      * Consumes the upstream {@link Multi} as an iterable.
      *
+     * @param contextSupplier the context supplier, must not be {@code null}, must not return {@code null}
      * @param batchSize the number of elements stored in the queue
      * @param queueSupplier the supplier of queue used internally, must not be {@code null}, must not return {@code null}
-     * @param contextSupplier the context supplier, must not be {@code null}, must not return {@code null}
      * @return a blocking iterable used to consume the items emitted by the upstream {@link Multi}.
      */
     @CheckReturnValue
-    public BlockingIterable<T> asIterable(int batchSize, Supplier<Queue<T>> queueSupplier, Supplier<Context> contextSupplier) {
+    public BlockingIterable<T> asIterable(Supplier<Context> contextSupplier, int batchSize, Supplier<Queue<T>> queueSupplier) {
         // No interception of the queue supplier.
         return new BlockingIterable<>(upstream, batchSize, queueSupplier, contextSupplier);
     }
@@ -491,7 +491,7 @@ public class MultiSubscribe<T> {
     @CheckReturnValue
     public Stream<T> asStream(int batchSize, Supplier<Queue<T>> supplier) {
         // No interception of the queue supplier.
-        return asIterable(batchSize, supplier).stream();
+        return asIterable(supplier, batchSize).stream();
     }
 
     /**
@@ -505,7 +505,7 @@ public class MultiSubscribe<T> {
     @CheckReturnValue
     public Stream<T> asStream(int batchSize, Supplier<Queue<T>> queueSupplier, Supplier<Context> contextSupplier) {
         // No interception of the queue supplier.
-        return asIterable(batchSize, queueSupplier, contextSupplier).stream();
+        return asIterable(contextSupplier, batchSize, queueSupplier).stream();
     }
 
 }
