@@ -4,7 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -799,6 +802,36 @@ class ContextTest {
             assertThat(sub.getItems())
                     .hasSize(3)
                     .containsExactly("58::bar", "63::bar", "69::bar");
+        }
+
+        @Test
+        void emitAndSubscribeOn() {
+            Context context = Context.empty();
+            ExecutorService pool = Executors.newFixedThreadPool(4);
+
+            AssertSubscriber<String> sub = Multi.createFrom().range(1, 100)
+                    .withContext((multi, ctx) -> {
+                        ctx.put("foo", "bar");
+                        return multi.onItem().transform(n -> {
+                            String key = n.toString();
+                            context.put(key, n + "::" + ctx.get("foo"));
+                            return key;
+                        });
+                    })
+                    .emitOn(pool)
+                    .runSubscriptionOn(pool)
+                    .subscribe().withSubscriber(AssertSubscriber.create(context, Long.MAX_VALUE));
+
+            sub.awaitCompletion(Duration.ofSeconds(5));
+
+            assertThat(sub.getItems())
+                    .hasSize(99)
+                    .contains("63", "99", "58", "69");
+
+            assertThat(context.keys()).contains("63", "99", "58", "69");
+            assertThat(context.<String> get("63")).isEqualTo("63::bar");
+
+            pool.shutdown();
         }
     }
 }
