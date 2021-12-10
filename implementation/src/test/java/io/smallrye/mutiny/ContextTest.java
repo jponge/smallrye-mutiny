@@ -8,7 +8,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
@@ -657,78 +656,149 @@ class ContextTest {
 
             assertThat(stream).containsExactly("58::bar", "63::bar", "69::bar");
         }
-    }
-
-    @Nested
-    @DisplayName("Multi smoke tests (in progress)")
-    class MultiInProgress {
 
         @Test
-        void smoke1() {
-            Context context = Context.of("foo", "bar", "baz", "baz");
+        void mergeStreamsAndManipulateContext() {
+            Context context = Context.of("foo", "bar", "counter", 0);
 
-            AssertSubscriber<String> sub = Multi.createFrom().range(1, 10)
-                    .withContext((multi, ctx) -> {
-                        System.out.println(ctx);
-                        return multi.onItem().transform(n -> {
-                            ctx.put("count", ctx.getOrElse("count", () -> 0) + 1);
-                            return n + " :: " + ctx.getOrElse("foo", () -> "!!!") + " @" + ctx.get("count");
-                        });
-                    })
-                    .attachContext().onItem().transform(contextAndItem -> {
-                        System.out.println(contextAndItem.get() + " -> " + contextAndItem.context());
-                        return contextAndItem.get();
-                    })
+            Multi<String> s1 = Multi.createFrom().range(0, 5)
+                    .withContext((multi, ctx) -> multi.onItem().transform(n -> n + "::" + ctx.getOrElse("foo", () -> "yolo")));
+
+            Multi<String> s2 = Multi.createFrom().range(0, 5)
+                    .withContext((multi, ctx) -> multi.onItem().transform(n -> n + "::" + ctx.getOrElse("foo", () -> "yolo")));
+
+            AssertSubscriber<String> sub = Multi.createBy().combining().streams(s1, s2).asTuple()
+                    .withContext((multi, ctx) -> multi.onItem().transform(t -> t.getItem1() + "|" + t.getItem2()))
+                    .withContext(
+                            (multi, ctx) -> multi.onItem().invoke(() -> ctx.put("counter", ctx.<Integer> get("counter") + 1)))
+                    .withContext((multi, ctx) -> multi.onItem().transformToUniAndConcatenate(s -> Uni
+                            .createFrom().item(s + "@" + ctx.get("counter"))
+                            .withContext((uni, nestedCtx) -> uni.onItem()
+                                    .transform(str -> "[" + ctx.get("counter") + " -> " + str + "]"))))
                     .subscribe().withSubscriber(AssertSubscriber.create(context, Long.MAX_VALUE));
 
-            System.out.println(sub.getItems());
             sub.assertCompleted();
-            assertThat(sub.getItems()).contains("2 :: bar @2", "7 :: bar @7");
+            assertThat(sub.getItems())
+                    .hasSize(5)
+                    .startsWith("[1 -> 0::bar|0::bar@1]")
+                    .endsWith("[5 -> 4::bar|4::bar@5]");
         }
 
         @Test
-        void smoke2() {
-            Context context = Context.of("foo", "bar", "baz", "baz");
+        void multiByRepeating() {
+            Context context = Context.of("foo", "bar", "counter", 0);
 
-            AssertSubscriber<String> sub = Multi.createFrom().range(1, 10)
-                    .select().where(n -> n % 2 == 0)
-                    .onItem().transform(n -> n * 10)
-                    .withContext((multi, ctx) -> multi.onItem().transformToUniAndMerge(n -> {
-                        ctx.put("count", ctx.getOrElse("count", () -> 0) + 1);
-                        return Uni.createFrom().item(n).withContext((uni, ctx2) -> uni.onItem()
-                                .transform(m -> m + " :: " + ctx2.getOrElse("foo", () -> "!!!") + " @" + ctx2.get("count")));
+            AssertSubscriber<String> sub = Multi.createBy().repeating().uni(() -> Uni
+                    .createFrom().item(63)
+                    .withContext((uni, ctx) -> uni.onItem().transform(n -> {
+                        ctx.put("counter", ctx.<Integer> get("counter") + 1);
+                        return n + "::" + ctx.get("foo") + "@" + ctx.get("counter");
+                    })))
+                    .atMost(5)
+                    .subscribe().withSubscriber(AssertSubscriber.create(context, Long.MAX_VALUE));
+
+            sub.assertCompleted();
+            assertThat(sub.getItems())
+                    .hasSize(5)
+                    .containsExactly("63::bar@1", "63::bar@2", "63::bar@3", "63::bar@4", "63::bar@5");
+        }
+
+        @Test
+        void multiRetry() {
+            Context context = Context.of("foo", "bar", "counter", 0);
+
+            AssertSubscriber<String> sub = Multi.createFrom().item("foo=")
+                    .withContext((multi, ctx) -> multi.onItem().transform(s -> {
+                        ctx.put("counter", ctx.<Integer> get("counter") + 1);
+                        return s + ctx.get("foo") + "@" + ctx.get("counter");
                     }))
-                    .subscribe().withSubscriber(AssertSubscriber.create(context, Long.MAX_VALUE));
-
-            System.out.println(sub.getItems());
-            sub.assertCompleted();
-            assertThat(sub.getItems()).contains("20 :: bar @1", "80 :: bar @4");
-        }
-
-        @Test
-        void smoke3() {
-            Context context = Context.of("foo", "bar", "baz", "baz");
-
-            AssertSubscriber<String> sub = Multi.createFrom().range(1, 10)
-                    .withContext((multi, ctx) -> multi.onItem().transformToMultiAndMerge(
-                            n -> Multi.createFrom().items(n.toString(), ctx.get("foo"), ctx.get("baz"))))
+                    .onItem().failWith(s -> new IOException(s))
                     .onFailure().retry().atMost(5)
                     .subscribe().withSubscriber(AssertSubscriber.create(context, Long.MAX_VALUE));
 
-            System.out.println(sub.getItems());
-            sub.assertCompleted();
+            sub.assertFailedWith(IOException.class, "foo=bar@6");
         }
 
         @Test
-        void smoke4() {
-            List<String> list = Multi.createFrom().range(1, 10)
-                    .attachContext()
-                    .subscribe().asStream(() -> Context.of("foo", "bar", "baz", "baz"))
-                    .map(cai -> cai.get() + " -> " + cai.context().keys())
-                    .collect(Collectors.toList());
+        void safeSubscriber() {
+            Context context = Context.of("foo", "bar");
 
-            assertThat(list).hasSize(9).contains("6 -> [foo, baz]");
-            System.out.println(list);
+            Multi<String> someMulti = Multi.createFrom().items(58, 63, 69)
+                    .withContext((multi, ctx) -> multi.onItem().transform(n -> n + "::" + ctx.getOrElse("foo", () -> "yolo")));
+
+            AssertSubscriber<String> sub = Multi.createFrom().safePublisher(someMulti)
+                    .subscribe().withSubscriber(AssertSubscriber.create(context, Long.MAX_VALUE));
+
+            sub.assertCompleted();
+            assertThat(sub.getItems())
+                    .hasSize(3)
+                    .containsExactly("58::bar", "63::bar", "69::bar");
+        }
+
+        @Test
+        void broadcast() {
+            Multi<String> someMulti = Multi.createFrom().items(58, 63, 69)
+                    .withContext((multi, ctx) -> multi.onItem().transform(n -> n + "::" + ctx.getOrElse("foo", () -> "yolo")))
+                    .broadcast().toAllSubscribers();
+
+            AssertSubscriber<String> sub1 = someMulti.subscribe()
+                    .withSubscriber(AssertSubscriber.create(Context.of("foo", "bar")));
+            AssertSubscriber<String> sub2 = someMulti.subscribe().withSubscriber(AssertSubscriber.create());
+
+            sub1.request(1L);
+            sub2.request(1L);
+            sub2.request(1L);
+            sub2.request(1L);
+            sub1.request(1L);
+            sub1.request(1L);
+            sub2.request(1L);
+
+            sub1.assertCompleted();
+            sub2.assertCompleted();
+
+            assertThat(sub1.getItems())
+                    .hasSize(3)
+                    .containsExactly("58::bar", "63::bar", "69::bar");
+
+            assertThat(sub2.getItems())
+                    .hasSize(3)
+                    .containsExactly("58::bar", "63::bar", "69::bar");
+        }
+
+        @Test
+        void cache() {
+            Multi<String> someMulti = Multi.createFrom().items(58, 63, 69)
+                    .withContext((multi, ctx) -> multi.onItem().transform(n -> n + "::" + ctx.getOrElse("foo", () -> "yolo")))
+                    .cache();
+
+            AssertSubscriber<String> sub1 = someMulti.subscribe()
+                    .withSubscriber(AssertSubscriber.create(Context.of("foo", "bar"), Long.MAX_VALUE));
+            sub1.assertCompleted();
+            assertThat(sub1.getItems())
+                    .hasSize(3)
+                    .containsExactly("58::bar", "63::bar", "69::bar");
+
+            AssertSubscriber<String> sub2 = someMulti.subscribe()
+                    .withSubscriber(AssertSubscriber.create(Context.of("foo", "baz"), Long.MAX_VALUE));
+            sub2.assertCompleted();
+            assertThat(sub2.getItems())
+                    .hasSize(3)
+                    .containsExactly("58::bar", "63::bar", "69::bar");
+        }
+
+        @Test
+        void attachContext() {
+            Context context = Context.of("foo", "bar");
+
+            AssertSubscriber<String> sub = Multi.createFrom().items(58, 63, 69)
+                    .attachContext()
+                    .onItem().transform(n -> n.get() + "::" + n.context().getOrElse("foo", () -> "yolo"))
+                    .subscribe().withSubscriber(AssertSubscriber.create(context, Long.MAX_VALUE));
+
+            sub.assertCompleted();
+            assertThat(sub.getItems())
+                    .hasSize(3)
+                    .containsExactly("58::bar", "63::bar", "69::bar");
         }
     }
 }
