@@ -167,7 +167,7 @@ public abstract class AbstractMulti<T> implements Multi<T> {
 
     @Override
     public Multi<T> log(String identifier) {
-        return new MultiLogger<>(this, identifier);
+        return Infrastructure.onMultiCreation(new MultiLogger<>(this, identifier));
     }
 
     @Override
@@ -177,6 +177,6 @@ public abstract class AbstractMulti<T> implements Multi<T> {
 
     @Override
     public <R> Multi<R> withContext(BiFunction<Multi<T>, Context, Multi<R>> builder) {
-        return new MultiWithContext<>(this, nonNull(builder, "builder"));
+        return Infrastructure.onMultiCreation(new MultiWithContext<>(this, nonNull(builder, "builder")));
     }
 }

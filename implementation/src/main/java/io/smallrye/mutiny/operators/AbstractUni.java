@@ -143,7 +143,7 @@ public abstract class AbstractUni<T> implements Uni<T> {
 
     @Override
     public Uni<T> log(String identifier) {
-        return new UniLogger<>(this, identifier);
+        return Infrastructure.onUniCreation(new UniLogger<>(this, identifier));
     }
 
     @Override
@@ -153,6 +153,6 @@ public abstract class AbstractUni<T> implements Uni<T> {
 
     @Override
     public <R> Uni<R> withContext(BiFunction<Uni<T>, Context, Uni<R>> builder) {
-        return new UniWithContext<>(this, nonNull(builder, "builder"));
+        return Infrastructure.onUniCreation(new UniWithContext<>(this, nonNull(builder, "builder")));
     }
 }
