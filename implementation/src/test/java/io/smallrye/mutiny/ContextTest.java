@@ -16,6 +16,8 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import io.smallrye.mutiny.helpers.BlockingIterable;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
@@ -939,6 +941,61 @@ class ContextTest {
                     .hasSize(3)
                     .anyMatch(item -> item.get().equals("63"))
                     .allMatch(item -> item.context().get("foo").equals("bar"));
+        }
+
+        @Test
+        void alienSubscriber() {
+            AtomicBoolean completed = new AtomicBoolean(false);
+            AtomicReference<Throwable> error = new AtomicReference<>();
+            ArrayList<String> items = new ArrayList<>();
+
+            Multi.createFrom().items(58, 63, 69)
+                    .attachContext()
+                    .onItem().transform(n -> n.get() + "::" + n.context().getOrElse("foo", () -> "yolo"))
+                    .subscribe().withSubscriber(new Subscriber<String>() {
+                        @Override
+                        public void onSubscribe(Subscription s) {
+                            s.request(Long.MAX_VALUE);
+                        }
+
+                        @Override
+                        public void onNext(String item) {
+                            items.add(item);
+                        }
+
+                        @Override
+                        public void onError(Throwable t) {
+                            error.set(t);
+                        }
+
+                        @Override
+                        public void onComplete() {
+                            completed.set(true);
+                        }
+                    });
+
+            assertThat(completed).isTrue();
+            assertThat(error).hasValue(null);
+            assertThat(items)
+                    .hasSize(3)
+                    .containsExactly("58::yolo", "63::yolo", "69::yolo");
+        }
+
+        @Test
+        void timeGrouping() {
+            Context context = Context.of("foo", "bar");
+
+            AssertSubscriber<List<String>> sub = Multi.createFrom().items(58, 63, 69)
+                    .attachContext()
+                    .onItem().transform(n -> n.get() + "::" + n.context().getOrElse("foo", () -> "yolo"))
+                    .group().intoLists().every(Duration.ofSeconds(5L))
+                    .subscribe().withSubscriber(AssertSubscriber.create(context, Long.MAX_VALUE));
+
+            sub.awaitCompletion();
+            assertThat(sub.getItems()).hasSize(1);
+            assertThat(sub.getItems().get(0))
+                    .hasSize(3)
+                    .containsExactly("58::bar", "63::bar", "69::bar");
         }
     }
 }
