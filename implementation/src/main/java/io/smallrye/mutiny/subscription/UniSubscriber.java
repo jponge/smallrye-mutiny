@@ -24,24 +24,6 @@ import io.smallrye.mutiny.groups.UniSubscribe;
  */
 public interface UniSubscriber<T> extends ContextSupport {
 
-    // TODO test coverage
-    // - UniJoin first/all
-    // - UniAndCombination
-    // - UniTransformToMulti
-    // - UniToMultiPublisher
-    // - UniSerializedPublisher
-    // - UniAssertSubscriber <-- make it nice for testing!
-    // - UniMemoize
-    // - UniDelegatingSubscriber
-    // - UniBlockingAwait
-    // - Uni.subscribe().asCompletionStage
-
-    // Context context();
-    //    default Context context() {
-    //        // TODO
-    //        throw new UnsupportedOperationException("Marker exception / default method to be removed later");
-    //    }
-
     /**
      * Event handler called once the subscribed {@link Uni} has taken into account the subscription. The {@link Uni}
      * have triggered the computation of the item.

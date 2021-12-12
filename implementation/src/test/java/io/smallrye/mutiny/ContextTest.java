@@ -24,7 +24,6 @@ import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import io.smallrye.mutiny.subscription.UniDelegatingSubscriber;
 
-// TODO
 class ContextTest {
 
     @Nested

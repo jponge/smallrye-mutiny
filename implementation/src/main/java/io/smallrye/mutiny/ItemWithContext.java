@@ -2,21 +2,49 @@ package io.smallrye.mutiny;
 
 import java.util.Objects;
 
-// TODO
+import io.smallrye.common.annotation.Experimental;
+
+/**
+ * Models an item flowing along a Mutiny pipeline with its subscriber context attached.
+ *
+ * @param <T> the iten type
+ * @see Uni#attachContext()
+ * @see Multi#attachContext()
+ */
+@Experimental("Context support is a new experimental API introduced in Mutiny 1.3.0")
 public final class ItemWithContext<T> {
 
     private final Context context;
     private final T item;
 
+    /**
+     * Creates a new item with a context.
+     * <p>
+     * Since instances are being created by Mutiny operators there is no {@code null} check on parameters
+     * for performance reasons.
+     *
+     * @param context the context
+     * @param item the item
+     */
     public ItemWithContext(Context context, T item) {
         this.context = context;
         this.item = item;
     }
 
+    /**
+     * Gives the context.
+     *
+     * @return the context
+     */
     public Context context() {
         return context;
     }
 
+    /**
+     * Gives the item.
+     *
+     * @return the item
+     */
     public T get() {
         return item;
     }

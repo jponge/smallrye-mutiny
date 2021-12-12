@@ -13,6 +13,7 @@ import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
 import io.smallrye.common.annotation.CheckReturnValue;
+import io.smallrye.common.annotation.Experimental;
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.BlockingIterable;
@@ -124,13 +125,14 @@ public class MultiSubscribe<T> {
      * Each {@link Subscription} will work for only a single {@link Subscriber}. A {@link Subscriber} should
      * only subscribe once to a single {@link Multi}.
      *
-     * @param context TODO
+     * @param context the context, must not be {@code null}
      * @param onSubscription the callback receiving the subscription, must not be {@code null}
      * @param onItem the callback receiving the items, must not be {@code null}
      * @param onFailure the callback receiving the failure, must not be {@code null}
      * @param onComplete the callback receiving the completion event, must not be {@code null}
      * @return the cancellable object to cancel the subscription
      */
+    @Experimental("Context support is a new experimental API introduced in Mutiny 1.3.0")
     public Cancellable with(
             Context context,
             Consumer<? super Subscription> onSubscription,
@@ -196,12 +198,13 @@ public class MultiSubscribe<T> {
      * Each {@link Subscription} will work for only a single {@link Subscriber}. A {@link Subscriber} should
      * only subscribe once to a single {@link Multi}.
      *
-     * @param context TODO
+     * @param context the context, must not be {@code null}
      * @param onItem the callback receiving the items, must not be {@code null}
      * @param onFailure the callback receiving the failure, must not be {@code null}
      * @param onComplete the callback receiving the completion event, must not be {@code null}
      * @return the cancellable object to cancel the subscription
      */
+    @Experimental("Context support is a new experimental API introduced in Mutiny 1.3.0")
     public Cancellable with(
             Context context,
             Consumer<? super T> onItem,
@@ -273,11 +276,12 @@ public class MultiSubscribe<T> {
      * *
      * <p>
      *
-     * @param context TODO
+     * @param context the context, must not be {@code null}
      * @param onItem the callback receiving the items, must not be {@code null}
      * @param onFailure the callback receiving the failure, must not be {@code null}
      * @return the cancellable object to cancel the subscription
      */
+    @Experimental("Context support is a new experimental API introduced in Mutiny 1.3.0")
     public Cancellable with(
             Context context,
             Consumer<? super T> onItem,
@@ -334,10 +338,11 @@ public class MultiSubscribe<T> {
      * *
      * <p>
      *
-     * @param context TODO
+     * @param context the context, must not be {@code null}
      * @param onItem the callback receiving the items, must not be {@code null}
      * @return the cancellable object to cancel the subscription
      */
+    @Experimental("Context support is a new experimental API introduced in Mutiny 1.3.0")
     public Cancellable with(Context context, Consumer<? super T> onItem) {
         Consumer<? super T> actual = Infrastructure.decorate(nonNull(onItem, "onItem"));
         CancellableSubscriber<? super T> subscriber = Subscribers.from(
@@ -399,11 +404,12 @@ public class MultiSubscribe<T> {
      * Each {@link Subscription} will work for only a single {@link Subscriber}. A {@link Subscriber} should
      * only subscribe once to a single {@link Multi}.
      *
-     * @param context TODO
+     * @param context the context, must not be {@code null}
      * @param onItem the callback receiving the items, must not be {@code null}
      * @param onComplete the callback receiving the completion event, must not be {@code null}
      * @return the cancellable object to cancel the subscription
      */
+    @Experimental("Context support is a new experimental API introduced in Mutiny 1.3.0")
     public Cancellable with(
             Context context,
             Consumer<? super T> onItem,
@@ -419,8 +425,6 @@ public class MultiSubscribe<T> {
         return withSubscriber(subscriber);
     }
 
-    // TODO Shall asIterable / asStream support Supplier<Context>? (because iterables etc)
-
     /**
      * @return a blocking iterable used to consume the items emitted by the upstream {@link Multi}.
      */
@@ -434,6 +438,7 @@ public class MultiSubscribe<T> {
      * @return a blocking iterable used to consume the items emitted by the upstream {@link Multi}.
      */
     @CheckReturnValue
+    @Experimental("Context support is a new experimental API introduced in Mutiny 1.3.0")
     public BlockingIterable<T> asIterable(Supplier<Context> contextSupplier) {
         return asIterable(contextSupplier, 256, () -> new ArrayBlockingQueue<>(256));
     }
@@ -459,6 +464,7 @@ public class MultiSubscribe<T> {
      * @return a blocking iterable used to consume the items emitted by the upstream {@link Multi}.
      */
     @CheckReturnValue
+    @Experimental("Context support is a new experimental API introduced in Mutiny 1.3.0")
     public BlockingIterable<T> asIterable(Supplier<Context> contextSupplier, int batchSize, Supplier<Queue<T>> queueSupplier) {
         // No interception of the queue supplier.
         return new BlockingIterable<>(upstream, batchSize, queueSupplier, contextSupplier);
@@ -477,6 +483,7 @@ public class MultiSubscribe<T> {
      * @return a <strong>blocking</strong> stream to consume the items from the upstream {@link Multi}.
      */
     @CheckReturnValue
+    @Experimental("Context support is a new experimental API introduced in Mutiny 1.3.0")
     public Stream<T> asStream(Supplier<Context> contextSupplier) {
         return asStream(256, () -> new ArrayBlockingQueue<>(256), contextSupplier);
     }
@@ -503,6 +510,7 @@ public class MultiSubscribe<T> {
      * @return a blocking stream used to consume the items from {@link Multi}
      */
     @CheckReturnValue
+    @Experimental("Context support is a new experimental API introduced in Mutiny 1.3.0")
     public Stream<T> asStream(int batchSize, Supplier<Queue<T>> queueSupplier, Supplier<Context> contextSupplier) {
         // No interception of the queue supplier.
         return asIterable(contextSupplier, batchSize, queueSupplier).stream();
