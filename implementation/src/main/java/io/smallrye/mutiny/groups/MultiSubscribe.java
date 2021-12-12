@@ -485,7 +485,7 @@ public class MultiSubscribe<T> {
     @CheckReturnValue
     @Experimental("Context support is a new experimental API introduced in Mutiny 1.3.0")
     public Stream<T> asStream(Supplier<Context> contextSupplier) {
-        return asStream(256, () -> new ArrayBlockingQueue<>(256), contextSupplier);
+        return asStream(contextSupplier, 256, () -> new ArrayBlockingQueue<>(256));
     }
 
     /**
@@ -504,14 +504,14 @@ public class MultiSubscribe<T> {
     /**
      * Consumes the items from the upstream {@link Multi} as a blocking stream.
      *
+     * @param contextSupplier the context supplier, must not be {@code null}, must not return {@code null}
      * @param batchSize the number of element stored in the queue
      * @param queueSupplier the supplier of queue used internally, must not be {@code null}, must not return {@code null}
-     * @param contextSupplier the context supplier, must not be {@code null}, must not return {@code null}
      * @return a blocking stream used to consume the items from {@link Multi}
      */
     @CheckReturnValue
     @Experimental("Context support is a new experimental API introduced in Mutiny 1.3.0")
-    public Stream<T> asStream(int batchSize, Supplier<Queue<T>> queueSupplier, Supplier<Context> contextSupplier) {
+    public Stream<T> asStream(Supplier<Context> contextSupplier, int batchSize, Supplier<Queue<T>> queueSupplier) {
         // No interception of the queue supplier.
         return asIterable(contextSupplier, batchSize, queueSupplier).stream();
     }
