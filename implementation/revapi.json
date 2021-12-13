@@ -24,24 +24,6 @@
     "differences" : [
       {
         "ignore": true,
-        "code": "java.method.addedToInterface",
-        "new": "method <R> io.smallrye.mutiny.Multi<R> io.smallrye.mutiny.Multi<T>::withContext(java.util.function.BiFunction<io.smallrye.mutiny.Multi<T>, io.smallrye.mutiny.Context, io.smallrye.mutiny.Multi<R>>)",
-        "justification": "New Mutiny context support APIs"
-      },
-      {
-        "ignore": true,
-        "code": "java.method.addedToInterface",
-        "new": "method io.smallrye.mutiny.groups.UniAwait<T> io.smallrye.mutiny.Uni<T>::awaitUsing(io.smallrye.mutiny.Context)",
-        "justification": "New Mutiny context support APIs"
-      },
-      {
-        "ignore": true,
-        "code": "java.method.addedToInterface",
-        "new": "method <R> io.smallrye.mutiny.Uni<R> io.smallrye.mutiny.Uni<T>::withContext(java.util.function.BiFunction<io.smallrye.mutiny.Uni<T>, io.smallrye.mutiny.Context, io.smallrye.mutiny.Uni<R>>)",
-        "justification": "New Mutiny context support APIs"
-      },
-      {
-        "ignore": true,
         "code": "java.method.numberOfParametersChanged",
         "old": "method void io.smallrye.mutiny.groups.UniAwait<T>::<init>(io.smallrye.mutiny.Uni<T>)",
         "new": "method void io.smallrye.mutiny.groups.UniAwait<T>::<init>(io.smallrye.mutiny.Uni<T>, io.smallrye.mutiny.Context)",

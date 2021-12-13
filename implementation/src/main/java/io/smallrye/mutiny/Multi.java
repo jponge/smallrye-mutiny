@@ -624,7 +624,9 @@ public interface Multi<T> extends Publisher<T> {
      */
     @Experimental("Context support is a new experimental API introduced in Mutiny 1.3.0")
     @CheckReturnValue
-    <R> Multi<R> withContext(BiFunction<Multi<T>, Context, Multi<R>> builder);
+    default <R> Multi<R> withContext(BiFunction<Multi<T>, Context, Multi<R>> builder) {
+        throw new UnsupportedOperationException("Default method added to limit binary incompatibility");
+    }
 
     /**
      * Materialize the context by attaching it to items using the {@link ItemWithContext} wrapper class.

@@ -200,7 +200,9 @@ public interface Uni<T> {
      */
     @CheckReturnValue
     @Experimental("Context support is a new experimental API introduced in Mutiny 1.3.0")
-    UniAwait<T> awaitUsing(Context context);
+    default UniAwait<T> awaitUsing(Context context) {
+        throw new UnsupportedOperationException("Default method added to limit binary incompatibility");
+    }
 
     /**
      * Configures the action to execute when the observed {@link Uni} emits the item (potentially {@code null}).
@@ -867,7 +869,9 @@ public interface Uni<T> {
      */
     @Experimental("Context support is a new experimental API introduced in Mutiny 1.3.0")
     @CheckReturnValue
-    <R> Uni<R> withContext(BiFunction<Uni<T>, Context, Uni<R>> builder);
+    default <R> Uni<R> withContext(BiFunction<Uni<T>, Context, Uni<R>> builder) {
+        throw new UnsupportedOperationException("Default method added to limit binary incompatibility");
+    }
 
     /**
      * Materialize the context by attaching it to items using the {@link ItemWithContext} wrapper class.
