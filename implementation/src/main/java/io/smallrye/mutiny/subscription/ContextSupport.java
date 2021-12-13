@@ -21,6 +21,6 @@ public interface ContextSupport {
      * @return the context, must not be {@code null}.
      */
     default Context context() {
-        throw new UnsupportedOperationException(getClass().getName() + " does not support Mutiny contexts yet");
+        return Context.empty();
     }
 }
