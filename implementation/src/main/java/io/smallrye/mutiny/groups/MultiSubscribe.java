@@ -430,7 +430,7 @@ public class MultiSubscribe<T> {
      */
     @CheckReturnValue
     public BlockingIterable<T> asIterable() {
-        return asIterable(() -> new ArrayBlockingQueue<>(256), 256);
+        return asIterable(256, () -> new ArrayBlockingQueue<>(256));
     }
 
     /**
@@ -446,12 +446,12 @@ public class MultiSubscribe<T> {
     /**
      * Consumes the upstream {@link Multi} as an iterable.
      *
-     * @param supplier the supplier of queue used internally, must not be {@code null}, must not return {@code null}
      * @param batchSize the number of elements stored in the queue
+     * @param supplier the supplier of queue used internally, must not be {@code null}, must not return {@code null}
      * @return a blocking iterable used to consume the items emitted by the upstream {@link Multi}.
      */
     @CheckReturnValue
-    public BlockingIterable<T> asIterable(Supplier<Queue<T>> supplier, int batchSize) {
+    public BlockingIterable<T> asIterable(int batchSize, Supplier<Queue<T>> supplier) {
         return asIterable(Context::empty, batchSize, supplier);
     }
 
@@ -498,7 +498,7 @@ public class MultiSubscribe<T> {
     @CheckReturnValue
     public Stream<T> asStream(int batchSize, Supplier<Queue<T>> supplier) {
         // No interception of the queue supplier.
-        return asIterable(supplier, batchSize).stream();
+        return asIterable(batchSize, supplier).stream();
     }
 
     /**

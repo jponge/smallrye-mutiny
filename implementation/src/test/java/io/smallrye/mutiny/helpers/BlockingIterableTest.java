@@ -58,7 +58,7 @@ public class BlockingIterableTest {
         Queue<Integer> q = new ArrayBlockingQueue<>(1);
         List<Integer> values = new ArrayList<>();
 
-        for (Integer i : Multi.createFrom().range(1, 11).subscribe().asIterable(() -> q, 1)) {
+        for (Integer i : Multi.createFrom().range(1, 11).subscribe().asIterable(1, () -> q)) {
             values.add(i);
         }
 
@@ -173,9 +173,9 @@ public class BlockingIterableTest {
     @Timeout(1)
     public void testQueueSupplierFailing() {
         assertThatThrownBy(() -> Multi.createFrom().items(1, 2, 3, 4, 5, 6)
-                .subscribe().asIterable(() -> {
+                .subscribe().asIterable(10, () -> {
                     throw new IllegalArgumentException("boom");
-                }, 10).forEach(i -> {
+                }).forEach(i -> {
                     // noop - the iterable is created lazily.
                 })).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("boom");
 
@@ -185,7 +185,7 @@ public class BlockingIterableTest {
     @Timeout(1)
     public void testQueueSupplierReturningNull() {
         assertThatThrownBy(() -> Multi.createFrom().items(1, 2, 3, 4, 5, 6)
-                .subscribe().asIterable(() -> null, 10).forEach(i -> {
+                .subscribe().asIterable(10, () -> null).forEach(i -> {
                     // noop - the iterable is created lazily.
                 })).isInstanceOf(IllegalStateException.class);
 
@@ -242,7 +242,7 @@ public class BlockingIterableTest {
         assertThrows(BackPressureFailure.class, () -> {
             BlockingIterable<Integer> integers = Multi.createFrom()
                     .<Integer> emitter(e -> e.emit(1).emit(2).emit(3).emit(4).emit(5))
-                    .subscribe().asIterable(() -> new SpscArrayQueue<>(4), 10);
+                    .subscribe().asIterable(10, () -> new SpscArrayQueue<>(4));
             integers.forEach(i -> assertThat(i).isPositive());
         });
     }
