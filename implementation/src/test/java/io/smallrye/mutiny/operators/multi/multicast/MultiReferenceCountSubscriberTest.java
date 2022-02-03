@@ -50,8 +50,8 @@ class MultiReferenceCountSubscriberTest {
     @Test
     public void testFailureWithASingleSubscriber() {
         Multi<Integer> multi = Multi.createBy().concatenating().streams(
-                Multi.createFrom().items(1, 2, 3, 4, 5),
-                Multi.createFrom().failure(new IOException("boom")))
+                        Multi.createFrom().items(1, 2, 3, 4, 5),
+                        Multi.createFrom().failure(new IOException("boom")))
                 .broadcast()
                 .withCancellationAfterLastSubscriberDeparture().toAllSubscribers();
 
@@ -66,10 +66,10 @@ class MultiReferenceCountSubscriberTest {
     @Test
     public void testFailureWithATwoSubscribers() {
         Multi<Integer> multi = Multi.createBy().concatenating().streams(
-                Multi.createFrom().items(1, 2, 3, 4, 5),
-                Multi.createFrom().failure(new IOException("boom")))
+                        Multi.createFrom().items(1, 2, 3, 4, 5),
+                        Multi.createFrom().failure(new IOException("boom")))
                 .broadcast()
-                .withCancellationAfterLastSubscriberDeparture().toAllSubscribers();
+                .toAllSubscribers();
 
         AssertSubscriber<Integer> subscriber1 = multi.subscribe()
                 .withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
@@ -81,6 +81,27 @@ class MultiReferenceCountSubscriberTest {
 
         subscriber2
                 .assertFailedWith(IOException.class, "boom");
+    }
+
+    @Test
+    public void testCompletionWithTwoSubscribers() {
+        Multi<Integer> multi = Multi.createBy().concatenating().streams(
+                        Multi.createFrom().items(1, 2, 3, 4, 5))
+                .broadcast()
+                .toAllSubscribers();
+
+        AssertSubscriber<Integer> subscriber1 = multi.subscribe()
+                .withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+        AssertSubscriber<Integer> subscriber2 = multi.subscribe()
+                .withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+
+        subscriber1
+                .assertCompleted()
+                .assertItems(1, 2, 3, 4, 5);
+
+        subscriber2
+                .assertCompleted()
+                .assertHasNotReceivedAnyItem();
     }
 
     @Test

@@ -72,4 +72,9 @@ public class MultiCreateBy {
         return new MultiRepetition();
     }
 
+    //TODO
+    @CheckReturnValue
+    public MultiReplay replaying() {
+        return new MultiReplay();
+    }
 }

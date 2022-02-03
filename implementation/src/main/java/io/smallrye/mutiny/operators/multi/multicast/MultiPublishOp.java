@@ -113,6 +113,7 @@ public final class MultiPublishOp<T> extends ConnectableMulti<T> {
          * Indicates an empty array of inner subscribers.
          */
         static final InnerSubscriber[] EMPTY = new InnerSubscriber[0];
+
         /**
          * Indicates a terminated PublishSubscriber.
          */
