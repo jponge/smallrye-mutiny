@@ -108,6 +108,10 @@ public abstract class SwitchableSubscriptionSubscriber<O> implements MultiSubscr
         setOrSwitchUpstream(s);
     }
 
+    protected long requested() {
+        return requested;
+    }
+
     public void emitted(long n) {
         if (unbounded) {
             return;
@@ -140,7 +144,7 @@ public abstract class SwitchableSubscriptionSubscriber<O> implements MultiSubscr
     }
 
     @Override
-    public final void request(long n) {
+    public void request(long n) {
         if (n <= 0) {
             downstream.onError(Subscriptions.getInvalidRequestException());
             return;

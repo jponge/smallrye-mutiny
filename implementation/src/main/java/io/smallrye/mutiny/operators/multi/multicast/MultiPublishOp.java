@@ -181,7 +181,8 @@ public final class MultiPublishOp<T> extends ConnectableMulti<T> {
         @Override
         public void onSubscribe(Subscription s) {
             if (this.upstream.compareAndSet(null, s)) {
-                s.request(bufferSize);
+//                 s.request(bufferSize);
+                s.request(1L);
             }
         }
 
