@@ -3,11 +3,13 @@ package io.smallrye.mutiny.operators.multi.builders;
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.Subscriptions;
+import io.smallrye.mutiny.helpers.queues.Queues;
 import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import org.reactivestreams.Subscription;
 
+import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -61,7 +63,7 @@ public class UnthrottledBroadcaster<T> extends AbstractMulti<T> {
         @Override
         public void onItem(T item) {
             subscribers.forEach(subscriber -> {
-                subscriber.itemsQueue.add(item);
+                subscriber.itemsQueue.offer(item);
                 subscriber.drain();
             });
         }
@@ -102,7 +104,7 @@ public class UnthrottledBroadcaster<T> extends AbstractMulti<T> {
         private final AtomicBoolean cancelled = new AtomicBoolean();
         private final AtomicLong demand = new AtomicLong();
 
-        private final ConcurrentLinkedDeque<T> itemsQueue = new ConcurrentLinkedDeque<>();
+        private final Queue<T> itemsQueue = Queues.<T>unbounded(Queues.BUFFER_XS).get();
 
         UnthrottledBroadcasterSubscription(MultiSubscriber<? super T> subscriber) {
             this.subscriber = subscriber;
@@ -150,7 +152,7 @@ public class UnthrottledBroadcaster<T> extends AbstractMulti<T> {
                             return;
                         }
                     } else {
-                        subscriber.onItem(itemsQueue.pop());
+                        subscriber.onItem(itemsQueue.poll());
                         emitted++;
                     }
                 }
