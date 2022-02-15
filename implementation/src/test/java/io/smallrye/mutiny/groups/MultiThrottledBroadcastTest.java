@@ -1,15 +1,16 @@
 package io.smallrye.mutiny.groups;
 
-import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.helpers.test.AssertSubscriber;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
-import org.awaitility.Awaitility;
-import org.junit.jupiter.api.Test;
-
 import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.awaitility.Awaitility;
+import org.junit.jupiter.api.Test;
+
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.helpers.test.AssertSubscriber;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 
 class MultiThrottledBroadcastTest {
 
