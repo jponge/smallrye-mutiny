@@ -1,7 +1,7 @@
 package io.smallrye.mutiny.groups;
 
 import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.operators.multi.builders.UnthrottledBroadcaster;
+import io.smallrye.mutiny.operators.multi.builders.broadcasters.UnthrottledBroadcaster;
 
 // TODO
 public class MultiThrottledBroadcast {
