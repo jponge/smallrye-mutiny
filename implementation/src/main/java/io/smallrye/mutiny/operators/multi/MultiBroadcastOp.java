@@ -6,7 +6,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.multicast.MultiPublishOp;
 
-public class MultiBroadcaster {
+public class MultiBroadcastOp {
 
     public static <T> Multi<T> publish(Multi<T> upstream, int numberOfSubscribers, boolean cancelWhenNoOneIsListening,
             Duration delayAfterLastDeparture) {
@@ -49,7 +49,7 @@ public class MultiBroadcaster {
         }
     }
 
-    private MultiBroadcaster() {
+    private MultiBroadcastOp() {
         // Avoid direct instantiation.
     }
 }

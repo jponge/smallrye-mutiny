@@ -5,7 +5,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import io.smallrye.mutiny.groups.UnthrottledBroadcasterConf;
 import org.reactivestreams.Subscription;
 
 import io.smallrye.mutiny.helpers.Subscriptions;
@@ -22,10 +21,11 @@ class BroadcasterSubscription<T> implements Subscription {
 
     private final Queue<T> itemsQueue;
 
-    BroadcasterSubscription(UnthrottledBroadcaster<T> broadcaster, MultiSubscriber<? super T> subscriber, UnthrottledBroadcasterConf configuration) {
+    BroadcasterSubscription(UnthrottledBroadcaster<T> broadcaster, MultiSubscriber<? super T> subscriber,
+            int subscriberInitialQueueSize) {
         this.broadcaster = broadcaster;
         this.subscriber = subscriber;
-        this.itemsQueue = Queues.<T>get(configuration.subscriberInitialQueueSize()).get();
+        this.itemsQueue = Queues.<T> get(subscriberInitialQueueSize).get();
     }
 
     public void offerItem(T item) {

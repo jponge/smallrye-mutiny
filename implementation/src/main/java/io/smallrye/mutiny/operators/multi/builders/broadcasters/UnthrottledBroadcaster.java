@@ -1,13 +1,16 @@
 package io.smallrye.mutiny.operators.multi.builders.broadcasters;
 
 import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.groups.UnthrottledBroadcasterConf;
+import io.smallrye.mutiny.groups.MultiBroadcaster;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 
 public class UnthrottledBroadcaster<T> extends BroadcasterBase<T> {
 
-    public UnthrottledBroadcaster(Multi<T> multi, UnthrottledBroadcasterConf configuration) {
-        super(multi, configuration);
+    private final MultiBroadcaster.UnthrottledConf configuration;
+
+    public UnthrottledBroadcaster(Multi<T> multi, MultiBroadcaster.UnthrottledConf configuration) {
+        super(multi, configuration.cancelAfterLastSubscriber(), configuration.cancelAfterLastSubscriberDelay());
+        this.configuration = configuration;
     }
 
     @Override
@@ -17,7 +20,7 @@ public class UnthrottledBroadcaster<T> extends BroadcasterBase<T> {
 
     @Override
     protected BroadcasterSubscription<T> newSubscriptionFor(MultiSubscriber<? super T> subscriber) {
-        return new BroadcasterSubscription<>(this, subscriber, configuration);
+        return new BroadcasterSubscription<>(this, subscriber, configuration.subscriberInitialQueueSize());
     }
 
 }

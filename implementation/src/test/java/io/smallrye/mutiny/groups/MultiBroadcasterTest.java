@@ -12,7 +12,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 
-class MultiThrottledBroadcastTest {
+class MultiBroadcasterTest {
 
     @Test
     void playground_1() throws InterruptedException {
@@ -78,9 +78,10 @@ class MultiThrottledBroadcastTest {
             step2.set(true);
         });
 
-        UnthrottledBroadcasterConf conf = UnthrottledBroadcasterConf.create()
-                .cancelAfterLastSubscriber(false)
-                .withSubscriberInitialQueueSize(256);
+        MultiBroadcaster.UnthrottledConf conf = MultiBroadcaster.UnthrottledConf.newBuilder()
+                .cancelAfterLastSubscriber(true)
+                .subscriberInitialQueueSize(256)
+                .build();
         Multi<Object> broadcaster = Multi.createBy().broadcasting().unthrottled(multi, conf)
                 .runSubscriptionOn(Infrastructure.getDefaultExecutor());
 
@@ -92,5 +93,63 @@ class MultiThrottledBroadcastTest {
         step1.set(true);
         Awaitility.await().untilTrue(step2);
         System.out.println(sub.getItems());
+    }
+
+    @Test
+    void playground_5() throws InterruptedException {
+        Multi<String> multi = Multi.createFrom().ticks().every(Duration.ofMillis(500))
+                .onItem().transform(Object::toString);
+
+        Multi<String> broadcast = Multi.createBy().broadcasting()
+                .unthrottled(multi, MultiBroadcaster.UnthrottledConf.newBuilder().cancelAfterLastSubscriber(true).build())
+                .runSubscriptionOn(Infrastructure.getDefaultExecutor());
+
+        AssertSubscriber<String> sub = broadcast.subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+        Thread.sleep(3000);
+        sub.cancel();
+        System.out.println(sub.getItems());
+        sub.assertNotTerminated();
+        Thread.sleep(500);
+        System.out.println(sub.getItems());
+        sub.assertNotTerminated();
+
+        sub = broadcast.subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+        Thread.sleep(1000);
+        sub.awaitCompletion().assertHasNotReceivedAnyItem();
+    }
+
+    @Test
+    void playground_6() throws InterruptedException {
+        Multi<String> multi = Multi.createFrom().ticks().every(Duration.ofMillis(500))
+                .onItem().transform(Object::toString);
+
+        Multi<String> broadcast = Multi.createBy().broadcasting()
+                .unthrottled(multi,
+                        MultiBroadcaster.UnthrottledConf.newBuilder().cancelAfterLastSubscriberDelay(Duration.ofSeconds(1))
+                                .build())
+                .runSubscriptionOn(Infrastructure.getDefaultExecutor());
+
+        AssertSubscriber<String> sideSub = broadcast.subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+
+        AssertSubscriber<String> sub = broadcast.subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+        Thread.sleep(1000);
+        sub.cancel();
+        System.out.println(sub.getItems());
+
+        Thread.sleep(500);
+        sub = broadcast.subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+        Thread.sleep(3000);
+        sub.cancel();
+        System.out.println(sub.getItems());
+
+        sideSub.cancel();
+        System.out.println("> " + sideSub.getItems());
+
+        Thread.sleep(1500);
+        System.out.println("Zzz for too long");
+
+        sub = broadcast.subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+        Thread.sleep(1000);
+        sub.awaitCompletion().assertHasNotReceivedAnyItem();
     }
 }

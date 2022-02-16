@@ -8,7 +8,7 @@ import java.time.Duration;
 import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
-import io.smallrye.mutiny.operators.multi.MultiBroadcaster;
+import io.smallrye.mutiny.operators.multi.MultiBroadcastOp;
 
 /**
  * Makes the upstream {@link Multi} be able to broadcast its events ({@code items}, {@code failure}, and
@@ -37,7 +37,7 @@ public class MultiBroadcast<T> {
     @CheckReturnValue
     public Multi<T> toAllSubscribers() {
         return Infrastructure.onMultiCreation(
-                MultiBroadcaster.publish(upstream, 0, cancelWhenNoOneIsListening, delayAfterLastDeparture));
+                MultiBroadcastOp.publish(upstream, 0, cancelWhenNoOneIsListening, delayAfterLastDeparture));
     }
 
     /**
@@ -53,7 +53,7 @@ public class MultiBroadcast<T> {
     public Multi<T> toAtLeast(int numberOfSubscribers) {
         positive(numberOfSubscribers, "numberOfSubscribers");
         return Infrastructure.onMultiCreation(
-                MultiBroadcaster.publish(upstream, numberOfSubscribers, cancelWhenNoOneIsListening, delayAfterLastDeparture));
+                MultiBroadcastOp.publish(upstream, numberOfSubscribers, cancelWhenNoOneIsListening, delayAfterLastDeparture));
     }
 
     /**

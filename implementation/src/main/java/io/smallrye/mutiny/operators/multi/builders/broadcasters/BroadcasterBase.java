@@ -1,30 +1,34 @@
 package io.smallrye.mutiny.operators.multi.builders.broadcasters;
 
+import java.time.Duration;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.smallrye.mutiny.groups.UnthrottledBroadcasterConf;
 import org.reactivestreams.Subscription;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.Subscriptions;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 
 abstract class BroadcasterBase<T> extends AbstractMulti<T> {
 
     protected final Multi<T> multi;
+    private final boolean cancelAfterLastSubscriber;
+    private final Duration cancelAfterLastSubscriberDelay;
     protected final CopyOnWriteArrayList<BroadcasterSubscription<T>> subscriptions = new CopyOnWriteArrayList<>();
-    protected final UnthrottledBroadcasterConf configuration;
 
     volatile Subscription upstreamSubscription;
     volatile Throwable failure;
     volatile boolean completed;
     AtomicBoolean init = new AtomicBoolean();
 
-    public BroadcasterBase(Multi<T> multi, UnthrottledBroadcasterConf configuration) {
+    public BroadcasterBase(Multi<T> multi, boolean cancelAfterLastSubscriber, Duration cancelAfterLastSubscriberDelay) {
         this.multi = multi;
-        this.configuration = configuration;
+        this.cancelAfterLastSubscriber = cancelAfterLastSubscriber;
+        this.cancelAfterLastSubscriberDelay = cancelAfterLastSubscriberDelay;
     }
 
     @Override
@@ -54,6 +58,26 @@ abstract class BroadcasterBase<T> extends AbstractMulti<T> {
 
     void subscriberHasCancelled(BroadcasterSubscription<T> subscription) {
         subscriptions.remove(subscription);
+        if (cancelAfterLastSubscriber && subscriptions.isEmpty()) {
+            if (cancelAfterLastSubscriberDelay != null) {
+                Infrastructure.getDefaultWorkerPool().schedule(this::checkAndTerminate,
+                        cancelAfterLastSubscriberDelay.toNanos(), TimeUnit.NANOSECONDS);
+            } else {
+                terminate();
+            }
+        }
+    }
+
+    private void checkAndTerminate() {
+        if (subscriptions.isEmpty()) {
+            terminate();
+        }
+    }
+
+    private void terminate() {
+        upstreamSubscription.cancel();
+        upstreamSubscription = Subscriptions.CANCELLED;
+        completed = true;
     }
 
     void upstreamSubscribedWith(Subscription s) {

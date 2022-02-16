@@ -74,7 +74,7 @@ public class MultiCreateBy {
 
     // TODO
     @CheckReturnValue
-    public MultiThrottledBroadcast broadcasting() {
-        return new MultiThrottledBroadcast();
+    public MultiBroadcaster broadcasting() {
+        return new MultiBroadcaster();
     }
 }
