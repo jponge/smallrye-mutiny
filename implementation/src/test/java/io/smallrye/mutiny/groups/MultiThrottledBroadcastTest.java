@@ -78,7 +78,10 @@ class MultiThrottledBroadcastTest {
             step2.set(true);
         });
 
-        Multi<Object> broadcaster = Multi.createBy().broadcasting().unthrottled(multi)
+        UnthrottledBroadcasterConf conf = UnthrottledBroadcasterConf.create()
+                .cancelAfterLastSubscriber(false)
+                .withSubscriberInitialQueueSize(256);
+        Multi<Object> broadcaster = Multi.createBy().broadcasting().unthrottled(multi, conf)
                 .runSubscriptionOn(Infrastructure.getDefaultExecutor());
 
         AssertSubscriber<Object> sub = broadcaster.subscribe().withSubscriber(AssertSubscriber.create());

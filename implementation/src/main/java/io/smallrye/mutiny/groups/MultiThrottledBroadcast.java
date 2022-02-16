@@ -7,6 +7,10 @@ import io.smallrye.mutiny.operators.multi.builders.broadcasters.UnthrottledBroad
 public class MultiThrottledBroadcast {
 
     public <T> Multi<T> unthrottled(Multi<T> multi) {
-        return new UnthrottledBroadcaster(multi);
+        return new UnthrottledBroadcaster<>(multi, BroadcasterConf.create());
+    }
+
+    public <T> Multi<T> unthrottled(Multi<T> multi, UnthrottledBroadcasterConf configuration) {
+        return new UnthrottledBroadcaster<>(multi, configuration);
     }
 }

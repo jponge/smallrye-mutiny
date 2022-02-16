@@ -3,6 +3,7 @@ package io.smallrye.mutiny.operators.multi.builders.broadcasters;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.smallrye.mutiny.groups.UnthrottledBroadcasterConf;
 import org.reactivestreams.Subscription;
 
 import io.smallrye.mutiny.Multi;
@@ -14,14 +15,16 @@ abstract class BroadcasterBase<T> extends AbstractMulti<T> {
 
     protected final Multi<T> multi;
     protected final CopyOnWriteArrayList<BroadcasterSubscription<T>> subscriptions = new CopyOnWriteArrayList<>();
+    protected final UnthrottledBroadcasterConf configuration;
 
     volatile Subscription upstreamSubscription;
     volatile Throwable failure;
     volatile boolean completed;
     AtomicBoolean init = new AtomicBoolean();
 
-    public BroadcasterBase(Multi<T> multi) {
+    public BroadcasterBase(Multi<T> multi, UnthrottledBroadcasterConf configuration) {
         this.multi = multi;
+        this.configuration = configuration;
     }
 
     @Override
