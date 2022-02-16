@@ -14,14 +14,14 @@ import io.smallrye.mutiny.subscription.MultiSubscriber;
 class BroadcasterSubscription<T> implements Subscription {
 
     private final MultiSubscriber<? super T> subscriber;
-    private final UnthrottledBroadcaster<T> broadcaster;
+    private final BroadcasterBase<T> broadcaster;
 
     private final AtomicBoolean cancelled = new AtomicBoolean();
     private final AtomicLong demand = new AtomicLong();
 
     private final Queue<T> itemsQueue;
 
-    BroadcasterSubscription(UnthrottledBroadcaster<T> broadcaster, MultiSubscriber<? super T> subscriber,
+    BroadcasterSubscription(BroadcasterBase<T> broadcaster, MultiSubscriber<? super T> subscriber,
             int subscriberInitialQueueSize) {
         this.broadcaster = broadcaster;
         this.subscriber = subscriber;
@@ -30,8 +30,12 @@ class BroadcasterSubscription<T> implements Subscription {
 
     public void offerItem(T item) {
         if (!cancelled.get()) {
-            itemsQueue.offer(item);
-            drain();
+            if (itemsQueue.isEmpty() && demand.get() > 0) {
+                subscriber.onItem(item);
+            } else {
+                itemsQueue.offer(item);
+                drain();
+            }
         }
     }
 
