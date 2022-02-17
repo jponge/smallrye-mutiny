@@ -16,8 +16,8 @@ import io.smallrye.mutiny.subscription.MultiSubscriber;
 abstract class BroadcasterBase<T> extends AbstractMulti<T> {
 
     protected final Multi<T> multi;
-    private final boolean cancelAfterLastSubscriber;
-    private final Duration cancelAfterLastSubscriberDelay;
+    protected final boolean cancelAfterLastSubscriber;
+    protected final Duration cancelAfterLastSubscriberDelay;
     protected final CopyOnWriteArrayList<BroadcasterSubscription<T>> subscriptions = new CopyOnWriteArrayList<>();
 
     volatile Subscription upstreamSubscription;

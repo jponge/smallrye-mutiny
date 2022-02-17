@@ -21,16 +21,16 @@ class BroadcasterSubscription<T> implements Subscription {
 
     private final Queue<T> itemsQueue;
 
-    BroadcasterSubscription(BroadcasterBase<T> broadcaster, MultiSubscriber<? super T> subscriber,
-            int subscriberInitialQueueSize) {
+    BroadcasterSubscription(BroadcasterBase<T> broadcaster, MultiSubscriber<? super T> subscriber, int subscriberInitialQueueSize) {
         this.broadcaster = broadcaster;
         this.subscriber = subscriber;
-        this.itemsQueue = Queues.<T> get(subscriberInitialQueueSize).get();
+        this.itemsQueue = Queues.<T>get(subscriberInitialQueueSize).get();
     }
 
     public void offerItem(T item) {
         if (!cancelled.get()) {
             if (itemsQueue.isEmpty() && demand.get() > 0) {
+                demand.decrementAndGet();
                 subscriber.onItem(item);
             } else {
                 itemsQueue.offer(item);
