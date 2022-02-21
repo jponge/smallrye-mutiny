@@ -1,5 +1,23 @@
 package io.smallrye.mutiny.operators.multi.replay;
 
+import java.util.function.BiPredicate;
+
+/*
+ * Replay is being captured using a custom linked list, while consumers can make progress using cursors.
+ * Cursors need to be made ready by calling `readyAtStart()`, which would typically be done at subscription time.
+ *
+ * The "start" depends on the replay semantics:
+ * - zero for unbounded replays,
+ * - the last n elements before the tail for bounded replays.
+ *
+ * From there each cursor (1 per subscriber) can make progress at its own pace.
+ *
+ * The code assumes reactive streams semantics, especially that there are no concurrent appends because of
+ * serial events.
+ *
+ * Bounded replays shall have earlier cells before the head be eventually garbage collected as there are only forward
+ * references.
+ */
 public class AppendOnlyReplayList {
 
     public class Cursor {
@@ -7,9 +25,11 @@ public class AppendOnlyReplayList {
         private volatile Cell current = SENTINEL_EMPTY;
 
         public boolean readyAtStart() {
-            if (head != SENTINEL_EMPTY) {
-                current = head;
-                return true;
+            if (current == SENTINEL_EMPTY) {
+                if (head != SENTINEL_EMPTY) {
+                    current = head;
+                    return true;
+                }
             }
             return false;
         }
@@ -116,5 +136,20 @@ public class AppendOnlyReplayList {
 
     public Cursor newCursor() {
         return new Cursor();
+    }
+
+    void runSanityCheck(BiPredicate<Object, Object> predicate) {
+        if (head == tail) {
+            return;
+        }
+        Cell last = head;
+        Cell current = last.next;
+        while (current != tail) {
+            if (!predicate.test(last.value, current.value)) {
+                throw new IllegalStateException(last.value + " vs " + current.value);
+            }
+            last = current;
+            current = current.next;
+        }
     }
 }

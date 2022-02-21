@@ -1,14 +1,24 @@
 package io.smallrye.mutiny.operators.multi.replay;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Random;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 class AppendOnlyReplayListTest {
+
+    private Random random = new Random();
 
     @Test
     void pushSomeItemsAndComplete() {
@@ -64,7 +74,7 @@ class AppendOnlyReplayListTest {
     }
 
     private void checkFailedWithAllItems(ArrayList<Integer> reference, AppendOnlyReplayList.Cursor cursor, Class<?> failureType,
-            String failureMessage) {
+                                         String failureMessage) {
         ArrayList<Integer> proof = new ArrayList<>();
         assertThat(cursor.readyAtStart()).isTrue();
         while (true) {
@@ -135,5 +145,97 @@ class AppendOnlyReplayListTest {
         assertThat(lateCursor.hasReachedFailure()).isTrue();
         assertThat(lateCursor.canMoveForward()).isFalse();
         assertThat(lateCursor.unwrapFailure()).isInstanceOf(IOException.class).hasMessage("boom");
+    }
+
+    @Test
+    void runSanityChecksOnChainingBounded() {
+        AppendOnlyReplayList replayList = new AppendOnlyReplayList(256);
+        for (int i = 0; i < 100_000; i++) {
+            replayList.push(i);
+        }
+        replayList.runSanityCheck((prevRef, nextRef) -> {
+            int prev = (int) prevRef;
+            int next = (int) nextRef;
+            return (prev + 1) == next;
+        });
+    }
+
+    @Test
+    void runSanityChecksOnChainingUnbounded() {
+        AppendOnlyReplayList replayList = new AppendOnlyReplayList(Long.MAX_VALUE);
+        for (int i = 0; i < 100_000; i++) {
+            replayList.push(i);
+        }
+        replayList.runSanityCheck((prevRef, nextRef) -> {
+            int prev = (int) prevRef;
+            int next = (int) nextRef;
+            return (prev + 1) == next;
+        });
+    }
+
+    @Test
+    void concurrencySanityChecks() {
+        final int N_CONSUMERS = 4;
+        AppendOnlyReplayList replayList = new AppendOnlyReplayList(256);
+        AtomicBoolean stop = new AtomicBoolean();
+        AtomicLong counter = new AtomicLong();
+        ConcurrentLinkedDeque<String> problems = new ConcurrentLinkedDeque<>();
+        ExecutorService pool = Executors.newCachedThreadPool();
+
+        pool.submit(() -> {
+            randomSleep();
+            long start = System.currentTimeMillis();
+            while (System.currentTimeMillis() - start < 5000L) {
+                for (int i = 0; i < 5000; i++) {
+                    replayList.push(counter.getAndIncrement());
+                }
+            }
+            replayList.runSanityCheck((a, b) -> {
+                long x = (long) a;
+                long y = (long) b;
+                return (x + 1) == y;
+            });
+            stop.set(true);
+        });
+
+        for (int i = 0; i < N_CONSUMERS; i++) {
+            pool.submit(() -> {
+                AppendOnlyReplayList.Cursor cursor = replayList.newCursor();
+                randomSleep();
+                while (!cursor.readyAtStart()) {
+                    // await
+                }
+                long previous = (long) cursor.unwrap();
+                while (!cursor.canMoveForward()) {
+                    // await
+                }
+                while (!stop.get()) {
+                    cursor.moveForward();
+                    long current = (long) cursor.unwrap();
+                    if (current != previous + 1) {
+                        problems.add("Broken sequence " + previous + " -> " + current);
+                        return;
+                    }
+                    previous = current;
+                    while (!cursor.canMoveForward() && !stop.get()) {
+                        // await
+                    }
+                }
+            });
+        }
+
+        await().untilTrue(stop);
+        pool.shutdownNow();
+        for (String problem : problems) {
+            System.out.println(problem);
+        }
+    }
+
+    private void randomSleep() {
+        try {
+            Thread.sleep(250 + random.nextInt(250));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
