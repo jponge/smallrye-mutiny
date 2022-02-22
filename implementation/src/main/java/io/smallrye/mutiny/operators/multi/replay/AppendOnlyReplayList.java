@@ -22,33 +22,38 @@ public class AppendOnlyReplayList {
 
     public class Cursor {
 
-        private volatile Cell current = SENTINEL_EMPTY;
-        private volatile Cell localHead = SENTINEL_EMPTY;
+        private Cell current = SENTINEL_EMPTY;
+        private boolean start = true;
+        private boolean currentHasBeenRead = false;
 
-        public boolean readyAtStart() {
-            Cell currentHead = head;
+        public boolean hasNext() {
             if (current == SENTINEL_EMPTY) {
+                Cell currentHead = head;
                 if (currentHead != SENTINEL_EMPTY) {
-                    localHead = currentHead;
                     current = currentHead;
                     return true;
+                } else {
+                    return false;
                 }
-                return false;
-            }
-            return true;
-        }
-
-        public boolean canMoveForward() {
-            return current != SENTINEL_EMPTY && current.next != SENTINEL_END;
-        }
-
-        public void moveForward() {
-            if (canMoveForward()) {
-                current = current.next;
+            } else if (!currentHasBeenRead) {
+                return true;
+            } else {
+                return current.next != SENTINEL_END;
             }
         }
 
-        public Object unwrap() {
+        public void moveToNext() {
+            if (start) {
+                start = false;
+                return;
+            }
+            assert current.next != SENTINEL_END;
+            current = current.next;
+            currentHasBeenRead = false;
+        }
+
+        public Object read() {
+            currentHasBeenRead = true;
             return current.value;
         }
 
@@ -60,8 +65,13 @@ public class AppendOnlyReplayList {
             return current.value instanceof Failure;
         }
 
-        public Throwable unwrapFailure() {
+        public Throwable readFailure() {
+            currentHasBeenRead = true;
             return ((Failure) current.value).failure;
+        }
+
+        public void readCompletion() {
+            currentHasBeenRead = true;
         }
     }
 

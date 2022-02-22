@@ -2,6 +2,7 @@ package io.smallrye.mutiny.operators.multi.replay;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -12,7 +13,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 class AppendOnlyReplayListTest {
@@ -24,16 +24,17 @@ class AppendOnlyReplayListTest {
         AppendOnlyReplayList replayList = new AppendOnlyReplayList(Long.MAX_VALUE);
         AppendOnlyReplayList.Cursor cursor = replayList.newCursor();
 
-        assertThat(cursor.readyAtStart()).isFalse();
+        assertThat(cursor.hasNext()).isFalse();
         replayList.push("foo");
         replayList.push("bar");
-        assertThat(cursor.readyAtStart()).isTrue();
-        assertThat(cursor.unwrap()).isEqualTo("foo");
-        assertThat(cursor.canMoveForward()).isTrue();
-        cursor.moveForward();
-        assertThat(cursor.readyAtStart()).isTrue();
-        assertThat(cursor.unwrap()).isEqualTo("bar");
-        assertThat(cursor.canMoveForward()).isFalse();
+        assertThat(cursor.hasNext()).isTrue();
+        cursor.moveToNext();
+        assertThat(cursor.read()).isEqualTo("foo");
+        assertThat(cursor.hasNext()).isTrue();
+        cursor.moveToNext();
+        assertThat(cursor.hasNext()).isTrue();
+        assertThat(cursor.read()).isEqualTo("bar");
+        assertThat(cursor.hasNext()).isFalse();
     }
 
     @Test
@@ -42,7 +43,7 @@ class AppendOnlyReplayListTest {
         ArrayList<Integer> reference = new ArrayList<>();
 
         AppendOnlyReplayList.Cursor firstCursor = replayList.newCursor();
-        assertThat(firstCursor.readyAtStart()).isFalse();
+        assertThat(firstCursor.hasNext()).isFalse();
         for (int i = 0; i < 20; i++) {
             replayList.push(i);
             reference.add(i);
@@ -56,18 +57,16 @@ class AppendOnlyReplayListTest {
 
     private void checkCompletedWithAllItems(ArrayList<Integer> reference, AppendOnlyReplayList.Cursor cursor) {
         ArrayList<Integer> proof = new ArrayList<>();
-        assertThat(cursor.readyAtStart()).isTrue();
-        while (true) {
+        assertThat(cursor.hasNext()).isTrue();
+        while (cursor.hasNext()) {
+            cursor.moveToNext();
             if (cursor.hasReachedCompletion()) {
+                cursor.readCompletion();
+                assumeFalse(cursor.hasNext());
                 break;
             }
-            Assumptions.assumeFalse(cursor.hasReachedFailure());
-            proof.add((Integer) cursor.unwrap());
-            if (cursor.canMoveForward()) {
-                cursor.moveForward();
-            } else {
-                break;
-            }
+            assumeFalse(cursor.hasReachedFailure());
+            proof.add((Integer) cursor.read());
         }
         assertThat(proof).isEqualTo(reference);
     }
@@ -92,22 +91,21 @@ class AppendOnlyReplayListTest {
     private void checkFailedWithAllItems(ArrayList<Integer> reference, AppendOnlyReplayList.Cursor cursor, Class<?> failureType,
             String failureMessage) {
         ArrayList<Integer> proof = new ArrayList<>();
-        assertThat(cursor.readyAtStart()).isTrue();
-        while (true) {
+        assertThat(cursor.hasNext()).isTrue();
+        while (cursor.hasNext()) {
+            cursor.moveToNext();
             if (cursor.hasReachedFailure()) {
+                assertThat(cursor.readFailure()).isInstanceOf(failureType).hasMessage(failureMessage);
+                assumeFalse(cursor.hasNext());
                 break;
             }
-            Assumptions.assumeFalse(cursor.hasReachedCompletion());
-            proof.add((Integer) cursor.unwrap());
-            if (cursor.canMoveForward()) {
-                cursor.moveForward();
-            } else {
-                break;
-            }
+            assumeFalse(cursor.hasReachedCompletion());
+            proof.add((Integer) cursor.read());
         }
         assertThat(proof).isEqualTo(reference);
+        assertThat(cursor.hasNext()).isFalse();
         assertThat(cursor.hasReachedFailure()).isTrue();
-        assertThat(cursor.unwrapFailure()).isInstanceOf(failureType).hasMessage(failureMessage);
+
     }
 
     @Test
@@ -117,50 +115,53 @@ class AppendOnlyReplayListTest {
         replayList.push(2);
 
         AppendOnlyReplayList.Cursor firstCursor = replayList.newCursor();
-        assertThat(firstCursor.readyAtStart()).isTrue();
-        assertThat(firstCursor.unwrap()).isEqualTo(1);
-        assertThat(firstCursor.canMoveForward()).isTrue();
-        firstCursor.moveForward();
-        assertThat(firstCursor.unwrap()).isEqualTo(2);
-        assertThat(firstCursor.canMoveForward()).isFalse();
+        assertThat(firstCursor.hasNext()).isTrue();
+        firstCursor.moveToNext();
+        assertThat(firstCursor.read()).isEqualTo(1);
+        assertThat(firstCursor.hasNext()).isTrue();
+        firstCursor.moveToNext();
+        assertThat(firstCursor.read()).isEqualTo(2);
+        assertThat(firstCursor.hasNext()).isFalse();
 
         AppendOnlyReplayList.Cursor secondCursor = replayList.newCursor();
         replayList.push(3);
         replayList.push(4);
         replayList.push(5);
 
-        assertThat(secondCursor.readyAtStart()).isTrue();
-        assertThat(secondCursor.unwrap()).isEqualTo(3);
-        secondCursor.moveForward();
-        assertThat(secondCursor.unwrap()).isEqualTo(4);
-        secondCursor.moveForward();
-        assertThat(secondCursor.unwrap()).isEqualTo(5);
-        secondCursor.moveForward();
-        assertThat(secondCursor.canMoveForward()).isFalse();
+        assertThat(secondCursor.hasNext()).isTrue();
+        secondCursor.moveToNext();
+        assertThat(secondCursor.read()).isEqualTo(3);
+        secondCursor.moveToNext();
+        assertThat(secondCursor.read()).isEqualTo(4);
+        secondCursor.moveToNext();
+        assertThat(secondCursor.read()).isEqualTo(5);
+        assertThat(secondCursor.hasNext()).isFalse();
 
-        assertThat(firstCursor.canMoveForward()).isTrue();
-        firstCursor.moveForward();
-        assertThat(firstCursor.unwrap()).isEqualTo(3);
-        firstCursor.moveForward();
-        assertThat(firstCursor.unwrap()).isEqualTo(4);
+        assertThat(firstCursor.hasNext()).isTrue();
+        firstCursor.moveToNext();
+        assertThat(firstCursor.read()).isEqualTo(3);
+        firstCursor.moveToNext();
+        assertThat(firstCursor.read()).isEqualTo(4);
 
         replayList.push(6);
         replayList.pushFailure(new IOException("boom"));
 
         AppendOnlyReplayList.Cursor lateCursor = replayList.newCursor();
-        assertThat(lateCursor.readyAtStart()).isTrue();
-        assertThat(lateCursor.unwrap()).isEqualTo(4);
-        assertThat(lateCursor.canMoveForward()).isTrue();
-        lateCursor.moveForward();
-        assertThat(lateCursor.unwrap()).isEqualTo(5);
-        assertThat(lateCursor.canMoveForward()).isTrue();
-        lateCursor.moveForward();
-        assertThat(lateCursor.unwrap()).isEqualTo(6);
-        assertThat(lateCursor.canMoveForward()).isTrue();
-        lateCursor.moveForward();
+        assertThat(lateCursor.hasNext()).isTrue();
+        lateCursor.moveToNext();
+        assertThat(lateCursor.read()).isEqualTo(4);
+        assertThat(lateCursor.hasNext()).isTrue();
+        lateCursor.moveToNext();
+        assertThat(lateCursor.read()).isEqualTo(5);
+        assertThat(lateCursor.hasNext()).isTrue();
+        lateCursor.moveToNext();
+        assertThat(lateCursor.read()).isEqualTo(6);
+        assertThat(lateCursor.hasNext()).isTrue();
+        lateCursor.moveToNext();
         assertThat(lateCursor.hasReachedFailure()).isTrue();
-        assertThat(lateCursor.canMoveForward()).isFalse();
-        assertThat(lateCursor.unwrapFailure()).isInstanceOf(IOException.class).hasMessage("boom");
+        assertThat(lateCursor.hasNext()).isTrue();
+        assertThat(lateCursor.readFailure()).isInstanceOf(IOException.class).hasMessage("boom");
+        assertThat(lateCursor.hasNext()).isFalse();
     }
 
     @Test
@@ -195,6 +196,7 @@ class AppendOnlyReplayListTest {
         AppendOnlyReplayList replayList = new AppendOnlyReplayList(256);
         AtomicBoolean stop = new AtomicBoolean();
         AtomicLong counter = new AtomicLong();
+        AtomicLong success = new AtomicLong();
         ConcurrentLinkedDeque<String> problems = new ConcurrentLinkedDeque<>();
         ExecutorService pool = Executors.newCachedThreadPool();
 
@@ -218,33 +220,31 @@ class AppendOnlyReplayListTest {
             pool.submit(() -> {
                 AppendOnlyReplayList.Cursor cursor = replayList.newCursor();
                 randomSleep();
-                while (!cursor.readyAtStart()) {
+                while (!cursor.hasNext()) {
                     // await
                 }
-                long previous = (long) cursor.unwrap();
-                while (!cursor.canMoveForward()) {
-                    // await
-                }
+                cursor.moveToNext();
+                long previous = (long) cursor.read();
                 while (!stop.get()) {
-                    cursor.moveForward();
-                    long current = (long) cursor.unwrap();
+                    if (!cursor.hasNext()) {
+                        continue;
+                    }
+                    cursor.moveToNext();
+                    long current = (long) cursor.read();
                     if (current != previous + 1) {
                         problems.add("Broken sequence " + previous + " -> " + current);
                         return;
                     }
                     previous = current;
-                    while (!cursor.canMoveForward() && !stop.get()) {
-                        // await
-                    }
+                    success.incrementAndGet();
                 }
             });
         }
 
         await().untilTrue(stop);
         pool.shutdownNow();
-        for (String problem : problems) {
-            System.out.println(problem);
-        }
+        assertThat(problems).isEmpty();
+        assertThat(success.get()).isGreaterThan(counter.get());
     }
 
     private void randomSleep() {

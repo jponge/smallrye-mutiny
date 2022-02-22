@@ -49,7 +49,7 @@ public class ReplayOperator<T> extends AbstractMulti<T> {
         private ReplaySubscription(MultiSubscriber<? super T> downstream) {
             this.downstream = downstream;
             this.cursor = replayList.newCursor();
-            this.cursor.readyAtStart(); // Try to catch the replay stream at subscription time if ready
+            this.cursor.hasNext(); // Try to catch the replay stream at subscription time if ready
         }
 
         @Override
@@ -63,7 +63,7 @@ public class ReplayOperator<T> extends AbstractMulti<T> {
                 return;
             }
             Subscriptions.add(demand, n);
-            if (cursor.readyAtStart()) {
+            if (cursor.hasNext()) {
                 drain();
             }
         }
@@ -75,7 +75,6 @@ public class ReplayOperator<T> extends AbstractMulti<T> {
         }
 
         private final AtomicInteger wip = new AtomicInteger();
-        private boolean firstEmitted = false;
 
         private void drain() {
             if (done) {
@@ -88,35 +87,32 @@ public class ReplayOperator<T> extends AbstractMulti<T> {
                 if (done) {
                     return;
                 }
-                if (!cursor.readyAtStart()) {
-                    break;
-                }
                 long max = demand.get();
                 long emitted = 0;
-                while (emitted < max) {
+                while (emitted < max && cursor.hasNext()) {
                     if (done) {
                         return;
                     }
-                    if (firstEmitted) {
-                        if (cursor.canMoveForward()) {
-                            cursor.moveForward();
-                        } else {
-                            break;
-                        }
-                    }
+                    cursor.moveToNext();
                     if (cursor.hasReachedCompletion()) {
                         cancel();
+                        cursor.readCompletion();
                         downstream.onComplete();
                         return;
                     }
                     if (cursor.hasReachedFailure()) {
                         cancel();
-                        downstream.onFailure(cursor.unwrapFailure());
+                        downstream.onFailure(cursor.readFailure());
                         return;
                     }
-                    downstream.onItem((T) cursor.unwrap());
+                    T item = (T) cursor.read();
+                    if (item == null) {
+                        cancel();
+                        downstream.onFailure(new NullPointerException("null item detected in the replay log"));
+                        return;
+                    }
+                    downstream.onItem(item);
                     emitted++;
-                    firstEmitted = true;
                 }
                 demand.addAndGet(-emitted);
                 if (wip.decrementAndGet() == 0) {
