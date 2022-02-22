@@ -23,15 +23,19 @@ public class AppendOnlyReplayList {
     public class Cursor {
 
         private volatile Cell current = SENTINEL_EMPTY;
+        private volatile Cell localHead = SENTINEL_EMPTY;
 
         public boolean readyAtStart() {
+            Cell currentHead = head;
             if (current == SENTINEL_EMPTY) {
-                if (head != SENTINEL_EMPTY) {
-                    current = head;
+                if (currentHead != SENTINEL_EMPTY) {
+                    localHead = currentHead;
+                    current = currentHead;
                     return true;
                 }
+                return false;
             }
-            return false;
+            return true;
         }
 
         public boolean canMoveForward() {
@@ -67,10 +71,6 @@ public class AppendOnlyReplayList {
 
     private final class Completion extends Terminal {
 
-        @Override
-        public String toString() {
-            return "[completion]";
-        }
     }
 
     private final class Failure extends Terminal {
@@ -78,11 +78,6 @@ public class AppendOnlyReplayList {
 
         Failure(Throwable failure) {
             this.failure = failure;
-        }
-
-        @Override
-        public String toString() {
-            return "[failure] " + failure.getMessage();
         }
     }
 
@@ -104,9 +99,9 @@ public class AppendOnlyReplayList {
     private volatile Cell head = SENTINEL_EMPTY;
     private volatile Cell tail = SENTINEL_EMPTY;
 
-    public AppendOnlyReplayList(long itemsToReplay) {
-        assert itemsToReplay > 0;
-        this.itemsToReplay = itemsToReplay;
+    public AppendOnlyReplayList(long numberOfItemsToReplay) {
+        assert numberOfItemsToReplay > 0;
+        this.itemsToReplay = numberOfItemsToReplay;
     }
 
     public void push(Object item) {

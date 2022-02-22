@@ -11,7 +11,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Function;
 
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
@@ -19,6 +18,23 @@ import org.junit.jupiter.api.Test;
 class AppendOnlyReplayListTest {
 
     private Random random = new Random();
+
+    @Test
+    void checkReadyAtStart() {
+        AppendOnlyReplayList replayList = new AppendOnlyReplayList(Long.MAX_VALUE);
+        AppendOnlyReplayList.Cursor cursor = replayList.newCursor();
+
+        assertThat(cursor.readyAtStart()).isFalse();
+        replayList.push("foo");
+        replayList.push("bar");
+        assertThat(cursor.readyAtStart()).isTrue();
+        assertThat(cursor.unwrap()).isEqualTo("foo");
+        assertThat(cursor.canMoveForward()).isTrue();
+        cursor.moveForward();
+        assertThat(cursor.readyAtStart()).isTrue();
+        assertThat(cursor.unwrap()).isEqualTo("bar");
+        assertThat(cursor.canMoveForward()).isFalse();
+    }
 
     @Test
     void pushSomeItemsAndComplete() {
@@ -74,7 +90,7 @@ class AppendOnlyReplayListTest {
     }
 
     private void checkFailedWithAllItems(ArrayList<Integer> reference, AppendOnlyReplayList.Cursor cursor, Class<?> failureType,
-                                         String failureMessage) {
+            String failureMessage) {
         ArrayList<Integer> proof = new ArrayList<>();
         assertThat(cursor.readyAtStart()).isTrue();
         while (true) {
