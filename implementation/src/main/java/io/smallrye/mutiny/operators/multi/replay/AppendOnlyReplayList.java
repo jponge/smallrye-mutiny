@@ -4,7 +4,6 @@ import java.util.function.BiPredicate;
 
 /*
  * Replay is being captured using a custom linked list, while consumers can make progress using cursors.
- * Cursors need to be made ready by calling `readyAtStart()`, which would typically be done at subscription time.
  *
  * The "start" depends on the replay semantics:
  * - zero for unbounded replays,
