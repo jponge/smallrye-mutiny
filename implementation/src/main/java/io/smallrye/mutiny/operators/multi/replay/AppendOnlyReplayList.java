@@ -1,5 +1,7 @@
 package io.smallrye.mutiny.operators.multi.replay;
 
+import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
+
 import java.util.function.BiPredicate;
 
 /*
@@ -109,13 +111,20 @@ public class AppendOnlyReplayList {
     private volatile Cell tail = SENTINEL_EMPTY;
 
     public AppendOnlyReplayList(long numberOfItemsToReplay) {
+        this(numberOfItemsToReplay, null);
+    }
+
+    public AppendOnlyReplayList(long numberOfItemsToReplay, Iterable<?> seed) {
         assert numberOfItemsToReplay > 0;
         this.itemsToReplay = numberOfItemsToReplay;
+        if (seed != null) {
+            seed.forEach(this::push);
+        }
     }
 
     public void push(Object item) {
         assert !(tail.value instanceof Terminal);
-        Cell newCell = new Cell(item, SENTINEL_END);
+        Cell newCell = new Cell(nonNull(item, "item"), SENTINEL_END);
         if (head == SENTINEL_EMPTY) {
             head = newCell;
         } else {

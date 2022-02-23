@@ -1,17 +1,22 @@
 package io.smallrye.mutiny.operators.multi.replay;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.Test;
 
@@ -253,5 +258,64 @@ class AppendOnlyReplayListTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    @Test
+    void seedUnbounded() {
+        List<Integer> seed = IntStream.range(1, 9).boxed().collect(Collectors.toList());
+        AppendOnlyReplayList replayList = new AppendOnlyReplayList(Long.MAX_VALUE, seed);
+        replayList.push(9);
+        replayList.push(10);
+        replayList.pushCompletion();
+
+        List<Integer> expected = IntStream.range(1, 11).boxed().collect(Collectors.toList());
+        ArrayList<Integer> check = new ArrayList<>();
+        AppendOnlyReplayList.Cursor cursor = replayList.newCursor();
+        while (cursor.hasNext()) {
+            cursor.moveToNext();
+            if (cursor.hasReachedCompletion()) {
+                break;
+            }
+            check.add((Integer) cursor.read());
+        }
+
+        assertThat(cursor.hasReachedCompletion()).isTrue();
+        assertThat(check).isEqualTo(expected);
+    }
+
+    @Test
+    void seedBounded() {
+        List<Integer> seed = IntStream.range(1, 9).boxed().collect(Collectors.toList());
+        AppendOnlyReplayList replayList = new AppendOnlyReplayList(4, seed);
+        replayList.push(9);
+        replayList.push(10);
+        replayList.pushCompletion();
+
+        List<Integer> expected = Arrays.asList(7, 8, 9, 10);
+        ArrayList<Integer> check = new ArrayList<>();
+        AppendOnlyReplayList.Cursor cursor = replayList.newCursor();
+        while (cursor.hasNext()) {
+            cursor.moveToNext();
+            if (cursor.hasReachedCompletion()) {
+                break;
+            }
+            check.add((Integer) cursor.read());
+        }
+
+        assertThat(cursor.hasReachedCompletion()).isTrue();
+        assertThat(check).isEqualTo(expected);
+    }
+
+    @Test
+    void forbidNull() {
+        assertThatThrownBy(() -> {
+            List<String> seed = Arrays.asList("foo", "bar", null);
+            AppendOnlyReplayList replayList = new AppendOnlyReplayList(Long.MAX_VALUE, seed);
+            AppendOnlyReplayList.Cursor cursor = replayList.newCursor();
+            while (cursor.hasNext()) {
+                cursor.moveToNext();
+                cursor.read();
+            }
+        }).isInstanceOf(IllegalArgumentException.class).hasMessage("`item` must not be `null`");
     }
 }

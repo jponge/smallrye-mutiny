@@ -29,6 +29,11 @@ public class ReplayOperator<T> extends AbstractMulti<T> {
         this.replayList = new AppendOnlyReplayList(numberOfItemsToReplay);
     }
 
+    public ReplayOperator(Multi<T> upstream, long numberOfItemsToReplay, Iterable<T> seed) {
+        this.upstream = upstream;
+        this.replayList = new AppendOnlyReplayList(numberOfItemsToReplay, seed);
+    }
+
     @Override
     public void subscribe(MultiSubscriber<? super T> subscriber) {
         if (upstreamSubscriptionRequested.compareAndSet(false, true)) {

@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -76,5 +78,16 @@ class MultiReplayTest {
         sub = replay.subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
         sub.assertFailedWith(IOException.class, "boom");
         sub.assertItems(7, 8, 9);
+    }
+
+    @Test
+    void replayWithSeed() {
+        List<Integer> seed = Arrays.asList(-100, -10, -1);
+        Multi<Integer> upstream = Multi.createFrom().range(0, 11);
+        Multi<Integer> replay = Multi.createBy().replaying().ofMultiWithSeed(upstream, seed);
+
+        AssertSubscriber<Integer> sub = replay.subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+        sub.assertCompleted();
+        assertThat(sub.getItems()).containsExactly(-100, -10, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
     }
 }
