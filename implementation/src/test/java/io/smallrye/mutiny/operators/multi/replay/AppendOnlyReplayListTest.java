@@ -1,7 +1,6 @@
 package io.smallrye.mutiny.operators.multi.replay;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
@@ -10,9 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -175,24 +172,6 @@ class AppendOnlyReplayListTest {
         for (int i = 0; i < 100_000; i++) {
             replayList.push(i);
         }
-        replayList.runSanityCheck((prevRef, nextRef) -> {
-            int prev = (int) prevRef;
-            int next = (int) nextRef;
-            return (prev + 1) == next;
-        });
-    }
-
-    @Test
-    void runSanityChecksOnChainingUnbounded() {
-        AppendOnlyReplayList replayList = new AppendOnlyReplayList(Long.MAX_VALUE);
-        for (int i = 0; i < 100_000; i++) {
-            replayList.push(i);
-        }
-        replayList.runSanityCheck((prevRef, nextRef) -> {
-            int prev = (int) prevRef;
-            int next = (int) nextRef;
-            return (prev + 1) == next;
-        });
     }
 
     @Test
@@ -213,11 +192,6 @@ class AppendOnlyReplayListTest {
                     replayList.push(counter.getAndIncrement());
                 }
             }
-            replayList.runSanityCheck((a, b) -> {
-                long x = (long) a;
-                long y = (long) b;
-                return (x + 1) == y;
-            });
             stop.set(true);
         });
 

@@ -2,8 +2,6 @@ package io.smallrye.mutiny.operators.multi.replay;
 
 import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 
-import java.util.function.BiPredicate;
-
 /*
  * Replay is being captured using a custom linked list, while consumers can make progress using cursors.
  *
@@ -149,20 +147,5 @@ public class AppendOnlyReplayList {
 
     public Cursor newCursor() {
         return new Cursor();
-    }
-
-    void runSanityCheck(BiPredicate<Object, Object> predicate) {
-        if (head == tail) {
-            return;
-        }
-        Cell last = head;
-        Cell current = last.next;
-        while (current != tail) {
-            if (!predicate.test(last.value, current.value)) {
-                throw new IllegalStateException(last.value + " vs " + current.value);
-            }
-            last = current;
-            current = current.next;
-        }
     }
 }

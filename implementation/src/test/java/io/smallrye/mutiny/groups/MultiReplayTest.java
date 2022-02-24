@@ -7,10 +7,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Random;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Subscription;
 
@@ -20,6 +22,8 @@ import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 
 class MultiReplayTest {
+
+    private Random random = new Random();
 
     @Test
     void basicReplayAll() {
@@ -191,6 +195,72 @@ class MultiReplayTest {
 
         public void cancel() {
             subscription.cancel();
+        }
+    }
+
+    @RepeatedTest(5)
+    void raceBetweenPushAndCancel() throws InterruptedException, TimeoutException {
+        ExecutorService pool = Executors.newCachedThreadPool();
+        final int N = 32;
+        CountDownLatch startLatch = new CountDownLatch(N);
+        CountDownLatch endLatch = new CountDownLatch(N);
+
+        Multi<Long> upstream = Multi.createFrom().<Long> emitter(emitter -> {
+            try {
+                startLatch.await();
+            } catch (InterruptedException e) {
+                emitter.fail(e);
+            }
+            long i = 0;
+            while (endLatch.getCount() != 0) {
+                emitter.emit(i++);
+            }
+            emitter.complete();
+        }).runSubscriptionOn(pool);
+
+        Multi<Long> replay = Multi.createBy().replaying().ofMulti(upstream)
+                .runSubscriptionOn(pool);
+
+        CopyOnWriteArrayList<List<Long>> items = new CopyOnWriteArrayList<>();
+        for (int i = 0; i < N; i++) {
+            AssertSubscriber<Long> sub = replay.subscribe().withSubscriber(AssertSubscriber.create());
+            pool.submit(() -> {
+                startLatch.countDown();
+                randomSleep();
+                sub.request(Long.MAX_VALUE);
+                randomSleep();
+                sub.cancel();
+                items.add(sub.getItems());
+                endLatch.countDown();
+            });
+        }
+
+        if (!endLatch.await(10, TimeUnit.SECONDS)) {
+            throw new TimeoutException("The test did not finish within 10 seconds");
+        }
+
+        assertThat(items).hasSize(N);
+        items.forEach(list -> {
+            if (list.isEmpty()) {
+                // Might happen due to subscriber timing
+                return;
+            }
+            assertThat(list).isNotEmpty();
+            AtomicLong prev = new AtomicLong(list.get(0));
+            list.stream().skip(1).forEach(n -> {
+                assertThat(n).isEqualTo(prev.get() + 1);
+                prev.set(n);
+            });
+        });
+
+        pool.shutdownNow();
+    }
+
+    private void randomSleep() {
+        try {
+            Thread.sleep(250 + random.nextInt(250));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 }
