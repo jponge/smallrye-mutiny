@@ -167,14 +167,6 @@ class AppendOnlyReplayListTest {
     }
 
     @Test
-    void runSanityChecksOnChainingBounded() {
-        AppendOnlyReplayList replayList = new AppendOnlyReplayList(256);
-        for (int i = 0; i < 100_000; i++) {
-            replayList.push(i);
-        }
-    }
-
-    @Test
     void concurrencySanityChecks() {
         final int N_CONSUMERS = 4;
         AppendOnlyReplayList replayList = new AppendOnlyReplayList(256);

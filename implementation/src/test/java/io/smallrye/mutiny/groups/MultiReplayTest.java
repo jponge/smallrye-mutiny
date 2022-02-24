@@ -70,6 +70,8 @@ class MultiReplayTest {
         sub.request(3000);
         assertThat(sub.getItems()).containsExactly(8, 9, 10);
         sub.assertCompleted();
+
+        pool.shutdownNow();
     }
 
     @Test
