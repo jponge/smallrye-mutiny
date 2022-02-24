@@ -81,6 +81,7 @@ public class ReplayOperator<T> extends AbstractMulti<T> {
 
         private final AtomicInteger wip = new AtomicInteger();
 
+        @SuppressWarnings("unchecked")
         private void drain() {
             if (done) {
                 return;
@@ -111,11 +112,7 @@ public class ReplayOperator<T> extends AbstractMulti<T> {
                         return;
                     }
                     T item = (T) cursor.read();
-                    if (item == null) {
-                        cancel();
-                        downstream.onFailure(new NullPointerException("null item detected in the replay log"));
-                        return;
-                    }
+                    assert item != null; // Invariant enforced by AppendOnlyReplayList
                     downstream.onItem(item);
                     emitted++;
                 }
