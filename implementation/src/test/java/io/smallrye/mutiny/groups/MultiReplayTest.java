@@ -12,7 +12,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Subscription;
 
@@ -57,21 +56,23 @@ class MultiReplayTest {
         }).runSubscriptionOn(pool);
         Multi<Integer> replay = Multi.createBy().replaying().upTo(3).ofMulti(upstream);
 
-        AssertSubscriber<Integer> sub = replay.subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
-        step.set(true);
-        sub.awaitCompletion();
-        assertThat(sub.getItems()).containsExactly(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+        try {
+            AssertSubscriber<Integer> sub = replay.subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+            step.set(true);
+            sub.awaitCompletion();
+            assertThat(sub.getItems()).containsExactly(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 
-        sub = replay.subscribe().withSubscriber(AssertSubscriber.create());
-        sub.request(1);
-        assertThat(sub.getItems()).containsExactly(8);
-        sub.request(1);
-        assertThat(sub.getItems()).containsExactly(8, 9);
-        sub.request(3000);
-        assertThat(sub.getItems()).containsExactly(8, 9, 10);
-        sub.assertCompleted();
-
-        pool.shutdownNow();
+            sub = replay.subscribe().withSubscriber(AssertSubscriber.create());
+            sub.request(1);
+            assertThat(sub.getItems()).containsExactly(8);
+            sub.request(1);
+            assertThat(sub.getItems()).containsExactly(8, 9);
+            sub.request(3000);
+            assertThat(sub.getItems()).containsExactly(8, 9, 10);
+            sub.assertCompleted();
+        } finally {
+            pool.shutdownNow();
+        }
     }
 
     @Test
@@ -200,62 +201,65 @@ class MultiReplayTest {
         }
     }
 
-    @RepeatedTest(5)
+    @Test
     void raceBetweenPushAndCancel() throws InterruptedException, TimeoutException {
         ExecutorService pool = Executors.newCachedThreadPool();
-        final int N = 32;
-        CountDownLatch startLatch = new CountDownLatch(N);
-        CountDownLatch endLatch = new CountDownLatch(N);
+        try {
 
-        Multi<Long> upstream = Multi.createFrom().<Long> emitter(emitter -> {
-            try {
-                startLatch.await();
-            } catch (InterruptedException e) {
-                emitter.fail(e);
+            final int N = 32;
+            CountDownLatch startLatch = new CountDownLatch(N);
+            CountDownLatch endLatch = new CountDownLatch(N);
+
+            Multi<Long> upstream = Multi.createFrom().<Long> emitter(emitter -> {
+                try {
+                    startLatch.await();
+                } catch (InterruptedException e) {
+                    emitter.fail(e);
+                }
+                long i = 0;
+                while (endLatch.getCount() != 0) {
+                    emitter.emit(i++);
+                }
+                emitter.complete();
+            }).runSubscriptionOn(pool);
+
+            Multi<Long> replay = Multi.createBy().replaying().ofMulti(upstream)
+                    .runSubscriptionOn(pool);
+
+            CopyOnWriteArrayList<List<Long>> items = new CopyOnWriteArrayList<>();
+            for (int i = 0; i < N; i++) {
+                AssertSubscriber<Long> sub = replay.subscribe().withSubscriber(AssertSubscriber.create());
+                pool.submit(() -> {
+                    startLatch.countDown();
+                    randomSleep();
+                    sub.request(Long.MAX_VALUE);
+                    randomSleep();
+                    sub.cancel();
+                    items.add(sub.getItems());
+                    endLatch.countDown();
+                });
             }
-            long i = 0;
-            while (endLatch.getCount() != 0) {
-                emitter.emit(i++);
+
+            if (!endLatch.await(10, TimeUnit.SECONDS)) {
+                throw new TimeoutException("The test did not finish within 10 seconds");
             }
-            emitter.complete();
-        }).runSubscriptionOn(pool);
 
-        Multi<Long> replay = Multi.createBy().replaying().ofMulti(upstream)
-                .runSubscriptionOn(pool);
-
-        CopyOnWriteArrayList<List<Long>> items = new CopyOnWriteArrayList<>();
-        for (int i = 0; i < N; i++) {
-            AssertSubscriber<Long> sub = replay.subscribe().withSubscriber(AssertSubscriber.create());
-            pool.submit(() -> {
-                startLatch.countDown();
-                randomSleep();
-                sub.request(Long.MAX_VALUE);
-                randomSleep();
-                sub.cancel();
-                items.add(sub.getItems());
-                endLatch.countDown();
+            assertThat(items).hasSize(N);
+            items.forEach(list -> {
+                if (list.isEmpty()) {
+                    // Might happen due to subscriber timing
+                    return;
+                }
+                assertThat(list).isNotEmpty();
+                AtomicLong prev = new AtomicLong(list.get(0));
+                list.stream().skip(1).forEach(n -> {
+                    assertThat(n).isEqualTo(prev.get() + 1);
+                    prev.set(n);
+                });
             });
+        } finally {
+            pool.shutdownNow();
         }
-
-        if (!endLatch.await(10, TimeUnit.SECONDS)) {
-            throw new TimeoutException("The test did not finish within 10 seconds");
-        }
-
-        assertThat(items).hasSize(N);
-        items.forEach(list -> {
-            if (list.isEmpty()) {
-                // Might happen due to subscriber timing
-                return;
-            }
-            assertThat(list).isNotEmpty();
-            AtomicLong prev = new AtomicLong(list.get(0));
-            list.stream().skip(1).forEach(n -> {
-                assertThat(n).isEqualTo(prev.get() + 1);
-                prev.set(n);
-            });
-        });
-
-        pool.shutdownNow();
     }
 
     private void randomSleep() {
