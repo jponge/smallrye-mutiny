@@ -94,7 +94,7 @@ class MultiReplayTest {
     void replayWithSeed() {
         List<Integer> seed = Arrays.asList(-100, -10, -1);
         Multi<Integer> upstream = Multi.createFrom().range(0, 11);
-        Multi<Integer> replay = Multi.createBy().replaying().ofMultiWithSeed(upstream, seed);
+        Multi<Integer> replay = Multi.createBy().replaying().ofSeedAndMulti(seed, upstream);
 
         AssertSubscriber<Integer> sub = replay.subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
         sub.assertCompleted();
@@ -105,7 +105,7 @@ class MultiReplayTest {
     void rejectBadRequests() {
         List<Integer> seed = Arrays.asList(-100, -10, -1);
         Multi<Integer> upstream = Multi.createFrom().range(0, 11);
-        Multi<Integer> replay = Multi.createBy().replaying().ofMultiWithSeed(upstream, seed);
+        Multi<Integer> replay = Multi.createBy().replaying().ofSeedAndMulti(seed, upstream);
 
         DirectSubscriber<Integer> sub = replay.subscribe().withSubscriber(new DirectSubscriber<>());
         sub.request(-1);

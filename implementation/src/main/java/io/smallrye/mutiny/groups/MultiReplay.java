@@ -19,7 +19,7 @@ public class MultiReplay {
         return new ReplayOperator<>(nonNull(upstream, "upstream"), numberOfItemsToReplay);
     }
 
-    public <T> Multi<T> ofMultiWithSeed(Multi<T> upstream, Iterable<T> seed) {
+    public <T> Multi<T> ofSeedAndMulti(Iterable<T> seed, Multi<T> upstream) {
         return new ReplayOperator<>(nonNull(upstream, "upstream"), numberOfItemsToReplay, nonNull(seed, "seed"));
     }
 }
