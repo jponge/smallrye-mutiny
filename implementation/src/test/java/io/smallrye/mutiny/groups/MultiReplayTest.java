@@ -127,6 +127,15 @@ class MultiReplayTest {
     }
 
     @Test
+    void forbidSeedWithNull() {
+        List<Integer> seed = Arrays.asList(-100, -10, -1, null);
+        Multi<Integer> upstream = Multi.createFrom().range(0, 11);
+        assertThatThrownBy(() -> Multi.createBy().replaying().ofSeedAndMulti(seed, upstream))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("`item` must not be `null`");
+    }
+
+    @Test
     void rejectBadRequests() {
         List<Integer> seed = Arrays.asList(-100, -10, -1);
         Multi<Integer> upstream = Multi.createFrom().range(0, 11);
