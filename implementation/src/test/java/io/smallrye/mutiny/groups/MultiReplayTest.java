@@ -1,6 +1,7 @@
 package io.smallrye.mutiny.groups;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 
 import java.io.IOException;
@@ -23,6 +24,29 @@ import io.smallrye.mutiny.subscription.MultiSubscriber;
 class MultiReplayTest {
 
     private Random random = new Random();
+
+    @Test
+    void rejectBadBuilderArguments() {
+        assertThatThrownBy(() -> Multi.createBy().replaying().ofMulti(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("must not be `null`");
+
+        assertThatThrownBy(() -> Multi.createBy().replaying().ofSeedAndMulti(null, Multi.createFrom().item(123)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("must not be `null`");
+
+        assertThatThrownBy(() -> Multi.createBy().replaying().ofSeedAndMulti(new ArrayList<Integer>(), null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("must not be `null`");
+
+        assertThatThrownBy(() -> Multi.createBy().replaying().upTo(0))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("must be greater than zero");
+
+        assertThatThrownBy(() -> Multi.createBy().replaying().upTo(-10))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("must be greater than zero");
+    }
 
     @Test
     void basicReplayAll() {
