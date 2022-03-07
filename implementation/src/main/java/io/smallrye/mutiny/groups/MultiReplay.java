@@ -33,7 +33,9 @@ public class MultiReplay {
      * <p>
      * Replaying work as follows.
      * <ol>
-     * <li>The provided {@link Multi} is turned into a hot-stream as it gets requested {@code Long.MAX_VALUE} elements.</li>
+     * <li>The provided {@code upstream} {@link Multi} is turned into a hot-stream as it gets requested {@code Long.MAX_VALUE}
+     * elements.
+     * This happens at the first subscription request. Note that {@code upstream} will never be cancelled.</li>
      * <li>Each new subscriber to this replay {@link Multi} is able to replay items at its own pace (back-pressure is
      * honored).</li>
      * <li>When the number of items to replay is limited using {@link #upTo(long)}, then a new subscriber gets to replay
@@ -46,9 +48,10 @@ public class MultiReplay {
      * </ol>
      * <p>
      * Replaying a large number of elements can be costly, as items have to be kept in-memory.
-     * It is not recommended using this operator with unbounded streams.
-     * In such cases and especially when you have to keep replay data around for a long time then eventing middleware might be a
-     * better fit.
+     * It is not recommended using this operator with unbounded streams, especially as they can't be cancelled (the subscribers
+     * can cancel replays, though).
+     * In such cases and especially when you have to keep replay data around for a long time then some eventing middleware might
+     * be a better fit.
      *
      * @param upstream the {@link Multi} to replay, must not be {@code null}
      * @param <T> the items type
