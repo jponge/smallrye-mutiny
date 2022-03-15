@@ -5,6 +5,7 @@ import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 import java.util.concurrent.Executor;
 import java.util.function.*;
 
+import io.smallrye.mutiny.subscription.SubscriptionPacer;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -602,4 +603,7 @@ public interface Multi<T> extends Publisher<T> {
     default Multi<ItemWithContext<T>> attachContext() {
         return this.withContext((multi, ctx) -> multi.onItem().transform(item -> new ItemWithContext<>(ctx, item)));
     }
+
+    // TODO
+    Multi<T> withSubscriptionPacer(SubscriptionPacer pacer);
 }
