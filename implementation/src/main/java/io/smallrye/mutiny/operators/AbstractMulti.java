@@ -7,7 +7,7 @@ import java.util.concurrent.Executor;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
-import io.smallrye.mutiny.subscription.SubscriptionPacer;
+import io.smallrye.mutiny.subscription.DemandPacer;
 import org.reactivestreams.Subscriber;
 
 import io.smallrye.mutiny.Context;
@@ -177,7 +177,8 @@ public abstract class AbstractMulti<T> implements Multi<T> {
     }
 
     @Override
-    public Multi<T> withSubscriptionPacer(SubscriptionPacer pacer) {
-        return Infrastructure.onMultiCreation(new MultiSubscriptionPacer<>(this, nonNull(pacer, "pacer")));
+    public MultiDemandPacing<T> paceDemand() {
+        return new MultiDemandPacing<>(this);
     }
+
 }

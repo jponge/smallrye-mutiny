@@ -5,7 +5,7 @@ import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 import java.util.concurrent.Executor;
 import java.util.function.*;
 
-import io.smallrye.mutiny.subscription.SubscriptionPacer;
+import io.smallrye.mutiny.subscription.DemandPacer;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -605,5 +605,6 @@ public interface Multi<T> extends Publisher<T> {
     }
 
     // TODO
-    Multi<T> withSubscriptionPacer(SubscriptionPacer pacer);
+    MultiDemandPacing<T> paceDemand();
+
 }

@@ -2,8 +2,7 @@ package io.smallrye.mutiny.subscription;
 
 import java.time.Duration;
 
-@FunctionalInterface
-public interface SubscriptionPacer {
+public interface DemandPacer {
 
     class Request {
 
@@ -31,6 +30,8 @@ public interface SubscriptionPacer {
                     '}';
         }
     }
+
+    Request initial();
 
     Request apply(Request previousRequest, long observedItemsCount);
 }
