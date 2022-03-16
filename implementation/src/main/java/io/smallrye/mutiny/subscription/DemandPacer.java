@@ -1,5 +1,8 @@
 package io.smallrye.mutiny.subscription;
 
+import static io.smallrye.mutiny.helpers.ParameterValidation.positive;
+import static io.smallrye.mutiny.helpers.ParameterValidation.validate;
+
 import java.time.Duration;
 
 public interface DemandPacer {
@@ -10,8 +13,8 @@ public interface DemandPacer {
         private final Duration delay;
 
         public Request(long demand, Duration delay) {
-            this.demand = demand;
-            this.delay = delay;
+            this.demand = positive(demand, "demand");
+            this.delay = validate(delay, "delay");
         }
 
         public long demand() {

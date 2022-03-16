@@ -7,7 +7,6 @@ import java.util.concurrent.Executor;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
-import io.smallrye.mutiny.subscription.DemandPacer;
 import org.reactivestreams.Subscriber;
 
 import io.smallrye.mutiny.Context;

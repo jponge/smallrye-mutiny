@@ -1,17 +1,18 @@
 package io.smallrye.mutiny.operators.multi;
 
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+
+import org.reactivestreams.Subscription;
+
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.DemandPacer;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
-import org.reactivestreams.Subscription;
-
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class MultiDemandPacer<T> extends AbstractMultiOperator<T, T> {
 
@@ -38,7 +39,8 @@ public class MultiDemandPacer<T> extends AbstractMultiOperator<T, T> {
         private ScheduledFuture<?> scheduledFuture;
         private DemandPacer.Request currentRequest;
 
-        MultiSubscriptionPacerProcessor(MultiSubscriber<? super T> downstream, ScheduledExecutorService executor, DemandPacer pacer) {
+        MultiSubscriptionPacerProcessor(MultiSubscriber<? super T> downstream, ScheduledExecutorService executor,
+                DemandPacer pacer) {
             super(downstream);
             this.executor = executor;
             this.pacer = pacer;
@@ -65,15 +67,37 @@ public class MultiDemandPacer<T> extends AbstractMultiOperator<T, T> {
                 return;
             }
             long numberOfItemsEmitted = itemsCounter.getAndSet(0L);
-            currentRequest = pacer.apply(currentRequest, numberOfItemsEmitted);
+            try {
+                currentRequest = pacer.apply(currentRequest, numberOfItemsEmitted);
+                if (currentRequest == null) {
+                    cancel();
+                    downstream.onFailure(new NullPointerException("The pacer provided a null request"));
+                    return;
+                }
+            } catch (Throwable failure) {
+                cancel();
+                downstream.onFailure(failure);
+                return;
+            }
             demandAndSchedule(executor);
         }
 
         @Override
         public void onSubscribe(Subscription subscription) {
             super.onSubscribe(subscription);
-            currentRequest = pacer.initial();
-            demandAndSchedule(executor);
+            try {
+                currentRequest = pacer.initial();
+            } catch (Throwable failure) {
+                cancel();
+                downstream.onFailure(failure);
+                return;
+            }
+            if (currentRequest == null) {
+                cancel();
+                downstream.onFailure(new NullPointerException("The pacer provided a null initial request"));
+            } else {
+                demandAndSchedule(executor);
+            }
         }
 
         @Override
@@ -105,7 +129,9 @@ public class MultiDemandPacer<T> extends AbstractMultiOperator<T, T> {
 
         @Override
         public void cancel() {
-            scheduledFuture.cancel(true);
+            if (scheduledFuture != null) {
+                scheduledFuture.cancel(true);
+            }
             super.cancel();
         }
 

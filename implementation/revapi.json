@@ -61,7 +61,14 @@
       "criticality": "highlight",
       "minSeverity": "POTENTIALLY_BREAKING",
       "minCriticality": "documented",
-      "differences": []
+      "differences": [
+        {
+          "ignore": true,
+          "code": "java.method.addedToInterface",
+          "new": "method io.smallrye.mutiny.groups.MultiDemandPacing<T> io.smallrye.mutiny.Multi<T>::paceDemand()",
+          "justification": "New Multi paceDeman experimental operator"
+        }
+      ]
     }
   },
   {
