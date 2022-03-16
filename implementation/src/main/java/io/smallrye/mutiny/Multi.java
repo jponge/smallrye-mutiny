@@ -612,13 +612,15 @@ public interface Multi<T> extends Publisher<T> {
      * In the following example a demand of 25 is issued every 100ms, using the default worker pool to perform requests:
      * 
      * <pre>
-     * {
-     *     &#64;code
-     *     var pacer = new FixedDemandPacer(25L, Duration.ofMillis(100L));
-     *     var multi = Multi.createFrom().range(0, 100)
-     *             .paceDemand().on(Infrastructure.getDefaultWorkerPool()).using(pacer);
-     * }
+     * var pacer = new FixedDemandPacer(25L, Duration.ofMillis(100L));
+     * var multi = Multi.createFrom().range(0, 100)
+     *         .paceDemand().on(Infrastructure.getDefaultWorkerPool()).using(pacer);
      * </pre>
+     *
+     * <strong>Important: this operator is not compliant with the reactive streams specification.</strong>
+     * Downstream demand requests are being ignored, so it is possible that this operator requests more than what the downstream
+     * subscriber would want, depending on the {@link io.smallrye.mutiny.subscription.DemandPacer}
+     * object in use.
      *
      * @return a group to configure the demand pacing
      */
