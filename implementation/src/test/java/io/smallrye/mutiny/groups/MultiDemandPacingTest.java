@@ -15,6 +15,7 @@ import org.reactivestreams.Subscription;
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.DemandPacer;
 import io.smallrye.mutiny.subscription.FixedDemandPacer;
 
@@ -35,7 +36,7 @@ class MultiDemandPacingTest {
         FixedDemandPacer pacer = new FixedDemandPacer(25L, Duration.ofMillis(100L));
         AssertSubscriber<Integer> sub = Multi.createFrom().range(0, 100)
                 .onRequest().invoke(requests::add)
-                .paceDemand().using(pacer)
+                .paceDemand().on(Infrastructure.getDefaultWorkerPool()).using(pacer)
                 .subscribe().withSubscriber(AssertSubscriber.create());
 
         sub.awaitCompletion();

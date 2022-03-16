@@ -560,7 +560,7 @@ public interface Multi<T> extends Publisher<T> {
      * <p>
      * The provided function takes this {@link Multi} and the {@link Context} as parameters, and returns a {@link Multi}
      * to build the sub-pipeline, as in:
-     * 
+     *
      * <pre>
      * {@code
      * someMulti.withContext((multi, ctx) -> multi.onItem().transform(n -> n + "::" + ctx.getOrElse("foo", () -> "yolo")));
@@ -587,7 +587,7 @@ public interface Multi<T> extends Publisher<T> {
      *
      * <p>
      * This is a shortcut for:
-     * 
+     *
      * <pre>
      * {@code
      * someMulti.withContext((multi, ctx) -> multi.onItem().transform(item -> new ItemWithContext<>(ctx, item)));
@@ -603,7 +603,27 @@ public interface Multi<T> extends Publisher<T> {
         return this.withContext((multi, ctx) -> multi.onItem().transform(item -> new ItemWithContext<>(ctx, item)));
     }
 
-    // TODO
+    /**
+     * A demand-pacer allows controlling upstream demand using a request and a delay.
+     * <p>
+     * Each time the delay expires the pacer can evaluate a new demand based on the previous request and the number of emitted
+     * items that have been observed since the previous request.
+     * <p>
+     * In the following example a demand of 25 is issued every 100ms, using the default worker pool to perform requests:
+     * 
+     * <pre>
+     * {
+     *     &#64;code
+     *     var pacer = new FixedDemandPacer(25L, Duration.ofMillis(100L));
+     *     var multi = Multi.createFrom().range(0, 100)
+     *             .paceDemand().on(Infrastructure.getDefaultWorkerPool()).using(pacer);
+     * }
+     * </pre>
+     *
+     * @return a group to configure the demand pacing
+     */
+    @Experimental("Demand pacing is a new experimental API introduced in Mutiny 1.5.0")
+    @CheckReturnValue
     MultiDemandPacing<T> paceDemand();
 
 }
