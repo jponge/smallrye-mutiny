@@ -1,10 +1,12 @@
 package io.smallrye.mutiny;
 
 import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
+import static io.smallrye.mutiny.helpers.ParameterValidation.positive;
 
 import java.util.concurrent.Executor;
 import java.util.function.*;
 
+import io.smallrye.mutiny.helpers.ParameterValidation;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -628,4 +630,16 @@ public interface Multi<T> extends Publisher<T> {
     @CheckReturnValue
     MultiDemandPacing<T> paceDemand();
 
+    // TODO
+    @Experimental("Demand capping is a new experimental API introduced in Mutiny 1.5.0")
+    @CheckReturnValue
+    default Multi<T> capDemandsTo(long max) {
+        long actual = positive(max, "max");
+        return capDemandsUsing(request -> Math.min(request, actual));
+    }
+
+    // TODO
+    @Experimental("Demand capping is a new experimental API introduced in Mutiny 1.5.0")
+    @CheckReturnValue
+    Multi<T> capDemandsUsing(LongFunction<Long> function);
 }
