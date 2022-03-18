@@ -1,14 +1,15 @@
 package io.smallrye.mutiny.operators.multi;
 
-import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.helpers.test.AssertSubscriber;
+import static java.lang.Math.max;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import static java.lang.Math.max;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 
 class MultiDemandCappingTest {
 
@@ -44,7 +45,7 @@ class MultiDemandCappingTest {
     }
 
     @ParameterizedTest
-    @ValueSource(longs = {-1L, 0L})
+    @ValueSource(longs = { -1L, 0L })
     void rejectBadCapConstant(long max) {
         assertThatThrownBy(() -> Multi.createFrom().range(0, 100).capDemandsTo(max))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -65,7 +66,8 @@ class MultiDemandCappingTest {
                 .subscribe().withSubscriber(AssertSubscriber.create());
 
         sub.request(10L);
-        sub.assertFailedWith(IllegalStateException.class, "computed a request of 20 elements while the downstream request is of 10 elements");
+        sub.assertFailedWith(IllegalStateException.class,
+                "computed a request of 20 elements while the downstream request is of 10 elements");
     }
 
     @Test

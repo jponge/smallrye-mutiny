@@ -1,15 +1,15 @@
 package io.smallrye.mutiny.operators.multi;
 
-import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.helpers.ParameterValidation;
-import io.smallrye.mutiny.helpers.Subscriptions;
-import io.smallrye.mutiny.operators.MultiOperator;
-import io.smallrye.mutiny.subscription.MultiSubscriber;
-import org.reactivestreams.Subscription;
+import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 
 import java.util.function.LongFunction;
 
-import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
+import org.reactivestreams.Subscription;
+
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.helpers.Subscriptions;
+import io.smallrye.mutiny.operators.MultiOperator;
+import io.smallrye.mutiny.subscription.MultiSubscriber;
 
 public class MultiDemandCapping<T> extends MultiOperator<T, T> {
 
@@ -48,7 +48,8 @@ public class MultiDemandCapping<T> extends MultiOperator<T, T> {
                     return;
                 }
                 if (actualDemand > numberOfItems) {
-                    onFailure(new IllegalStateException("The demand capping function computed a request of " + actualDemand + " elements while the downstream request is of " + numberOfItems + " elements"));
+                    onFailure(new IllegalStateException("The demand capping function computed a request of " + actualDemand
+                            + " elements while the downstream request is of " + numberOfItems + " elements"));
                     return;
                 }
                 subscription.request(actualDemand);
