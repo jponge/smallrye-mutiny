@@ -103,8 +103,7 @@
         <revapi-reporter-text.version>0.14.5</revapi-reporter-text.version>
         <revapi.skip>true</revapi.skip>
 
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven-compiler-plugin.release>11</maven-compiler-plugin.release>
 
         <!-- Configuration of mutiny-kotlin module -->
         <kotlin.version>1.6.20</kotlin.version>
@@ -358,6 +357,13 @@
             </plugins>
         </pluginManagement>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <release>${maven-compiler-plugin.release}</release>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
