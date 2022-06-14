@@ -49,3 +49,4 @@ plugins:
 extra:
   snippet_dir: docs/src/test
   attributes_path: docs/attributes.yaml
+  javadoc_artifact: io.smallrye.reactive/smallrye-mutiny

@@ -1,4 +1,4 @@
-package guides;
+package tutorials;
 
 import guides.extension.SystemOut;
 import guides.extension.SystemOutCaptureExtension;
@@ -22,12 +22,12 @@ public class CreatingUniTest {
 
     @Test
     void pipeline(SystemOut out) {
-        // tag::pipeline[]
+        // <pipeline>
         Uni.createFrom().item(1)
                 .onItem().transform(i -> "hello-" + i)
                 .onItem().delayIt().by(Duration.ofMillis(100))
                 .subscribe().with(System.out::println);
-        // end::pipeline[]
+        // </pipeline>
         await().untilAsserted(() ->
                 assertThat(out.get()).contains("hello-1")
         );
@@ -36,12 +36,12 @@ public class CreatingUniTest {
     @Test
     void subscription(SystemOut out) {
         Uni<Integer> uni = Uni.createFrom().item(1);
-        // tag::subscription[]
+        // <subscription>
         Cancellable cancellable = uni
                 .subscribe().with(
                         item -> System.out.println(item),
                         failure -> System.out.println("Failed with " + failure));
-        // end::subscription[]
+        // </subscription>
         assertThat(cancellable).isNotNull();
         assertThat(out.get()).contains("1").doesNotContain("Failed");
     }
@@ -49,30 +49,30 @@ public class CreatingUniTest {
     @Test
     public void creation() {
         {
-            // tag::simple[]
+            // <simple>
             Uni<Integer> uni = Uni.createFrom().item(1);
-            // end::simple[]
+            // </simple>
             assertThat(uni.await().indefinitely()).isEqualTo(1);
         }
 
         {
-            // tag::supplier[]
+            // <supplier>
             AtomicInteger counter = new AtomicInteger();
             Uni<Integer> uni = Uni.createFrom().item(() -> counter.getAndIncrement());
-            // end::supplier[]
+            // </supplier>
             assertThat(uni.await().indefinitely()).isEqualTo(0);
             assertThat(uni.await().indefinitely()).isEqualTo(1);
             assertThat(uni.await().indefinitely()).isEqualTo(2);
         }
 
         {
-            // tag::failed[]
+            // <failed>
             // Pass an exception directly:
             Uni<Integer> failed1 = Uni.createFrom().failure(new Exception("boom"));
 
             // Pass a supplier called for every subscriber:
             Uni<Integer> failed2 = Uni.createFrom().failure(() -> new Exception("boom"));
-            // end::failed[]
+            // </failed>
 
             assertThatThrownBy(() -> failed1.await().indefinitely())
                     .hasMessageContaining("boom");
@@ -82,28 +82,28 @@ public class CreatingUniTest {
         }
 
         {
-            // tag::null[]
+            // <null>
             Uni<Void> uni = Uni.createFrom().nullItem();
-            // end::null[]
+            // </null>
             assertThat(uni.await().indefinitely()).isNull();
         }
 
         {
             String result = "hello";
-            // tag::emitter[]
+            // <emitter>
             Uni<String> uni = Uni.createFrom().emitter(em -> {
                 // When the result is available, emit it
                 em.complete(result);
             });
-            // end::emitter[]
+            // </emitter>
             assertThat(uni.await().indefinitely()).isEqualTo("hello");
         }
 
         {
             CompletionStage<String> stage = CompletableFuture.completedFuture("hello");
-            // tag::cs[]
+            // <cs>
             Uni<String> uni = Uni.createFrom().completionStage(stage);
-            // end::cs[]
+            // </cs>
             assertThat(uni.await().indefinitely()).isEqualTo("hello");
         }
     }

@@ -1,4 +1,4 @@
-package guides;
+package tutorials;
 
 import guides.extension.SystemOut;
 import guides.extension.SystemOutCaptureExtension;
@@ -23,26 +23,26 @@ public class CreatingMultiTest {
 
     @Test
     void pipeline(SystemOut out) {
-        // tag::pipeline[]
+        // <pipeline>
         Multi.createFrom().items(1, 2, 3, 4, 5)
                 .onItem().transform(i -> i * 2)
                 .select().first(3)
                 .onFailure().recoverWithItem(0)
                 .subscribe().with(System.out::println);
-        // end::pipeline[]
+        // </pipeline>
         assertThat(out.get()).contains("2", "4", "6");
     }
 
     @Test
     void subscription(SystemOut out) {
         Multi<Integer> multi = Multi.createFrom().item(1);
-        // tag::subscription[]
+        // <subscription>
         Cancellable cancellable = multi
                 .subscribe().with(
                         item -> System.out.println(item),
                         failure -> System.out.println("Failed with " + failure),
                         () -> System.out.println("Completed"));
-        // end::subscription[]
+        // </subscription>
         assertThat(cancellable).isNotNull();
         assertThat(out.get()).contains("1", "Completed").doesNotContain("Failed");
     }
@@ -50,33 +50,33 @@ public class CreatingMultiTest {
     @Test
     public void creation() {
         {
-            // tag::simple[]
+            // <simple>
             Multi<Integer> multiFromItems = Multi.createFrom().items(1, 2, 3, 4);
             Multi<Integer> multiFromIterable = Multi.createFrom().iterable(Arrays.asList(1, 2, 3, 4, 5));
-            // end::simple[]
+            // </simple>
             assertThat(multiFromItems.collect().asList().await().indefinitely()).containsExactly(1, 2, 3, 4);
             assertThat(multiFromIterable.collect().asList().await().indefinitely()).containsExactly(1, 2, 3, 4, 5);
         }
 
         {
-            // tag::supplier[]
+            // <supplier>
             AtomicInteger counter = new AtomicInteger();
             Multi<Integer> multi = Multi.createFrom().items(() ->
                     IntStream.range(counter.getAndIncrement(), counter.get() * 2).boxed());
-            // end::supplier[]
+            // </supplier>
             assertThat(multi.collect().asList().await().indefinitely()).containsExactly(0, 1);
             assertThat(multi.collect().asList().await().indefinitely()).containsExactly(1, 2, 3);
             assertThat(multi.collect().asList().await().indefinitely()).containsExactly(2, 3, 4, 5);
         }
 
         {
-            // tag::failed[]
+            // <failed>
             // Pass an exception directly:
             Multi<Integer> failed1 = Multi.createFrom().failure(new Exception("boom"));
 
             // Pass a supplier called for every subscriber:
             Multi<Integer> failed2 = Multi.createFrom().failure(() -> new Exception("boom"));
-            // end::failed[]
+            // </failed>
 
             assertThatThrownBy(() -> failed1.toUni().await().indefinitely())
                     .hasMessageContaining("boom");
@@ -86,28 +86,28 @@ public class CreatingMultiTest {
         }
 
         {
-            // tag::empty[]
+            // <empty>
             Multi<String> multi = Multi.createFrom().empty();
-            // end::empty[]
+            // </empty>
             assertThat(multi.toUni().await().indefinitely()).isNull();
         }
 
         {
-            // tag::emitter[]
+            // <emitter>
             Multi<Integer> multi = Multi.createFrom().emitter(em -> {
                 em.emit(1);
                 em.emit(2);
                 em.emit(3);
                 em.complete();
             });
-            // end::emitter[]
+            // </emitter>
             assertThat(multi.collect().asList().await().indefinitely()).containsExactly(1, 2, 3);
         }
 
         {
-            // tag::ticks[]
+            // <ticks>
             Multi<Long> ticks = Multi.createFrom().ticks().every(Duration.ofMillis(100));
-            // end::ticks[]
+            // </ticks>
             BlockingIterable<Long> longs = ticks
                     .select().first(3)
                     .subscribe().asIterable();
@@ -115,7 +115,7 @@ public class CreatingMultiTest {
         }
 
         {
-            // tag::generator[]
+            // <generator>
             Multi<Object> sequence = Multi.createFrom().generator(() -> 1, (n, emitter) -> {
                 int next = n + (n / 2) + 1;
                 if (n < 50) {
@@ -126,7 +126,7 @@ public class CreatingMultiTest {
                 }
                 return next;
             });
-            // end::generator[]
+            // </generator>
             assertThat(sequence.collect().asList().await().indefinitely()).containsExactly(2, 4, 7, 11, 17, 26, 40, 61);
         }
     }
