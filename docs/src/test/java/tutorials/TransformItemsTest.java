@@ -1,4 +1,4 @@
-package guides;
+package tutorials;
 
 import guides.extension.SystemOut;
 import guides.extension.SystemOutCaptureExtension;
@@ -15,46 +15,45 @@ public class TransformItemsTest {
 
     @Test
     public void testUniTransform(SystemOut out) {
-        // tag::uni-transform[]
-        Uni<String> uni = Uni.createFrom().item("hello");
-        uni
+        // <uni-transform>
+        Uni<String> someUni = Uni.createFrom().item("hello");
+        someUni
                 .onItem().transform(i -> i.toUpperCase())
                 .subscribe().with(
-                item -> System.out.println(item)); // Print HELLO
-        // end::uni-transform[]
+                        item -> System.out.println(item)); // Print HELLO
+        // </uni-transform>
         assertThat(out.get()).contains("HELLO");
     }
 
     @Test
     public void testMultiTransform() {
         Multi<String> multi = Multi.createFrom().items("a", "b", "c");
-        // tag::multi-transform[]
-        Multi<String> m = multi
-                .onItem().transform(i -> i.toUpperCase());
-        // end::multi-transform[]
+        // <multi-transform>
+        Multi<String> m = multi.onItem().transform(i -> i.toUpperCase());
+        // </multi-transform>
         assertThat(m.collect().asList().await().indefinitely()).containsExactly("A", "B", "C");
     }
 
     @Test
     public void testMultiTransformWithSubscription(SystemOut out) {
-        // tag::multi-transform-2[]
-        Multi<String> multi = Multi.createFrom().items("a", "b", "c");
-        multi
+        // <multi-transform-2>
+        Multi<String> someMulti = Multi.createFrom().items("a", "b", "c");
+        someMulti
                 .onItem().transform(i -> i.toUpperCase())
                 .subscribe().with(
-                    item -> System.out.println(item)); // Print A B C
-        // end::multi-transform-2[]
+                        item -> System.out.println(item)); // Print A B C
+        // </multi-transform-2>
         assertThat(out.get()).contains("A", "B", "C");
     }
 
     @Test
     public void testChain() {
         Uni<String> uni = Uni.createFrom().item("hello");
-        // tag::chain[]
+        // <chain>
         Uni<String> u = uni
                 .onItem().transform(i -> i.toUpperCase())
                 .onItem().transform(i -> i + "!");
-        // end::chain[]
+        // </chain>
 
         assertThat(u.await().indefinitely()).isEqualTo("HELLO!");
 
