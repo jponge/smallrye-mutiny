@@ -1,4 +1,4 @@
-package guides;
+package tutorials;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -12,41 +12,48 @@ public class ObserveTest {
     public void test() {
         Uni<String> uni = Uni.createFrom().item("hello");
         Multi<String> multi = Multi.createFrom().items("a", "b", "c");
-        // tag::invoke[]
+        // <invoke>
         Uni<String> u = uni.onItem()
             .invoke(i -> System.out.println("Received item: " + i));
+
         Multi<String> m = multi.onItem()
             .invoke(i -> System.out.println("Received item: " + i));
-        // end::invoke[]
+        // </invoke>
 
-        // tag::call[]
+        // <call>
         multi
             .onItem().call(i ->
                 Uni.createFrom().voidItem()
                     .onItem().delayIt().by(Duration.ofSeconds(1)
             )
         );
-        // end::call[]
+        // </call>
 
         MyResource resource = new MyResource();
-        // tag::close[]
+        // <close>
         multi
             .onCompletion().call(() -> resource.close());
-        // end::close[]
+        // </close>
     }
 
     @Test
     public void all() {
         Multi<String> multi = Multi.createFrom().items("a", "b", "c");
-        // tag::invoke-all[]
+        // <invoke-all>
         multi
-            .onSubscription().invoke(() -> System.out.println("⬇️ Subscribed"))
-            .onItem().invoke(i -> System.out.println("⬇️ Received item: " + i))
-            .onFailure().invoke(f -> System.out.println("⬇️ Failed with " + f))
-            .onCompletion().invoke(() -> System.out.println("⬇️ Completed"))
-            .onCancellation().invoke(() -> System.out.println("⬆️ Cancelled"))
-            .onRequest().invoke(l -> System.out.println("⬆️ Requested: " + l));
-        // end::invoke-all[]
+            .onSubscription()
+                .invoke(() -> System.out.println("⬇️ Subscribed"))
+            .onItem()
+                .invoke(i -> System.out.println("⬇️ Received item: " + i))
+            .onFailure()
+                .invoke(f -> System.out.println("⬇️ Failed with " + f))
+            .onCompletion()
+                .invoke(() -> System.out.println("⬇️ Completed"))
+            .onCancellation()
+                .invoke(() -> System.out.println("⬆️ Cancelled"))
+            .onRequest()
+                .invoke(l -> System.out.println("⬆️ Requested: " + l));
+        // </invoke-all>
 
     }
 

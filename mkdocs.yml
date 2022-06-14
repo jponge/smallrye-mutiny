@@ -30,12 +30,19 @@ theme:
 markdown_extensions:
   - admonition
   - meta
+  - tables
   - pymdownx.highlight:
       anchor_linenums: true
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.snippets
   - pymdownx.inlinehilite
   - pymdownx.details
+  - pymdownx.smartsymbols
+  - pymdownx.betterem
   - pymdownx.tabbed:
       alternate_style: true
 
