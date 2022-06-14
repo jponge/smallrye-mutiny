@@ -1,0 +1,51 @@
+site_name: SmallRye Mutiny
+repo_url: https://github.com/smallrye/smallrye-mutiny
+docs_dir: docs/mkdocs
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: cyan
+      accent: red
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: orange
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.indexes
+    - navigation.sections
+    - navigation.tracking
+    - navigation.tabs
+
+markdown_extensions:
+  - admonition
+  - meta
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.snippets
+  - pymdownx.inlinehilite
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+
+plugins:
+  - search
+  - macros:
+      verbose: true
+      module_name: docs/mkdocs-customizations/macros/docissimo
+      include_dir: docs/mkdocs-customizations/macros
+
+extra:
+  snippet_dir: docs/src/test
+  attributes_path: docs/attributes.yaml
