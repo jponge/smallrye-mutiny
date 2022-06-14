@@ -10,16 +10,16 @@ Your code is going to observe and process these events.
 Most of the time, your code is only interested in item and failure events.
 But there are other kinds of events such as cancellation, request, completion, and so on:
 
-| Event            | Uni / Multi   | Direction              | Note                                                                                                   |
-|------------------|---------------|------------------------|--------------------------------------------------------------------------------------------------------|
-| **item**         | Uni + Multi   | upstream -> downstream | The upstream sent an item.                                                                             |
-| **failure**      | Uni + Multi   | upstream -> downstream | The upstream failed.                                                                                   |
-| **completion**   | Multi         | upstream -> downstream | The upstream completed.                                                                                |
-| **subscribe**    | Uni and Multi | downstream -> upstream | A downstream subscriber is interested in the data.                                                     |
-| **subscription** | Uni and Multi | upstream -> downstream | Event happening after a `subscribe` event to indicate that the upstream acknowledged the subscription. |
-| **cancellation** | Uni and Multi | downstream -> upstream | A downstream subscriber does not want any more events.                                                 |
-| **overflow**     | Multi         | upstream -> downstream | The upstream has emitted more than the downstream can handle.                                          |
-| **request**      | Multi         | downstream -> upstream | The downstream indicates its capacity to handle `n` items.                                             |
+|             Event | Uni / Multi   | Direction               | Note                                                                                                    |
+|------------------:|---------------|:------------------------|:--------------------------------------------------------------------------------------------------------|
+|          **item** | Uni + Multi   | upstream -> downstream  | The upstream sent an item.                                                                              |
+|       **failure** | Uni + Multi   | upstream -> downstream  | The upstream failed.                                                                                    |
+|    **completion** | Multi         | upstream -> downstream  | The upstream completed.                                                                                 |
+|     **subscribe** | Uni and Multi | downstream -> upstream  | A downstream subscriber is interested in the data.                                                      |
+|  **subscription** | Uni and Multi | upstream -> downstream  | Event happening after a `subscribe` event to indicate that the upstream acknowledged the subscription.  |
+|  **cancellation** | Uni and Multi | downstream -> upstream  | A downstream subscriber does not want any more events.                                                  |
+|      **overflow** | Multi         | upstream -> downstream  | The upstream has emitted more than the downstream can handle.                                           |
+|       **request** | Multi         | downstream -> upstream  | The downstream indicates its capacity to handle `n` items.                                              |
 
 
 It’s not rare that you need to look at these various events to understand better what’s going on or implement specific side effects.
@@ -132,9 +132,9 @@ If the callback throws an exception or the produced `Uni` produces a failure, Mu
 
 The following table highlights the key differences:
 
-|                    | `invoke`                          | `call`                                           |
-|--------------------|-----------------------------------|--------------------------------------------------|
-| **Nature**         | synchronous                       | asynchronous                                     |
-| **Return type**    | `void`                            | `Uni<T>`                                         |
-| **Main use cases** | logging, synchronous side-effects | I/O operations, closing resources, flushing data |
+|                     | `invoke`                          | `call`                                           |
+|--------------------:|:----------------------------------|:-------------------------------------------------|
+|          **Nature** | synchronous                       | asynchronous                                     |
+|     **Return type** | `void`                            | `Uni<T>`                                         |
+|  **Main use cases** | logging, synchronous side-effects | I/O operations, closing resources, flushing data |
 
