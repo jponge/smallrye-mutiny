@@ -3,6 +3,18 @@ repo_url: https://github.com/smallrye/smallrye-mutiny
 docs_dir: docs/mkdocs
 edit_uri: edit/main/docs/
 
+nav:
+  - 'index.md'
+  - 'Tutorials':
+      - 'tutorials/getting-started-with-mutiny.md'
+      - 'tutorials/creating-uni-pipelines.md'
+      - 'tutorials/creating-multi-pipelines.md'
+      - 'tutorials/observing-events.md'
+      - 'tutorials/transforming-items.md'
+      - 'tutorials/transforming-items-asynchronously.md'
+      - 'tutorials/handling-failures.md'
+      - 'tutorials/retrying.md'
+
 theme:
   name: material
   logo: assets/logo.png
