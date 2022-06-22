@@ -58,7 +58,7 @@ Let's start with this simple program:
 
 
 ```java linenums="1"
---8<-- "{{ attributes.snippet_dir }}/java/FirstProgram.java"
+{{ insert('java/FirstProgram.java') }}
 ```
 
 This program prints:
