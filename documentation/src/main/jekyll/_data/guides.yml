@@ -58,23 +58,23 @@
 #  url: getting-started/retry
 #  ----
 
-reactive-to-imperative:
-  title: From reactive to imperative
-  text: Learn how to block until you get items.
-  labels:
-    - advanced
-  related:
-    - url: https://javadoc.io/doc/io.smallrye.reactive/mutiny/latest/io/smallrye/mutiny/groups/UniAwait.html
-      text: The Uni Await group
-    - guide: imperative-to-reactive
-
-imperative-to-reactive:
-  title: Imperative to Reactive
-  text: Learn how to integrate blocking code.
-  labels:
-    - advanced
-  related:
-    - guide: reactive-to-imperative
+#reactive-to-imperative:
+#  title: From reactive to imperative
+#  text: Learn how to block until you get items.
+#  labels:
+#    - advanced
+#  related:
+#    - url: https://javadoc.io/doc/io.smallrye.reactive/mutiny/latest/io/smallrye/mutiny/groups/UniAwait.html
+#      text: The Uni Await group
+#    - guide: imperative-to-reactive
+#
+#imperative-to-reactive:
+#  title: Imperative to Reactive
+#  text: Learn how to integrate blocking code.
+#  labels:
+#    - advanced
+#  related:
+#    - guide: reactive-to-imperative
 
 unchecked:
   title: Dealing with checked exceptions

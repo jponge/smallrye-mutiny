@@ -14,6 +14,9 @@ nav:
       - 'tutorials/transforming-items-asynchronously.md'
       - 'tutorials/handling-failures.md'
       - 'tutorials/retrying.md'
+  - 'Topic guides':
+      - 'topic-guides/imperative-to-reactive.md'
+      - 'topic-guides/reactive-to-imperative.md'
 
 theme:
   name: material
