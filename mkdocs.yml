@@ -17,10 +17,17 @@ nav:
   - 'Topic guides':
       - 'topic-guides/imperative-to-reactive.md'
       - 'topic-guides/reactive-to-imperative.md'
+      - 'topic-guides/unchecked-exceptions.md'
+      - 'topic-guides/filtering-items.md'
+      - 'topic-guides/collecting-items.md'
+      - 'topic-guides/take-skip-items.md'
 
 theme:
   name: material
   logo: assets/logo.png
+  font:
+    text: Roboto
+    code: JetBrains Mono
   favicon: assets/favicon.ico
   palette:
     - media: "(prefers-color-scheme: light)"
