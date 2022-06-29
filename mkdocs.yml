@@ -36,6 +36,13 @@ nav:
       - 'topic-guides/combining-items.md'
       - 'topic-guides/joining-unis.md'
       - 'topic-guides/converters.md'
+      - 'topic-guides/testing.md'
+      - 'topic-guides/custom-operators.md'
+      - 'topic-guides/dropped-exceptions.md'
+      - 'topic-guides/framework-integration.md'
+      - 'topic-guides/hot-streams.md'
+      - 'topic-guides/integrate-a-non-reactive-source.md'
+      - 'topic-guides/kotlin.md'
 
 theme:
   name: material
@@ -65,6 +72,7 @@ theme:
     - navigation.sections
     - navigation.tracking
     - navigation.tabs
+    - navigation.tabs.sticky
 
 markdown_extensions:
   - toc:
