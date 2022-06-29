@@ -9,21 +9,27 @@ You need to add another dependency to access the converters.
 Each artifact contains the converters for a specific reactive library.
 Pick the right one and add it to your project:
 
-```xml
-<!-- Mutiny <-> Reactor -->
-<dependency>
-  <groupId>io.smallrye.reactive</groupId>
-  <artifactId>mutiny-reactor</artifactId>
-  <version>{{ attributes.versions.mutiny }}</version>
-</dependency>
+=== "Reactor"
 
-<!-- Mutiny <-> RX Java 3 -->
-<dependency>
-  <groupId>io.smallrye.reactive</groupId>
-  <artifactId>mutiny-rxjava3</artifactId>
-  <version>{{ attributes.versions.mutiny }}</version>
-</dependency>
-```
+    ```xml
+    <!-- Mutiny <-> Reactor -->
+    <dependency>
+        <groupId>io.smallrye.reactive</groupId>
+        <artifactId>mutiny-reactor</artifactId>
+        <version>{{ attributes.versions.mutiny }}</version>
+    </dependency>
+    ```
+
+=== "RxJava 3"
+
+    ```xml
+    <!-- Mutiny <-> RX Java 3 -->
+    <dependency>
+        <groupId>io.smallrye.reactive</groupId>
+        <artifactId>mutiny-rxjava3</artifactId>
+        <version>{{ attributes.versions.mutiny }}</version>
+    </dependency>
+    ```
 
 ## Integration with Project Reactor
 
@@ -174,7 +180,7 @@ You can also produce a `Single<T>` and emit a _failure_ event if the `Multi` com
 You can configure the thrown exception using `onEmptyThrow.`
 
 !!! tip
-    
+
     You can also create a `Flowable` from a `Multi` using: `Flowable.fromPublisher(multi)`.
 
 ### Converting a Uni into a RX Java type
