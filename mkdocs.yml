@@ -21,6 +21,12 @@ nav:
       - 'topic-guides/filtering-items.md'
       - 'topic-guides/collecting-items.md'
       - 'topic-guides/take-skip-items.md'
+      - 'topic-guides/eliminate-duplicates-and-repetitions.md'
+      - 'topic-guides/handling-null.md'
+      - 'topic-guides/handling-timeouts.md'
+      - 'topic-guides/delaying-events.md'
+      - 'topic-guides/pagination.md'
+      - 'topic-guides/polling.md'
 
 theme:
   name: material

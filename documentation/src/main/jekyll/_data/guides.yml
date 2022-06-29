@@ -115,62 +115,62 @@
 #    - url: https://javadoc.io/doc/io.smallrye.reactive/mutiny/latest/io/smallrye/mutiny/groups/MultiTransform.html
 #      text: <tt>MultiTransform</tt>
 
-repetitions:
-  title: Eliminate duplicates and repetitions
-  text: Learn how to drop duplicated and repeated items from a multi.
-  labels:
-    - beginner
-  related:
-    - guide: filter
-    - url: https://javadoc.io/doc/io.smallrye.reactive/mutiny/latest/io/smallrye/mutiny/groups/MultiTransform.html
-      text: <tt>MultiTransform</tt>
+#repetitions:
+#  title: Eliminate duplicates and repetitions
+#  text: Learn how to drop duplicated and repeated items from a multi.
+#  labels:
+#    - beginner
+#  related:
+#    - guide: filter
+#    - url: https://javadoc.io/doc/io.smallrye.reactive/mutiny/latest/io/smallrye/mutiny/groups/MultiTransform.html
+#      text: <tt>MultiTransform</tt>
 
-handling-null:
-  title: How to handle null?
-  text: Learn how to execute specific actions on <em>null</em> items
-  labels:
-    - beginner
-  related:
-    - url: https://javadoc.io/static/io.smallrye.reactive/mutiny/latest/io/smallrye/mutiny/groups/UniOnNull.html
-      text: <tt>UniOnNull</tt>
-    - url: https://javadoc.io/static/io.smallrye.reactive/mutiny/latest/io/smallrye/mutiny/groups/UniOnNotNull.html
-      text: <tt>UniOnNotNull</tt>
+#handling-null:
+#  title: How to handle null?
+#  text: Learn how to execute specific actions on <em>null</em> items
+#  labels:
+#    - beginner
+#  related:
+#    - url: https://javadoc.io/static/io.smallrye.reactive/mutiny/latest/io/smallrye/mutiny/groups/UniOnNull.html
+#      text: <tt>UniOnNull</tt>
+#    - url: https://javadoc.io/static/io.smallrye.reactive/mutiny/latest/io/smallrye/mutiny/groups/UniOnNotNull.html
+#      text: <tt>UniOnNotNull</tt>
 
-timeout:
-  title: How to handle timeout?
-  text: Learn how to timeouts and deadlines.
-  labels:
-    - beginner
-  related:
-    - url: https://javadoc.io/doc/io.smallrye.reactive/mutiny/latest/io/smallrye/mutiny/groups/UniOnTimeout.html
-      text: <tt>UniOnTimeout</tt>
+#timeout:
+#  title: How to handle timeout?
+#  text: Learn how to timeouts and deadlines.
+#  labels:
+#    - beginner
+#  related:
+#    - url: https://javadoc.io/doc/io.smallrye.reactive/mutiny/latest/io/smallrye/mutiny/groups/UniOnTimeout.html
+#      text: <tt>UniOnTimeout</tt>
 
-delay:
-  title: How to delay events?
-  text: Learn how to artifically delays event propagation and throttle emissions.
-  labels:
-    - intermediate
-  related:
-    - url: https://javadoc.io/doc/io.smallrye.reactive/mutiny/latest/io/smallrye/mutiny/groups/UniOnItemDelay.html
-      text: <tt>UniOnItemDelay</tt>
+#delay:
+#  title: How to delay events?
+#  text: Learn how to artifically delays event propagation and throttle emissions.
+#  labels:
+#    - intermediate
+#  related:
+#    - url: https://javadoc.io/doc/io.smallrye.reactive/mutiny/latest/io/smallrye/mutiny/groups/UniOnItemDelay.html
+#      text: <tt>UniOnItemDelay</tt>
 
-pagination:
-  title: How to use paginated API?
-  text: Learn how to consume APIs using pagination.
-  labels:
-    - intermediate
-  related:
-    - guide: polling
-    - url: https://quarkus.io/blog/mutiny-pagination/
-      text: Handling paginated APIs with Mutiny
+#pagination:
+#  title: How to use paginated API?
+#  text: Learn how to consume APIs using pagination.
+#  labels:
+#    - intermediate
+#  related:
+#    - guide: polling
+#    - url: https://quarkus.io/blog/mutiny-pagination/
+#      text: Handling paginated APIs with Mutiny
 
-polling:
-  title: How to use polling?
-  text: Learn how to consume items from pollable sources.
-  labels:
-    - intermediate
-  related:
-    - guide: pagination
+#polling:
+#  title: How to use polling?
+#  text: Learn how to consume items from pollable sources.
+#  labels:
+#    - intermediate
+#  related:
+#    - guide: pagination
 
 emission-threads:
   title: How to change the emission thread?
