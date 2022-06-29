@@ -27,6 +27,15 @@ nav:
       - 'topic-guides/delaying-events.md'
       - 'topic-guides/pagination.md'
       - 'topic-guides/polling.md'
+      - 'topic-guides/emission-threads.md'
+      - 'topic-guides/emit-on-vs-run-subscription-on.md'
+      - 'topic-guides/completion-stage.md'
+      - 'topic-guides/rx.md'
+      - 'topic-guides/shortcut-methods.md'
+      - 'topic-guides/merging-and-concatenating-streams.md'
+      - 'topic-guides/combining-items.md'
+      - 'topic-guides/joining-unis.md'
+      - 'topic-guides/converters.md'
 
 theme:
   name: material
