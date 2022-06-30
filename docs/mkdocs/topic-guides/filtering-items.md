@@ -17,7 +17,6 @@ Otherwise, it drops the item.
 The predicate passed to `where` is synchronous.
 The `when` method provides an asynchronous version:
 
-
 ```java linenums="1"
 {{ insert('java/guides/operators/FilterTest.java', 'test') }}
 ```

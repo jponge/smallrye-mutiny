@@ -43,6 +43,10 @@ nav:
       - 'topic-guides/hot-streams.md'
       - 'topic-guides/integrate-a-non-reactive-source.md'
       - 'topic-guides/kotlin.md'
+      - 'topic-guides/logging.md'
+      - 'topic-guides/context-passing.md'
+      - 'topic-guides/replaying-multis.md'
+      - 'topic-guides/controlling-demand.md'
 
 theme:
   name: material
