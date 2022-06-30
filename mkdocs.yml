@@ -70,14 +70,14 @@ theme:
       primary: cyan
       accent: red
       toggle:
-        icon: material/weather-night
+        icon: material/lightbulb-night
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       primary: black
       accent: orange
       toggle:
-        icon: material/weather-sunny
+        icon: material/lightbulb-on
         name: Switch to light mode
   features:
     - navigation.instant
