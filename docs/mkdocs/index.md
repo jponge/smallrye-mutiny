@@ -1,3 +1,7 @@
-Yolo Mutiny
+---
+hide:
+- navigation
+- toc
+---
 
-{{ macros_info() }}
+Yolo
