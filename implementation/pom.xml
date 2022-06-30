@@ -17,7 +17,21 @@
         <revapi.skip>false</revapi.skip>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>jboss-community</id>
+            <layout>default</layout>
+            <name>JBoss community</name>
+            <url>https://repository.jboss.org/nexus/content/repositories/public/</url>
+        </repository>
+    </repositories>
+
     <dependencies>
+        <dependency>
+            <groupId>org.jboss.threads</groupId>
+            <artifactId>jboss-threads</artifactId>
+            <version>3.5.0.Beta1</version>
+        </dependency>
         <dependency>
             <groupId>org.reactivestreams</groupId>
             <artifactId>reactive-streams</artifactId>

@@ -10,6 +10,7 @@ import java.util.ServiceLoader;
 import java.util.concurrent.*;
 import java.util.function.*;
 
+import org.jboss.threads.EnhancedQueueExecutor;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 
@@ -61,7 +62,7 @@ public class Infrastructure {
      * Configure or reset the executors.
      */
     public static void setDefaultExecutor() {
-        ExecutorService scheduler = Executors.newCachedThreadPool();
+        EnhancedQueueExecutor scheduler = new EnhancedQueueExecutor.Builder().build();
         setDefaultExecutor(scheduler);
     }
 

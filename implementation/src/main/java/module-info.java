@@ -2,6 +2,7 @@ open module io.smallrye.mutiny {
 
     requires transitive org.reactivestreams;
     requires transitive io.smallrye.common.annotation;
+    requires transitive jboss.threads;
 
     exports io.smallrye.mutiny;
     exports io.smallrye.mutiny.groups;
