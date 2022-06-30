@@ -2,6 +2,61 @@
 hide:
 - navigation
 - toc
+title: Home
 ---
 
-Yolo
+# Mutiny -- Intuitive Event-Driven Reactive Programming Library for Java
+
+```java
+Uni<String> request = makeSomeNetworkRequest(params);
+
+request.ifNoItem().after(ofMillis(100))
+    .failWith(() -> new TooSlowException("💥"))
+    .onFailure(IOException.class).recoverWithItem(fail -> "📦")
+    .subscribe().with(
+        item -> log("👍 " + item),
+         err -> log(err.getMessage())
+    );
+```
+
+[:fontawesome-solid-download: Get Mutiny {{ attributes.versions.mutiny }}](tutorials/getting-mutiny.md){ .md-button .md-button--primary }
+
+----
+
+# Mutiny is...
+
+## :material-lightning-bolt: Event-Driven
+
+Mutiny places _events_ at the core of its design.
+
+With Mutiny, you observe _events_, _react_ to them, and create elegant and readable processing pipelines. 
+
+A PhD in functional programming is not required.
+
+## :material-routes: Navigable
+
+Even with smart code completion, classes with hundreds of methods are confusing.
+
+Mutiny provides a navigable and explicit API driving you towards the operator you need.
+
+## :material-cogs: Non-blocking I/O
+
+Mutiny is the perfect companion to tame the asynchronous nature of applications with non-blocking I/O.
+
+Compose operations in a declarative fashion, transform data, enforce progress, recover from failures and more.
+
+## :material-home: Quarkus and Vert.x native
+
+Mutiny is integrated in [Quarkus](https://quarkus.io) where every reactive API uses Mutiny, and [Eclipse Vert.x](https://vertx.io) clients are made available using Mutiny bindings.
+
+Mutiny is however an independent library that can ultimately be used in any Java application. 
+
+## :material-message-fast: Made for an asynchronous world
+
+Mutiny can be used in any asynchronous application such as event-driven microservices, message-based applications, network utilities, data stream processing, and of course... reactive applications!
+
+## :material-bridge: Reactive Converters Built-In
+
+Mutiny is based on the _Reactive Streams_ specification, and so it can be integrated with any other reactive programming library.
+
+In addition, it proposes _converters_ to interact with other popular libraries.

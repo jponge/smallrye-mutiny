@@ -6,7 +6,8 @@ edit_uri: edit/main/docs/
 nav:
   - 'index.md'
   - 'Tutorials':
-      - 'tutorials/getting-started-with-mutiny.md'
+      - 'tutorials/getting-mutiny.md'
+      - 'tutorials/hello-mutiny.md'
       - 'tutorials/creating-uni-pipelines.md'
       - 'tutorials/creating-multi-pipelines.md'
       - 'tutorials/observing-events.md'
@@ -90,6 +91,8 @@ markdown_extensions:
   - toc:
       permalink: '#'
   - admonition
+  - smarty
+  - attr_list
   - meta
   - tables
   - pymdownx.highlight:
@@ -106,6 +109,9 @@ markdown_extensions:
   - pymdownx.betterem
   - pymdownx.tabbed:
       alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
 
 plugins:
   - search
