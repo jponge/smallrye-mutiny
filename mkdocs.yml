@@ -59,11 +59,11 @@ nav:
 
 theme:
   name: material
-  logo: assets/logo.png
+  logo: assets/logo-white.svg
   font:
     text: Roboto
     code: JetBrains Mono
-  favicon: assets/favicon.ico
+  favicon: assets/logo-white.svg
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default

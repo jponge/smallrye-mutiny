@@ -2,7 +2,7 @@
     .frontpage-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        column-gap: 1em;
+        column-gap: 2em;
         row-gap: 1em;
     }
 }
