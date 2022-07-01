@@ -1,3 +1,9 @@
+---
+tags:
+- tutorial
+- beginner
+---
+
 # Creating `Uni` pipelines
 
 A `Uni` represents a _stream_ that can only emit either an item or a failure event.

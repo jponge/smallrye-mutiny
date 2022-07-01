@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- advanced
+---
+
 # How can I integrate Mutiny with my framework?
 
 Sometimes, Mutiny needs to execute tasks on other threads, such as monitoring time or delaying actions.

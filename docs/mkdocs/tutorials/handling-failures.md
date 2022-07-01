@@ -1,3 +1,9 @@
+---
+tags:
+- tutorial
+- beginner
+---
+
 # Handling failures
 
 Mutiny provides several operators to handle failures.

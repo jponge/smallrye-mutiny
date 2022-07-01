@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- intermediate
+---
+
 # Merging and Concatenating Streams
 
 Merging or concatenating streams is a frequent operation which consists in taking multiple streams and creating a new `Multi` out of them.

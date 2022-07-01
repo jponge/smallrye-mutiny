@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- advanced
+---
+
 # Replaying Multis
 
 A `Multi` is a _cold-source_: no processing happens until you subscribe.

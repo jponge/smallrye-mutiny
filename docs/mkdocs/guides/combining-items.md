@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- intermediate
+---
+
 # Combining items from streams
 
 Combining items from various streams is an essential pattern in Reactive Programming.

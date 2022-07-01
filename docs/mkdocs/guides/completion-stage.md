@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- intermediate
+---
+
 # How to deal with CompletionStage?
 
 `CompletionStage` and `CompletableFuture` are classes provided by Java to represent asynchronous actions.

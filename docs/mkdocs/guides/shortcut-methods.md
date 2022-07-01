@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- beginner
+---
+
 # Shortcut methods
 
 The Mutiny API is decomposed around the idea of groups, each group handling a specific event.

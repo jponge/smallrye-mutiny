@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- advanced
+---
+
 # How to use polling?
 
 There are many poll-based API around us.

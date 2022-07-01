@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- intermediate
+---
+
 # How to handle timeouts?
 
 Unis are often used to represent asynchronous operations, like making an HTTP call.

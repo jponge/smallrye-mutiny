@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- intermediate
+---
+
 # How to delay events?
 
 ## Delaying Uni's item

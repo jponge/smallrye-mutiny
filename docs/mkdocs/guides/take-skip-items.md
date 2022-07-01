@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- beginner
+---
+
 # Take/Skip the first or last items
 
 Multi provides the ability to:

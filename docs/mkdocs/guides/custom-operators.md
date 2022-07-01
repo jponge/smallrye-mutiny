@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- advanced
+---
+
 # Can I have custom operators?
 
 Yes, but please write operators responsibly!

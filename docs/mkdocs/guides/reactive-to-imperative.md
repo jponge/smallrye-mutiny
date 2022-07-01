@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- advanced
+---
+
 # From reactive to imperative
 
 There are use cases where you need the items in an imperative manner instead of asynchronous.

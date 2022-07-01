@@ -1,3 +1,9 @@
+---
+tags:
+- tutorial
+- beginner
+---
+
 # Observing events
 
 Learn how to observe the events emitted by `Uni` and `Multi` instances.

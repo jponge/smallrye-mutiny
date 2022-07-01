@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- advanced
+---
+
 # Hot streams
 
 In a _cold_ stream, the stream is created when one subscriber subscribes to the stream.

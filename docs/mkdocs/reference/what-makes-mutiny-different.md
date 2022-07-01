@@ -1,3 +1,9 @@
+---
+tags:
+- reference
+- beginner
+---
+
 # What makes Mutiny different?
 
 There are other reactive programming libraries out there.

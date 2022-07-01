@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- advanced
+---
+
 # Context passing
 
 Mutiny reactive pipelines let data flow from publishers to subscribers.

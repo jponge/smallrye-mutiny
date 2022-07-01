@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- beginner
+---
+
 # Logging events
 
 Both `Uni` and `Multi` offer a `log` operator that can be used to trace events as they flow through operators.

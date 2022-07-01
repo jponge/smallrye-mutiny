@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- intermediate
+---
+
 # How to use paginated APIs?
 
 There are many REST / HTTP APIs using pagination, _i.e._ return only a subset of the results and you need to request the next _page_ to get the next batch.

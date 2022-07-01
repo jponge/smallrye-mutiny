@@ -1,3 +1,9 @@
+---
+tags:
+- tutorial
+- beginner
+---
+
 # Getting started with Mutiny
 
 ## Using Mutiny in a Java application

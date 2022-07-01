@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- advanced
+---
+
 # Using map, flatMap and concatMap
 
 If you are a seasoned reactive developer, you may miss the `map`, `flatMap`, `concatMap` methods.

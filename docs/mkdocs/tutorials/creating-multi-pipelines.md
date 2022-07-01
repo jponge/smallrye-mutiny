@@ -1,3 +1,9 @@
+---
+tags:
+- tutorial
+- beginner
+---
+
 # Creating `Multi` pipelines
 
 A `Multi` represents a _stream_ of data.

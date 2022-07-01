@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- advanced
+---
+
 # From imperative to reactive
 
 If you use Mutiny, there is a good chance you may want to avoid blocking the caller thread.

@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- beginner
+---
+
 # Filtering items from Multi
 
 When observing a `Multi`, you may not want to forward all the received items to the downstream.

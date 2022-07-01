@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- advanced
+---
+
 # How can I create a Multi from a non-reactive source?
 
 The `UnicastProcessor` is an implementation of `Multi` that lets you enqueue items in a queue.

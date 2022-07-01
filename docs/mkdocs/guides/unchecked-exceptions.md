@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- intermediate
+---
+
 # Dealing with checked exceptions
 
 When implementing your reactive pipeline, you write lots of functions (`java.util.function.Function`), consumers (`java.util.function.Consumer`), suppliers (`java.util.function.Supplier`) and so on.

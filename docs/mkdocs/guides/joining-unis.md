@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- intermediate
+---
+
 # Joining several unis
 
 A `Uni` represents an operation that either emits a value or a failure.

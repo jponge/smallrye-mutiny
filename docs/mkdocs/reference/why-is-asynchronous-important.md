@@ -1,3 +1,9 @@
+---
+tags:
+- reference
+- beginner
+---
+
 # Why is asynchronous important?
 
 We are living in a distributed world.

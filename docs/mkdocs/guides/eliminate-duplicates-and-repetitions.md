@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- beginner
+---
+
 # Eliminate duplicates and repetitions
 
 When observing a `Multi`, you may see duplicated items or repetitions.

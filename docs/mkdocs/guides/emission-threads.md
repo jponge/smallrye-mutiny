@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- intermediate
+---
+
 # How to change the emission thread?
 
 Except indicated otherwise, Mutiny invokes the next _stage_ using the thread emitting the event from upstream.

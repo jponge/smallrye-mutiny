@@ -1,3 +1,9 @@
+---
+tags:
+- tutorial
+- beginner
+---
+
 # Transforming items
 
 Both `Unis` and `Multis` emit _items_.

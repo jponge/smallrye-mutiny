@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- beginner
+---
+
 # How can I write unit / integration tests?
 
 Mutiny provides subscribers for `Uni` and `Multi` offering helpful assertion methods.

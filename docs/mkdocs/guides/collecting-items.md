@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- beginner
+---
+
 # Collecting items from Multi
 
 There are cases where you want to accumulate the items from a `Multi` and produce a `Uni` as a final result.

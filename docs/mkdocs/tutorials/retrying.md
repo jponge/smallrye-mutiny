@@ -1,3 +1,9 @@
+---
+tags:
+- tutorial
+- beginner
+---
+
 # Retrying on failures
 
 It is common to want to retry if something terrible happened.

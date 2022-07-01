@@ -54,6 +54,7 @@ nav:
       - 'reference/what-makes-mutiny-different.md'
       - 'reference/uni-and-multi.md'
       - 'reference/publications.md'
+      - 'Tags index': 'tags-index.md'
   - 'API': 'https://javadoc.io/doc/io.smallrye.reactive/mutiny/latest/index.html'
   - 'Discussions/Questions': 'https://github.com/smallrye/smallrye-mutiny/discussions'
 
@@ -116,6 +117,8 @@ markdown_extensions:
       emoji_generator: !!python/name:materialx.emoji.to_svg
 
 plugins:
+  - tags:
+      tags_file: tags-index.md
   - search
   - macros:
       verbose: true

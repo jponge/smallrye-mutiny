@@ -1,3 +1,9 @@
+---
+tags:
+- tutorial
+- beginner
+---
+
 # Hello Mutiny!
 
 Once you made Mutiny available to your classpath, you can start writing code.

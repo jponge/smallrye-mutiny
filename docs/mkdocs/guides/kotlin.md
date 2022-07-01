@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- intermediate
+---
+
 # Kotlin coroutines integration
 
 The module `mutiny-kotlin` provides an integration with Kotlin coroutines.

@@ -1,3 +1,9 @@
+---
+tags:
+- tutorial
+- beginner
+---
+
 # Transforming items asynchronously
 
 The previous examples illustrated how to transform each item from a stream into another item.

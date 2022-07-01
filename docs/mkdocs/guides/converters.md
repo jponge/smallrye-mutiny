@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- advanced
+---
+
 # Using other reactive programming libraries
 
 You may need to integrate libraries exposing an API using other reactive programming libraries such as RX Java or Reactor.

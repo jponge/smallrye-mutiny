@@ -1,3 +1,9 @@
+---
+tags:
+- reference
+- beginner
+---
+
 # Uni and Multi
 
 Mutiny defines two _reactive_ types:

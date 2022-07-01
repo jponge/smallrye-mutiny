@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- advanced
+---
+
 # How to deal with dropped exceptions?
 
 There are a few corner cases where Mutiny cannot propagate an exception to a `Uni` or a `Multi` subscriber.

@@ -1,3 +1,9 @@
+---
+tags:
+- guide
+- intermediate
+---
+
 # What is the difference between emitOn and runSubscriptionOn?
 
 The `emitOn` and `runSubscriptionOn` are 2 operators influencing on which threads the event are dispatched.
