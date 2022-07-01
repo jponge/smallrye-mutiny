@@ -93,6 +93,7 @@ markdown_extensions:
   - admonition
   - smarty
   - attr_list
+  - md_in_html
   - meta
   - tables
   - pymdownx.highlight:
@@ -119,6 +120,9 @@ plugins:
       verbose: true
       module_name: docs/mkdocs-customizations/macros/docissimo
       include_dir: docs/mkdocs-customizations/macros
+
+extra_css:
+  - assets/extra.css
 
 extra:
   snippet_dir: docs/src/test
