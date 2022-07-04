@@ -1,14 +1,13 @@
-import org.kohsuke.github.GitHub;
+///usr/bin/env jbang "$0" "$@" ; exit $?
+//DEPS org.kohsuke:github-api:1.307
+
 import org.kohsuke.github.GitHubBuilder;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
-///usr/bin/env jbang "$0" "$@" ; exit $?
-//DEPS org.kohsuke:github-api:1.307
 public class UpdateDocsAttributesFiles {
 
     public static void main(String... args) throws IOException {
