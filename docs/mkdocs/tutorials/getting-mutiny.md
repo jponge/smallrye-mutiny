@@ -70,24 +70,24 @@ As an example here's how to add a dependency to the `vertx-core` Mutiny bindings
     <dependency>
         <groupId>io.smallrye.reactive</groupId>
         <artifactId>smallrye-mutiny-vertx-core</artifactId>
-        <version>{{ attributes.versions.vertxbindings }}</version>
+        <version>{{ attributes.versions.vertx_bindings }}</version>
     </dependency>
     ```
 
 === "Gradle (Groovy)"
 
     ```groovy
-    implementation 'io.smallrye.reactive:smallrye-mutiny-vertx-core:{{ attributes.versions.vertxbindings }}'
+    implementation 'io.smallrye.reactive:smallrye-mutiny-vertx-core:{{ attributes.versions.vertx_bindings }}'
     ```
 
 === "Gradle (Kotlin)"
 
     ```kotlin
-    implementation("io.smallrye.reactive:smallrye-mutiny-vertx-core:{{ attributes.versions.vertxbindings }}")
+    implementation("io.smallrye.reactive:smallrye-mutiny-vertx-core:{{ attributes.versions.vertx_bindings }}")
     ```
 
 === "JBang"
 
     ```java
-    //DEPS io.smallrye.reactive:smallrye-mutiny-vertx-core:{{ attributes.versions.vertxbindings }}
+    //DEPS io.smallrye.reactive:smallrye-mutiny-vertx-core:{{ attributes.versions.vertx_bindings }}
     ```
