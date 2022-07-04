@@ -100,8 +100,8 @@ sequenceDiagram
    P->>O: onItem("b")
    O->>S: onItem("B")
    
-   S->>O: cancellation
-   O->>P: cancellation
+   S->>O: cancel()
+   O->>P: cancel()
    
 ```
 
