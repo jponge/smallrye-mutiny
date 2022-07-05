@@ -22,7 +22,7 @@ From reactive microservices, data streaming, event processing to API gateways an
 Mutiny places events at the core of its design. 
 With Mutiny, you observe events, react to them, and create elegant and readable processing pipelines.
 
-**A PhD in functional programming is not required.**
+**💡 A PhD in functional programming is not required.**
 
 ### Navigable
 
