@@ -1,7 +1,7 @@
 site_name: SmallRye Mutiny
 repo_url: https://github.com/smallrye/smallrye-mutiny
-docs_dir: docs/mkdocs
-edit_uri: edit/main/docs/
+docs_dir: docs
+edit_uri: edit/main/documentation/docs
 
 nav:
   - 'index.md'
@@ -87,7 +87,7 @@ theme:
     - navigation.tracking
     - navigation.tabs
     - navigation.tabs.sticky
-  custom_dir: docs/mkdocs-customizations/overrides
+  custom_dir: mkdocs-customizations/overrides
 
 markdown_extensions:
   - toc:
@@ -122,13 +122,13 @@ plugins:
   - search
   - macros:
       verbose: true
-      module_name: docs/mkdocs-customizations/macros/docissimo
-      include_dir: docs/mkdocs-customizations/macros
+      module_name: mkdocs-customizations/macros/docissimo
+      include_dir: mkdocs-customizations/macros
 
 extra_css:
   - assets/extra.css
 
 extra:
-  snippet_dir: docs/src/test
-  attributes_path: docs/attributes.yaml
+  snippet_dir: src/test
+  attributes_path: attributes.yaml
   javadoc_artifact: io.smallrye.reactive/smallrye-mutiny
