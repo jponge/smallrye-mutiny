@@ -132,3 +132,6 @@ extra:
   snippet_dir: src/test
   attributes_path: attributes.yaml
   javadoc_artifact: io.smallrye.reactive/smallrye-mutiny
+  manifest: manifest.webmanifest
+  version:
+    provider: mike
