@@ -56,7 +56,7 @@ jobs:
 
           echo "Waiting for artifacts to be available from Maven Central"
           jbang .build/WaitForCentral.java \
-            --artifacts=(./mvnw -Dexec.executable='echo' -Dexec.args='${project.groupId}:${project.artifactId}' exec:exec -q) \
+            --artifacts=$(./mvnw -Dexec.executable='echo' -Dexec.args='${project.groupId}:${project.artifactId}' exec:exec -q | tr '\n' ',') \
             --expected-version="${MUTINY_VERSION}"
 
           echo "Run the deployment script"
