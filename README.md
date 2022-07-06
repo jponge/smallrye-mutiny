@@ -1,6 +1,5 @@
 ![Build Status](https://github.com/smallrye/smallrye-mutiny/actions/workflows/build-main.yml/badge.svg) 
 ![Build status (1.x branch)](https://github.com/smallrye/smallrye-mutiny/actions/workflows/build-1.x.yml/badge.svg) 
-![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=smallrye_smallrye-mutiny&metric=alert_status) 
 ![License](https://img.shields.io/github/license/smallrye/smallrye-mutiny.svg) 
 ![Maven Central](https://img.shields.io/maven-central/v/io.smallrye.reactive/mutiny?color=green) 
 ![Javadoc](https://javadoc.io/badge2/io.smallrye.reactive/mutiny/javadoc.svg)
