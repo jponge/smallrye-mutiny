@@ -12,10 +12,6 @@
     <artifactId>mutiny-reactive-streams-operators</artifactId>
     <name>SmallRye Mutiny - MicroProfile Reactive Streams Operators implementation</name>
 
-    <properties>
-        <pinned.mutiny.version>1.6.0</pinned.mutiny.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.eclipse.microprofile.reactive-streams-operators</groupId>
@@ -35,11 +31,15 @@
         <dependency>
             <groupId>io.smallrye.reactive</groupId>
             <artifactId>mutiny</artifactId>
-            <version>${pinned.mutiny.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.smallrye.reactive</groupId>
+            <artifactId>mutiny-zero-flow-adapters</artifactId>
         </dependency>
         <dependency>
             <groupId>io.smallrye.reactive</groupId>
             <artifactId>mutiny-test-utils</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
