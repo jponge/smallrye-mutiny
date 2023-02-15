@@ -76,4 +76,9 @@ public class UniAwait<T> {
         return new UniAwaitOptional<>(upstream, context);
     }
 
+    // TODO document
+    @CheckReturnValue
+    public UniAwaitStream<T> asStream() {
+        return new UniAwaitStream<T>(upstream, context);
+    }
 }
