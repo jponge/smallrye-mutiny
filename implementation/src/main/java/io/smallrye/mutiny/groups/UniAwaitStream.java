@@ -5,9 +5,16 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Stream;
 
+import io.smallrye.common.annotation.Experimental;
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Uni;
 
+/**
+ * {@link Uni} to {@link Stream} await group.
+ *
+ * @param <T> the {@link Uni} item type
+ * @since 2.2.0
+ */
 public class UniAwaitStream<T> {
 
     private final Uni<T> upstream;
@@ -18,11 +25,26 @@ public class UniAwaitStream<T> {
         this.context = context;
     }
 
+    /**
+     * Unbounded time await for the {@link Stream} to be available.
+     *
+     * @return the stream
+     * @param <E> the stream items type
+     */
+    @Experimental("Uni.await().asStream() is an experimental API in Mutiny 2.2.0")
     public <E> Stream<E> indefinitely() {
         T result = upstream.awaitUsing(context).indefinitely();
         return handleResult(result);
     }
 
+    /**
+     * Bounded time await for the {@link Stream} to be available.
+     *
+     * @param duration the duration to wait for
+     * @return the stream
+     * @param <E> the stream items type
+     */
+    @Experimental("Uni.await().asStream() is an experimental API in Mutiny 2.2.0")
     public <E> Stream<E> atMost(Duration duration) {
         T result = upstream.awaitUsing(context).atMost(duration);
         return handleResult(result);
