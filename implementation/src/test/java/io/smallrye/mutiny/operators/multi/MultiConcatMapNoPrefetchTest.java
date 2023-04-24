@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -128,7 +129,7 @@ class MultiConcatMapNoPrefetchTest {
         ts.assertHasNotReceivedAnyItem().assertCompleted();
     }
 
-    @Test
+    @RepeatedTest(10_000)   // TODO: Possible race condition on concurrent demand requests
     void testNoPrefetchWithConcatMapContainingEmpty() {
         Multi<Integer> result = upstream.onItem()
                 .transformToMulti(i -> (i % 3 == 0) ? Multi.createFrom().empty() : Multi.createFrom().item(i))
@@ -136,8 +137,8 @@ class MultiConcatMapNoPrefetchTest {
         AssertSubscriber<Integer> ts = new AssertSubscriber<>(5);
         result.runSubscriptionOn(Infrastructure.getDefaultExecutor()).subscribe(ts);
         ts.request(5);
-        ts.awaitItems(10);
-        assertThat(upstreamRequestCount).hasValueGreaterThan(10);
+        ts.awaitItems(10);  // TODO: case 1 - won't get 10 but 5 elements
+        assertThat(upstreamRequestCount).hasValueGreaterThan(10);   // TODO: case 2 - get 15, not 10 elements
         ts.assertItems(1, 2, 4, 5, 7, 8, 10, 11, 13, 14);
         ts.request(1);
         ts.awaitItems(11);
