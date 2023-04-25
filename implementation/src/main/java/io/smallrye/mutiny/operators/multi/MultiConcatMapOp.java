@@ -1,12 +1,5 @@
 package io.smallrye.mutiny.operators.multi;
 
-import java.util.concurrent.Flow.Publisher;
-import java.util.concurrent.Flow.Subscription;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
-import java.util.function.Function;
-
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.ParameterValidation;
@@ -16,6 +9,14 @@ import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.smallrye.mutiny.subscription.SwitchableSubscriptionSubscriber;
 
+import java.util.concurrent.Flow.Publisher;
+import java.util.concurrent.Flow.Subscription;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
+import java.util.function.Function;
+
 /**
  * ConcatMap operator without prefetching items from the upstream.
  * Requests are forwarded lazily to the upstream when:
@@ -24,7 +25,7 @@ import io.smallrye.mutiny.subscription.SwitchableSubscriptionSubscriber;
  * <li>The inner has no more outstanding requests.</li>
  * <li>The inner completed without emitting items or with outstanding requests.</li>
  * </ul>
- *
+ * <p>
  * This operator can collect failures and postpone them until termination.
  *
  * @param <I> the upstream value type / input type
@@ -37,8 +38,8 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
     private final boolean postponeFailurePropagation;
 
     public MultiConcatMapOp(Multi<? extends I> upstream,
-            Function<? super I, ? extends Publisher<? extends O>> mapper,
-            boolean postponeFailurePropagation) {
+                            Function<? super I, ? extends Publisher<? extends O>> mapper,
+                            boolean postponeFailurePropagation) {
         super(upstream);
         this.mapper = mapper;
         this.postponeFailurePropagation = postponeFailurePropagation;
@@ -49,11 +50,181 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         if (subscriber == null) {
             throw new NullPointerException("The subscriber must not be `null`");
         }
-        ConcatMapMainSubscriber<I, O> sub = new ConcatMapMainSubscriber<>(subscriber,
-                mapper,
-                postponeFailurePropagation);
+//        ConcatMapMainSubscriber<I, O> sub = new ConcatMapMainSubscriber<>(subscriber,
+//                mapper,
+//                postponeFailurePropagation);
+//
+//        upstream.subscribe(Infrastructure.onMultiSubscription(upstream, sub));
 
-        upstream.subscribe(Infrastructure.onMultiSubscription(upstream, sub));
+        upstream.subscribe(Infrastructure.onMultiSubscription(upstream, new MainSubscriber(subscriber)));
+    }
+
+    enum State {
+        INIT,
+        READY,
+        WAITING_FOR_NEXT_PUBLISHER,
+        EMITTING,
+        TERMINATED,
+        CANCELLED,
+    }
+
+    class MainSubscriber implements MultiSubscriber<I>, Subscription, ContextSupport {
+
+        final MultiSubscriber<? super O> downstream;
+
+        Subscription upstream;
+        final InnerSubscriber innerSubscriber = new InnerSubscriber();
+
+        final AtomicReference<State> state = new AtomicReference<>(State.INIT);
+        final AtomicLong demand = new AtomicLong(0L);
+        boolean reachedEndOfMainStream = false;
+
+        MainSubscriber(MultiSubscriber<? super O> downstream) {
+            this.downstream = downstream;
+        }
+
+        @Override
+        public void onItem(I item) {
+            if (state.get() != State.WAITING_FOR_NEXT_PUBLISHER) {
+                onFailure(new IllegalStateException("Concurrent onItem(" + item + ") received"));
+                return;
+            }
+            state.set(State.EMITTING);
+            Publisher<? extends O> publisher = mapper.apply(item);
+            if (publisher == null) {
+                onFailure(new NullPointerException(ParameterValidation.MAPPER_RETURNED_NULL));
+                return;
+            }
+            publisher.subscribe(innerSubscriber);
+        }
+
+        @Override
+        public void onFailure(Throwable failure) {
+            State previousState = state.getAndSet(State.TERMINATED);
+            if (previousState != State.TERMINATED) {
+                downstream.onFailure(failure);
+            }
+        }
+
+        @Override
+        public void onCompletion() {
+            this.reachedEndOfMainStream = true;
+        }
+
+        @Override
+        public void onSubscribe(Subscription subscription) {
+            if (state.compareAndSet(State.INIT, State.WAITING_FOR_NEXT_PUBLISHER)) {
+                this.upstream = subscription;
+                downstream.onSubscribe(this);
+            } else {
+                subscription.cancel();
+            }
+        }
+
+        @Override
+        public void request(long n) {
+            if (n <= 0L) {
+                throw Subscriptions.getInvalidRequestException();
+            }
+            State currentState = state.get();
+            switch (currentState) {
+                case READY:
+                    Subscriptions.add(demand, n);
+                    break;
+                case WAITING_FOR_NEXT_PUBLISHER:
+                    Subscriptions.add(demand, n);
+                    upstream.request(1L);
+                    break;
+                case EMITTING:
+                    Subscriptions.add(demand, n);
+                    forwardRequestToInnerSubscriber(n);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        void forwardRequestToInnerSubscriber(long n) {
+            if (state.get() == State.EMITTING) {
+                innerSubscriber.innerUpstream.request(n);
+            }
+        }
+
+        @Override
+        public void cancel() {
+            state.set(State.CANCELLED);
+            if (innerSubscriber.innerUpstream != null) {
+                innerSubscriber.innerUpstream.cancel();
+            }
+        }
+
+        @Override
+        public Context context() {
+            if (downstream instanceof ContextSupport) {
+                return ((ContextSupport) downstream).context();
+            } else {
+                return Context.empty();
+            }
+        }
+
+        class InnerSubscriber implements MultiSubscriber<O>, ContextSupport {
+
+            private Subscription innerUpstream;
+
+            @Override
+            public void onItem(O item) {
+                if (state.get() != State.EMITTING) {
+                    return;
+                }
+                if (demand.decrementAndGet() < 0) {
+                    innerUpstream.cancel();
+                    MainSubscriber.this.onFailure(new IllegalStateException("Received more items than demanded"));
+                    return;
+                }
+                downstream.onItem(item);
+            }
+
+            @Override
+            public void onFailure(Throwable failure) {
+                state.set(State.TERMINATED);
+                MainSubscriber.this.upstream.cancel();
+                if (postponeFailurePropagation) {
+                    // TODO check if we have pending failures, etc
+                } else {
+                    downstream.onFailure(failure);
+                }
+            }
+
+            @Override
+            public void onCompletion() {
+                if (state.compareAndSet(State.EMITTING, State.WAITING_FOR_NEXT_PUBLISHER)) {
+                    if (!reachedEndOfMainStream) {
+                        upstream.request(1L);
+                    } else {
+                        state.set(State.TERMINATED);
+                        if (postponeFailurePropagation) {
+                            // TODO check if we have pending failures
+                        } else {
+                            downstream.onComplete();
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onSubscribe(Subscription subscription) {
+                innerUpstream = subscription;
+                long currentDemand = demand.get();
+                if (currentDemand > 0L) {
+                    innerUpstream.request(currentDemand);
+                }
+            }
+
+            @Override
+            public Context context() {
+                return MainSubscriber.this.context();
+            }
+        }
     }
 
     public static final class ConcatMapMainSubscriber<I, O> implements MultiSubscriber<I>, Subscription, ContextSupport {
