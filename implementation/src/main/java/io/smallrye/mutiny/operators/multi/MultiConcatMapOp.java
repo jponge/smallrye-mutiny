@@ -85,11 +85,11 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
         @Override
         public void onItem(I item) {
-            if (state.get() != State.WAITING_FOR_NEXT_PUBLISHER) {
+            State previousState = state.getAndSet(State.EMITTING);
+            if (previousState != State.WAITING_FOR_NEXT_PUBLISHER) {
                 onFailure(new IllegalStateException("Concurrent onItem(" + item + ") received"));
                 return;
             }
-            state.set(State.EMITTING);
             Publisher<? extends O> publisher = mapper.apply(item);
             if (publisher == null) {
                 onFailure(new NullPointerException(ParameterValidation.MAPPER_RETURNED_NULL));
@@ -113,7 +113,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
         @Override
         public void onSubscribe(Subscription subscription) {
-            if (state.compareAndSet(State.INIT, State.WAITING_FOR_NEXT_PUBLISHER)) {
+            if (state.compareAndSet(State.INIT, State.READY)) {
                 this.upstream = subscription;
                 downstream.onSubscribe(this);
             } else {
@@ -121,31 +121,23 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
             }
         }
 
+        boolean done() {
+            State currentState = state.get();
+            return currentState == State.CANCELLED || currentState == State.TERMINATED;
+        }
+
         @Override
         public void request(long n) {
             if (n <= 0L) {
                 throw Subscriptions.getInvalidRequestException();
             }
-            State currentState = state.get();
-            switch (currentState) {
-                case READY:
-                    Subscriptions.add(demand, n);
-                    break;
-                case WAITING_FOR_NEXT_PUBLISHER:
-                    Subscriptions.add(demand, n);
-                    upstream.request(1L);
-                    break;
-                case EMITTING:
-                    Subscriptions.add(demand, n);
-                    forwardRequestToInnerSubscriber(n);
-                    break;
-                default:
-                    break;
+            if (done()) {
+                return;
             }
-        }
-
-        void forwardRequestToInnerSubscriber(long n) {
-            if (state.get() == State.EMITTING) {
+            Subscriptions.add(demand, n);
+            if (state.compareAndSet(State.READY, State.WAITING_FOR_NEXT_PUBLISHER)) {
+                upstream.request(1L);
+            } else if (state.get() == State.EMITTING && innerSubscriber.innerUpstream != null) {
                 innerSubscriber.innerUpstream.request(n);
             }
         }

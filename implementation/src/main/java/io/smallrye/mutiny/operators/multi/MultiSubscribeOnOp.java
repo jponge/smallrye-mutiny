@@ -45,7 +45,7 @@ public class MultiSubscribeOnOp<T> extends AbstractMultiOperator<T, T> {
     @Override
     public void subscribe(MultiSubscriber<? super T> downstream) {
         SubscribeOnProcessor<T> sub = new SubscribeOnProcessor<>(downstream, executor);
-        sub.scheduleSubscription(upstream, downstream);
+        sub.scheduleSubscription(upstream);
     }
 
     static final class SubscribeOnProcessor<T> extends MultiOperatorProcessor<T, T> {
@@ -57,7 +57,7 @@ public class MultiSubscribeOnOp<T> extends AbstractMultiOperator<T, T> {
             this.executor = executor;
         }
 
-        public void scheduleSubscription(Multi<? extends T> upstream, MultiSubscriber<? super T> downstream) {
+        public void scheduleSubscription(Multi<? extends T> upstream) {
             try {
                 executor.execute(() -> upstream.subscribe().withSubscriber(this));
             } catch (RejectedExecutionException rejection) {

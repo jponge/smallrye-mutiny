@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -131,6 +132,7 @@ class MultiConcatMapNoPrefetchTest {
 
     @RepeatedTest(10_000)   // TODO: Possible race condition on concurrent demand requests
     void testNoPrefetchWithConcatMapContainingEmpty() {
+        AtomicLong requested = new AtomicLong();
         Multi<Integer> result = upstream.onItem()
                 .transformToMulti(i -> (i % 3 == 0) ? Multi.createFrom().empty() : Multi.createFrom().item(i))
                 .concatenate();
