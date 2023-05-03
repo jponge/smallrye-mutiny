@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import io.smallrye.mutiny.Context;
+import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.subscription.ContextSupport;
 
 /**
@@ -695,10 +696,14 @@ public class AssertSubscriber<T> implements Subscriber<T>, ContextSupport {
      */
     public AssertSubscriber<T> cancel() {
         shouldBeSubscribed(numberOfSubscription);
-        subscription.get().cancel();
+        Flow.Subscription sub = subscription.get();
+        if (sub != null) {
+            sub.cancel();
+        }
         cancelled = true;
         Event ev = new Event(null, null, false, true);
         eventListeners.forEach(l -> l.accept(ev));
+        subscription.set(null);
         return this;
     }
 
@@ -711,7 +716,7 @@ public class AssertSubscriber<T> implements Subscriber<T>, ContextSupport {
     public AssertSubscriber<T> request(long req) {
         Flow.Subscription sub = subscription.get();
         if (sub == null) {
-            requested.addAndGet(req);
+            Subscriptions.add(requested, req);
             return this;
         }
         long acc = requested.getAndSet(0L);

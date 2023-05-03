@@ -210,13 +210,13 @@ public class MultiToHotStreamTest {
         processor.onNext("two");
 
         processor.subscribe(subscriber1);
+        subscriber1.request(10);
 
         processor.onNext("three");
         processor.onComplete();
 
         subscriber1.assertItems("one", "three")
                 .assertCompleted();
-
     }
 
     @Test
@@ -236,6 +236,7 @@ public class MultiToHotStreamTest {
         processor.onComplete();
 
         processor.subscribe(subscriber1);
+        subscriber1.request(10);
 
         subscriber1.assertItems("one")
                 .assertCompleted();
