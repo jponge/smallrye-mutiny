@@ -709,10 +709,13 @@ public class AssertSubscriber<T> implements Subscriber<T>, ContextSupport {
      * @return this {@link AssertSubscriber}
      */
     public AssertSubscriber<T> request(long req) {
-        requested.addAndGet(req);
-        if (subscription.get() != null) {
-            subscription.get().request(req);
+        Flow.Subscription sub = subscription.get();
+        if (sub == null) {
+            requested.addAndGet(req);
+            return this;
         }
+        long acc = requested.getAndSet(0L);
+        sub.request(acc + req);
         return this;
     }
 
@@ -727,10 +730,10 @@ public class AssertSubscriber<T> implements Subscriber<T>, ContextSupport {
             // Do not request is cancelled.
             return;
         }
-        if (requested.get() > 0) {
-            s.request(requested.get());
+        long upfrontDemand = requested.getAndSet(0L);
+        if (upfrontDemand > 0L) {
+            s.request(upfrontDemand);
         }
-
     }
 
     @Override
