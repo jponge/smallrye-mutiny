@@ -15,8 +15,6 @@
  */
 package io.smallrye.mutiny.operators.multi;
 
-import static io.smallrye.mutiny.helpers.Subscriptions.CANCELLED;
-
 import java.util.concurrent.Executor;
 import java.util.concurrent.Flow;
 import java.util.concurrent.RejectedExecutionException;
@@ -73,12 +71,7 @@ public class MultiSubscribeOnOp<T> extends AbstractMultiOperator<T, T> {
             }
             if (!isDone()) {
                 try {
-                    executor.execute(() -> {
-                        Flow.Subscription subscription = getUpstreamSubscription();
-                        if (subscription != CANCELLED) {
-                            subscription.request(numberOfItems);
-                        }
-                    });
+                    executor.execute(() -> super.request(numberOfItems));
                 } catch (RejectedExecutionException rejected) {
                     onFailure(rejected);
                 }
