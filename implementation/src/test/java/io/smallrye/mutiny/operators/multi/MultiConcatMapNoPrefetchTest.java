@@ -130,7 +130,7 @@ class MultiConcatMapNoPrefetchTest {
         ts.assertHasNotReceivedAnyItem().assertCompleted();
     }
 
-    @RepeatedTest(10_000)   // TODO: Possible race condition on concurrent demand requests
+    @RepeatedTest(10_000) // TODO: Possible race condition on concurrent demand requests
     void testNoPrefetchWithConcatMapContainingEmpty() {
         AtomicLong requested = new AtomicLong();
         Multi<Integer> result = upstream.onItem()
@@ -139,8 +139,8 @@ class MultiConcatMapNoPrefetchTest {
         AssertSubscriber<Integer> ts = new AssertSubscriber<>(5);
         result.runSubscriptionOn(Infrastructure.getDefaultExecutor()).subscribe(ts);
         ts.request(5);
-        ts.awaitItems(10);  // TODO: case 1 - won't get 10 but 5 elements
-        assertThat(upstreamRequestCount).hasValueGreaterThan(10);   // TODO: case 2 - get 15, not 10 elements
+        ts.awaitItems(10); // TODO: case 1 - won't get 10 but 5 elements
+        assertThat(upstreamRequestCount).hasValueGreaterThan(10); // TODO: case 2 - get 15, not 10 elements
         ts.assertItems(1, 2, 4, 5, 7, 8, 10, 11, 13, 14);
         ts.request(1);
         ts.awaitItems(11);
