@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 import io.smallrye.mutiny.Context;
+import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.subscription.ContextSupport;
 
 /**
@@ -58,9 +59,9 @@ public class AssertSubscriber<T> implements Subscriber<T>, ContextSupport {
     private volatile Flow.Subscription subscription = null;
 
     /**
-     * The number of initially requested items.
+     * The number of pending requested items.
      */
-    private final AtomicLong initiallyRequested = new AtomicLong();
+    private final AtomicLong pendingRequests = new AtomicLong();
 
     /**
      * The received items.
@@ -108,7 +109,7 @@ public class AssertSubscriber<T> implements Subscriber<T>, ContextSupport {
      */
     public AssertSubscriber(Context context, long requested, boolean cancelled) {
         this.context = context;
-        this.initiallyRequested.set(requested);
+        this.pendingRequests.set(requested);
         this.upfrontCancellation = cancelled;
     }
 
@@ -706,7 +707,7 @@ public class AssertSubscriber<T> implements Subscriber<T>, ContextSupport {
      * @return this {@link AssertSubscriber}
      */
     public synchronized AssertSubscriber<T> request(long req) {
-        initiallyRequested.addAndGet(req);
+        Subscriptions.add(pendingRequests, req);
         if (state != State.INIT) {
             subscription.request(req);
         }
@@ -725,7 +726,7 @@ public class AssertSubscriber<T> implements Subscriber<T>, ContextSupport {
             // Do not request if cancelled.
             return;
         }
-        long pending = initiallyRequested.getAndSet(0L);
+        long pending = pendingRequests.get();
         if (pending > 0) {
             s.request(pending);
         }
@@ -736,6 +737,7 @@ public class AssertSubscriber<T> implements Subscriber<T>, ContextSupport {
         items.add(t);
         Event ev = new Event(t, null, false, false);
         eventListeners.forEach(l -> l.accept(ev));
+        pendingRequests.decrementAndGet();
     }
 
     @Override

@@ -221,7 +221,6 @@ public class BroadcastProcessorTest {
         processor.onNext("two");
 
         processor.subscribe(subscriber1);
-        subscriber1.request(10);
 
         processor.onNext("three");
         processor.onComplete();
