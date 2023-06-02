@@ -18,13 +18,14 @@ import java.util.function.Consumer;
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.subscription.ContextSupport;
+import io.smallrye.mutiny.subscription.MultiSubscriber;
 
 /**
  * A {@link io.smallrye.mutiny.Multi} {@link Subscriber} for testing purposes that comes with useful assertion helpers.
  *
  * @param <T> the type of the items
  */
-public class AssertSubscriber<T> implements Subscriber<T>, ContextSupport {
+public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
 
     /**
      * The default timeout used by {@code await} method.
@@ -733,7 +734,7 @@ public class AssertSubscriber<T> implements Subscriber<T>, ContextSupport {
     }
 
     @Override
-    public synchronized void onNext(T t) {
+    public synchronized void onItem(T t) {
         items.add(t);
         Event ev = new Event(t, null, false, false);
         eventListeners.forEach(l -> l.accept(ev));
@@ -741,7 +742,7 @@ public class AssertSubscriber<T> implements Subscriber<T>, ContextSupport {
     }
 
     @Override
-    public void onError(Throwable t) {
+    public void onFailure(Throwable t) {
         state = State.FAILED;
         failure = t;
         terminal.countDown();
@@ -750,7 +751,7 @@ public class AssertSubscriber<T> implements Subscriber<T>, ContextSupport {
     }
 
     @Override
-    public void onComplete() {
+    public void onCompletion() {
         state = State.COMPLETED;
         terminal.countDown();
         Event ev = new Event(null, null, true, false);
