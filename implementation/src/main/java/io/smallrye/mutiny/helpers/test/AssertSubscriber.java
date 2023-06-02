@@ -58,9 +58,9 @@ public class AssertSubscriber<T> implements Subscriber<T>, ContextSupport {
     private volatile Flow.Subscription subscription = null;
 
     /**
-     * The number of requested items.
+     * The number of initially requested items.
      */
-    private final AtomicLong requested = new AtomicLong();
+    private final AtomicLong initiallyRequested = new AtomicLong();
 
     /**
      * The received items.
@@ -108,7 +108,7 @@ public class AssertSubscriber<T> implements Subscriber<T>, ContextSupport {
      */
     public AssertSubscriber(Context context, long requested, boolean cancelled) {
         this.context = context;
-        this.requested.set(requested);
+        this.initiallyRequested.set(requested);
         this.upfrontCancellation = cancelled;
     }
 
@@ -705,16 +705,16 @@ public class AssertSubscriber<T> implements Subscriber<T>, ContextSupport {
      * @param req the number of items to request.
      * @return this {@link AssertSubscriber}
      */
-    public AssertSubscriber<T> request(long req) {
-        requested.addAndGet(req);
-        if (state != State.INIT && subscription != null) {
+    public synchronized AssertSubscriber<T> request(long req) {
+        initiallyRequested.addAndGet(req);
+        if (state != State.INIT) {
             subscription.request(req);
         }
         return this;
     }
 
     @Override
-    public void onSubscribe(Flow.Subscription s) {
+    public synchronized void onSubscribe(Flow.Subscription s) {
         numberOfSubscription++;
         subscription = s;
         state = State.SUBSCRIBED;
@@ -725,10 +725,10 @@ public class AssertSubscriber<T> implements Subscriber<T>, ContextSupport {
             // Do not request if cancelled.
             return;
         }
-        if (requested.get() > 0) {
-            s.request(requested.get());
+        long pending = initiallyRequested.getAndSet(0L);
+        if (pending > 0) {
+            s.request(pending);
         }
-
     }
 
     @Override
