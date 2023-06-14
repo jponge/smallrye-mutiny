@@ -10,8 +10,10 @@ import java.util.concurrent.Flow.Subscription;
 import java.util.function.*;
 
 import io.smallrye.common.annotation.CheckReturnValue;
+import io.smallrye.common.annotation.Experimental;
 import io.smallrye.mutiny.groups.*;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
+import io.smallrye.mutiny.operators.multi.split.MultiSplitter;
 
 public interface Multi<T> extends Publisher<T> {
 
@@ -637,4 +639,9 @@ public interface Multi<T> extends Publisher<T> {
      */
     @CheckReturnValue
     Multi<T> capDemandsUsing(LongFunction<Long> function);
+
+    // TODO
+    @Experimental("TBD")
+    @CheckReturnValue
+    <K extends Enum<K>> MultiSplitter<T, K> split(Class<K> keyType, Function<T, K> splitter);
 }
