@@ -86,7 +86,8 @@ public class MultiSplitter<T, K extends Enum<K>> {
             SplitMulti.Split target = splits.get(key);
             if (target != null) {
                 target.downstream.onItem(item);
-                if (splits.size() == requiredNumberOfSubscribers && target.demand.decrementAndGet() > 0L) {
+                if (splits.size() == requiredNumberOfSubscribers
+                        && (target.demand.get() == Long.MAX_VALUE || target.demand.decrementAndGet() > 0L)) {
                     upstreamSubscription.request(1L);
                 }
             }

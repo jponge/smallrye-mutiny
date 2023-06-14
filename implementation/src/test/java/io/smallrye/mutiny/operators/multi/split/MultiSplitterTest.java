@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
 import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 
 class MultiSplitterTest {
 
@@ -18,10 +19,20 @@ class MultiSplitterTest {
         var splitter = Multi.createFrom().items(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
                 .split(OddEven.class, n -> (n % 2 == 0) ? OddEven.EVEN : OddEven.ODD);
 
+        AssertSubscriber<Integer> oddSub = AssertSubscriber.create();
+        AssertSubscriber<Integer> evenSub = AssertSubscriber.create();
+
         splitter.get(OddEven.ODD)
-                .subscribe().with(n -> System.out.println("odd -> " + n));
+                .onItem().invoke(n -> System.out.println("odd -> " + n))
+                .subscribe().withSubscriber(oddSub);
+
+        oddSub.request(2L);
 
         splitter.get(OddEven.EVEN)
-                .subscribe().with(n -> System.out.println("even -> " + n));
+                .onItem().invoke(n -> System.out.println("even -> " + n))
+                .subscribe().withSubscriber(evenSub);
+
+        evenSub.request(2L);
+        oddSub.request(Long.MAX_VALUE);
     }
 }

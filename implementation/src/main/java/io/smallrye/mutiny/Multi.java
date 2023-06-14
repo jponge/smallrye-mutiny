@@ -641,7 +641,9 @@ public interface Multi<T> extends Publisher<T> {
     Multi<T> capDemandsUsing(LongFunction<Long> function);
 
     // TODO
-    @Experimental("TBD")
     @CheckReturnValue
-    <K extends Enum<K>> MultiSplitter<T, K> split(Class<K> keyType, Function<T, K> splitter);
+    @Experimental("WIP")
+    default <K extends Enum<K>> MultiSplitter<T, K> split(Class<K> keyType, Function<T, K> splitter) {
+        return new MultiSplitter<>(this, keyType, splitter);
+    }
 }

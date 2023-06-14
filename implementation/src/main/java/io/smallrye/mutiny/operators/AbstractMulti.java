@@ -6,7 +6,6 @@ import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Flow;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.LongFunction;
 import java.util.function.Predicate;
 
@@ -18,7 +17,6 @@ import io.smallrye.mutiny.helpers.StrictMultiSubscriber;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.*;
 import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
-import io.smallrye.mutiny.operators.multi.split.MultiSplitter;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 
 public abstract class AbstractMulti<T> implements Multi<T> {
@@ -180,10 +178,5 @@ public abstract class AbstractMulti<T> implements Multi<T> {
     @Override
     public Multi<T> capDemandsUsing(LongFunction<Long> function) {
         return Infrastructure.onMultiCreation(new MultiDemandCapping<>(this, nonNull(function, "function")));
-    }
-
-    @Override
-    public <K extends Enum<K>> MultiSplitter<T, K> split(Class<K> keyType, Function<T, K> splitter) {
-        return new MultiSplitter<>(this, keyType, splitter);
     }
 }
