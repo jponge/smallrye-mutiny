@@ -1,22 +1,20 @@
 package io.smallrye.mutiny.operators.multi.split;
 
-import io.smallrye.mutiny.Context;
-import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.helpers.ParameterValidation;
-import io.smallrye.mutiny.helpers.Subscriptions;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
-import io.smallrye.mutiny.operators.AbstractMulti;
-import io.smallrye.mutiny.subscription.ContextSupport;
-import io.smallrye.mutiny.subscription.MultiSubscriber;
+import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Flow;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 
-import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
+import io.smallrye.mutiny.Context;
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.helpers.Subscriptions;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
+import io.smallrye.mutiny.operators.AbstractMulti;
+import io.smallrye.mutiny.subscription.ContextSupport;
+import io.smallrye.mutiny.subscription.MultiSubscriber;
 
 public class MultiSplitter<T, K extends Enum<K>> {
 
@@ -53,35 +51,16 @@ public class MultiSplitter<T, K extends Enum<K>> {
 
     private Flow.Subscription upstreamSubscription;
 
-    private final ReentrantLock splitsCoherentReadingLock = new ReentrantLock();
-
     private void onSplitRequest() {
-        long minimalDemand = Long.MAX_VALUE;
-
-        // Get a coherent view of the splits to get the minimal demand, and finally trim demands
-        splitsCoherentReadingLock.lock();
-        try {
-            if ((upstreamSubscription == null) || (splits.size() < requiredNumberOfSubscribers)) {
-                return;
-            }
-            for (SplitMulti.Split split : splits.values()) {
-                long demand = split.demand.get();
-                if (demand < minimalDemand) {
-                    minimalDemand = demand;
-                }
-            }
-            if (minimalDemand == 0L) {
-                return;
-            }
-            for (SplitMulti.Split split : splits.values()) {
-                split.demand.addAndGet(-minimalDemand);
-            }
-        } finally {
-            splitsCoherentReadingLock.unlock();
+        if (state.get() != State.SUBSCRIBED || splits.size() < requiredNumberOfSubscribers) {
+            return;
         }
-
-        // Forward demand
-        upstreamSubscription.request(minimalDemand);
+        for (SplitMulti.Split split : splits.values()) {
+            if (split.demand.get() == 0L) {
+                return;
+            }
+        }
+        upstreamSubscription.request(1L);
     }
 
     private void onUpstreamFailure() {
@@ -107,6 +86,9 @@ public class MultiSplitter<T, K extends Enum<K>> {
             SplitMulti.Split target = splits.get(key);
             if (target != null) {
                 target.downstream.onItem(item);
+                if (splits.size() == requiredNumberOfSubscribers && target.demand.decrementAndGet() > 0L) {
+                    upstreamSubscription.request(1L);
+                }
             }
         } catch (Throwable err) {
             terminalFailure = err;
@@ -217,12 +199,7 @@ public class MultiSplitter<T, K extends Enum<K>> {
 
             @Override
             public void cancel() {
-                splitsCoherentReadingLock.lock();
-                try {
-                    splits.remove(key);
-                } finally {
-                    splitsCoherentReadingLock.unlock();
-                }
+                splits.remove(key);
             }
 
             @Override

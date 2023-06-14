@@ -1,9 +1,10 @@
 package io.smallrye.mutiny.operators.multi.split;
 
-import io.smallrye.mutiny.Multi;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import io.smallrye.mutiny.Multi;
 
 class MultiSplitterTest {
 
