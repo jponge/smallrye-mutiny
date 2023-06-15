@@ -151,6 +151,7 @@ public class MultiSplitter<T, K extends Enum<K>> {
 
             // First subscription triggers upstream subscription
             if (state.compareAndSet(State.INIT, State.AWAITING_SUBSCRIPTION)) {
+                // TODO handle context passing (first, combined, or empty?)
                 upstream.subscribe().withSubscriber(new Forwarder());
             }
 
