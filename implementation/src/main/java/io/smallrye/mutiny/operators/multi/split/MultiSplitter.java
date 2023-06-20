@@ -25,10 +25,11 @@ public class MultiSplitter<T, K extends Enum<K>> {
 
     public MultiSplitter(Multi<? extends T> upstream, Class<K> keyType, Function<T, K> splitter) {
         this.upstream = nonNull(upstream, "upstream");
-        this.splitter = nonNull(splitter, "splitter");
         if (!nonNull(keyType, "keyType").isEnum()) {
+            // Note: the Java compiler enforces a type check on keyType being some enum, so this branch is only here for added peace of mind
             throw new IllegalArgumentException("The key type must be that of an enumeration");
         }
+        this.splitter = nonNull(splitter, "splitter");
         this.splits = new ConcurrentHashMap<>();
         this.requiredNumberOfSubscribers = keyType.getEnumConstants().length;
     }
