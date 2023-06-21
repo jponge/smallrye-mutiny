@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
+import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.Subscriptions;
@@ -16,6 +17,29 @@ import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 
+/**
+ * Splits a {@link Multi} into several co-operating {@link Multi}.
+ * <p>
+ * Each split {@link Multi} receives items based on a function that maps each item to a key from an enumeration.
+ * <p>
+ * The demand of each split {@link Multi} is independent.
+ * Items flow when all keys from the enumeration have a split subscriber, and until either one of the split has a {@code 0}
+ * demand,
+ * or when one of the split subscriber cancels.
+ * The flow resumes when all keys have a subscriber again, and when the demand for each split is strictly positive.
+ * <p>
+ * Calls to {@link #get(Enum)} result in new {@link Multi} objects, but given a key {@code K} then there can be only one
+ * active subscription. If there is already a subscriber for {@code K} then any subscription request to a {@link Multi} for key
+ * {@code K} results in a terminal failure.
+ * Note that when a subscriber for {@code K} has cancelled then a request to subscribe for a {@link Multi} for {@code K} can
+ * succeed.
+ * <p>
+ * If the upstream {@link Multi} has already completed or failed, then any new subscriber will receive the terminal signal
+ * (see {@link MultiSubscriber#onCompletion()} and {@link MultiSubscriber#onFailure(Throwable)}).
+ *
+ * @param <T> the items type
+ * @param <K> the enumeration type
+ */
 public class MultiSplitter<T, K extends Enum<K>> {
 
     private final Multi<? extends T> upstream;
@@ -34,6 +58,13 @@ public class MultiSplitter<T, K extends Enum<K>> {
         this.requiredNumberOfSubscribers = keyType.getEnumConstants().length;
     }
 
+    /**
+     * Get a {@link Multi} for a given key
+     *
+     * @param key the key
+     * @return a new {@link Multi}
+     */
+    @CheckReturnValue
     public Multi<T> get(K key) {
         return Infrastructure.onMultiCreation(new SplitMulti(key));
     }
@@ -84,6 +115,7 @@ public class MultiSplitter<T, K extends Enum<K>> {
             if (key == null) {
                 throw new NullPointerException("The splitter function returned null");
             }
+            // Note: if the target subscriber was removed between the last upstream demand and now, it is simply discarded
             SplitMulti.Split target = splits.get(key);
             if (target != null) {
                 target.downstream.onItem(item);
