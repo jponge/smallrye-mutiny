@@ -59,7 +59,7 @@ public class MultiSplitter<T, K extends Enum<K>> {
     }
 
     /**
-     * Get a {@link Multi} for a given key
+     * Get a {@link Multi} for a given key.
      *
      * @param key the key
      * @return a new {@link Multi}
