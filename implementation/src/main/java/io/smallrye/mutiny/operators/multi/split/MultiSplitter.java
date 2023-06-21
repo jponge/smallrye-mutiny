@@ -189,7 +189,7 @@ public class MultiSplitter<T, K extends Enum<K>> {
 
         private final K key;
 
-        SplitMulti(K key) {
+        private SplitMulti(K key) {
             this.key = key;
         }
 
