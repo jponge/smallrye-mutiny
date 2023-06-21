@@ -3,8 +3,11 @@ package io.smallrye.mutiny.operators.multi.split;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
+import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 
@@ -213,5 +216,22 @@ class MultiSplitterTest {
                 .subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
         afterWork.assertHasNotReceivedAnyItem()
                 .assertFailedWith(RuntimeException.class, "boom");
+    }
+
+    @Test
+    void contextPassing() {
+        var splitter = Multi.createFrom().context(ctx -> Multi.createFrom().iterable(ctx.<List<Integer>> get("items")))
+                .split(OddEven.class, n -> (n % 2 == 0) ? OddEven.EVEN : OddEven.ODD);
+
+        var ctx = Context.of("items", List.of(1, 2, 3, 4, 5, 6));
+
+        var odd = splitter.get(OddEven.ODD)
+                .subscribe().withSubscriber(AssertSubscriber.create(ctx, Long.MAX_VALUE));
+
+        var even = splitter.get(OddEven.EVEN)
+                .subscribe().withSubscriber(AssertSubscriber.create(ctx, Long.MAX_VALUE));
+
+        odd.assertCompleted().assertItems(1, 3, 5);
+        even.assertCompleted().assertItems(2, 4, 6);
     }
 }

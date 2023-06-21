@@ -100,7 +100,17 @@ public class MultiSplitter<T, K extends Enum<K>> {
     }
 
     // Note: we need a subscriber class because another onCompletion definition exists in Multi
-    private class Forwarder implements MultiSubscriber<T> {
+    private class Forwarder implements MultiSubscriber<T>, ContextSupport {
+
+        private final Context context;
+
+        private Forwarder(MultiSubscriber<? super T> firstSubscriber) {
+            if (firstSubscriber instanceof ContextSupport) {
+                context = ((ContextSupport) firstSubscriber).context();
+            } else {
+                context = Context.empty();
+            }
+        }
 
         @Override
         public void onItem(T item) {
@@ -136,6 +146,11 @@ public class MultiSplitter<T, K extends Enum<K>> {
                 onSplitRequest();
             }
         }
+
+        @Override
+        public Context context() {
+            return context;
+        }
     }
 
     private class SplitMulti extends AbstractMulti<T> {
@@ -152,8 +167,8 @@ public class MultiSplitter<T, K extends Enum<K>> {
 
             // First subscription triggers upstream subscription
             if (state.compareAndSet(State.INIT, State.AWAITING_SUBSCRIPTION)) {
-                // TODO handle context passing (first, combined, or empty?)
-                upstream.subscribe().withSubscriber(new Forwarder());
+                // TODO assumptiom is that all split subscribers have the same context, first subscriber passes it
+                upstream.subscribe().withSubscriber(new Forwarder(subscriber));
             }
 
             // Early exits
@@ -180,7 +195,7 @@ public class MultiSplitter<T, K extends Enum<K>> {
             }
         }
 
-        private class Split implements Flow.Subscription, ContextSupport {
+        private class Split implements Flow.Subscription {
 
             MultiSubscriber<? super T> downstream;
             AtomicLong demand = new AtomicLong();
@@ -203,15 +218,6 @@ public class MultiSplitter<T, K extends Enum<K>> {
             @Override
             public void cancel() {
                 splits.remove(key);
-            }
-
-            @Override
-            public Context context() {
-                if (downstream instanceof ContextSupport) {
-                    return ((ContextSupport) downstream).context();
-                } else {
-                    return Context.empty();
-                }
             }
         }
     }
