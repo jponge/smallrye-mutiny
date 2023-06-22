@@ -36,6 +36,11 @@ import io.smallrye.mutiny.subscription.MultiSubscriber;
  * <p>
  * If the upstream {@link Multi} has already completed or failed, then any new subscriber will receive the terminal signal
  * (see {@link MultiSubscriber#onCompletion()} and {@link MultiSubscriber#onFailure(Throwable)}).
+ * <p>
+ * Note on {@link Context} support: it is assumed that all split subscribers share the same {@link Context} instance, if any.
+ * The {@link Context} is passed to the upstream {@link Multi} when the first split subscription happens.
+ * When disjoint {@link Context} are in use by the different split subscribers then the behavior of your code will be most
+ * likely incorrect.
  *
  * @param <T> the items type
  * @param <K> the enumeration type
@@ -199,7 +204,7 @@ public class MultiSplitter<T, K extends Enum<K>> {
 
             // First subscription triggers upstream subscription
             if (state.compareAndSet(State.INIT, State.AWAITING_SUBSCRIPTION)) {
-                // TODO assumption is that all split subscribers have the same context, first subscriber passes it
+                // Assumption: all split subscribers share the same context, if any
                 upstream.subscribe().withSubscriber(new Forwarder(subscriber));
             }
 
