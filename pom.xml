@@ -74,6 +74,7 @@
         <module>bom</module>
         <module>math</module>
         <module>workshop-examples</module>
+        <module>native-tests</module>
     </modules>
 
     <properties>
@@ -88,7 +89,7 @@
         <smallrye-config.version>3.1.1</smallrye-config.version>
         <smallrye-common-annotation.version>2.1.2</smallrye-common-annotation.version>
 
-        <junit.version>5.9.1</junit.version>
+        <junit.version>5.10.0</junit.version>
         <assertj-core.version>3.24.2</assertj-core.version>
         <junit4.version>4.13.2</junit4.version>
         <awaitility.version>4.2.0</awaitility.version>
