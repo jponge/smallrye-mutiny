@@ -90,6 +90,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 }
                 if (state.get() != State.WAITING_NEXT_SUBSCRIPTION) {
                     // TODO protocol failure
+                    System.out.println("woops");
                 }
                 currentUpstream = subscription;
                 state.set(State.EMITTING);
@@ -160,6 +161,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 }
             } else {
                 // TODO protocol error
+                System.out.println("woops");
             }
         }
 
@@ -177,7 +179,9 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 return;
             }
             upstreamHasCompleted = true;
-            // TODO mark as pending inner completion
+            if (state.compareAndSet(State.WAITING_NEXT_PUBLISHER, State.COMPLETED)) {
+                downstream.onCompletion();
+            }
         }
 
         @Override
