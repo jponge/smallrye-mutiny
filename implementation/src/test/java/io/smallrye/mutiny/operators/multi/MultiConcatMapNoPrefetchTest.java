@@ -36,6 +36,20 @@ class MultiConcatMapNoPrefetchTest {
         });
     }
 
+    @Test
+    void simpleConcatMap() {
+        AssertSubscriber<Integer> sub = Multi.createFrom().range(1, 3)
+                .onItem().transformToMultiAndConcatenate(n -> Multi.createFrom().items(n * 10, n * 20))
+                .subscribe().withSubscriber(AssertSubscriber.create());
+        sub.request(1);
+        sub.assertItems(10);
+        sub.request(2);
+        sub.assertItems(10, 20, 20);
+        sub.request(Long.MAX_VALUE);
+        sub.assertItems(10, 20, 20, 40);
+        sub.assertCompleted();
+    }
+
     @ParameterizedTest
     @MethodSource("argsTransformToUni")
     void testTransformToUni(boolean prefetch, int[] upstreamRequests) {

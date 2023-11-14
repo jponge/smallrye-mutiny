@@ -4,6 +4,7 @@ import java.util.concurrent.Flow.Publisher;
 import java.util.concurrent.Flow.Subscription;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.Function;
@@ -25,7 +26,7 @@ import io.smallrye.mutiny.subscription.SwitchableSubscriptionSubscriber;
  * <li>The inner has no more outstanding requests.</li>
  * <li>The inner completed without emitting items or with outstanding requests.</li>
  * </ul>
- *
+ * <p>
  * This operator can collect failures and postpone them until termination.
  *
  * @param <I> the upstream value type / input type
@@ -50,11 +51,164 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         if (subscriber == null) {
             throw new NullPointerException("The subscriber must not be `null`");
         }
-        ConcatMapMainSubscriber<I, O> sub = new ConcatMapMainSubscriber<>(subscriber,
-                mapper,
-                postponeFailurePropagation);
+        //        ConcatMapMainSubscriber<I, O> sub = new ConcatMapMainSubscriber<>(subscriber,
+        //                mapper,
+        //                postponeFailurePropagation);
+        //
+        //        upstream.subscribe(Infrastructure.onMultiSubscription(upstream, sub));
+        upstream.subscribe(Infrastructure.onMultiSubscription(upstream, new ConcatMapSubscriber(subscriber)));
+    }
 
-        upstream.subscribe(Infrastructure.onMultiSubscription(upstream, sub));
+    private enum State {
+        INIT,
+        WAITING_NEXT_PUBLISHER,
+        WAITING_NEXT_SUBSCRIPTION,
+        EMITTING,
+        CANCELLED,
+        COMPLETED
+    }
+
+    final class ConcatMapSubscriber implements MultiSubscriber<I>, Subscription {
+
+        private final MultiSubscriber<? super O> downstream;
+        private final AtomicLong demand = new AtomicLong();
+        private final AtomicReference<State> state = new AtomicReference<>(State.INIT);
+        private Subscription upstream;
+        private Subscription currentUpstream;
+        private boolean upstreamHasCompleted = false;
+
+        ConcatMapSubscriber(MultiSubscriber<? super O> downstream) {
+            this.downstream = downstream;
+        }
+
+        private final MultiSubscriber<O> innerSubscriber = new MultiSubscriber<>() {
+
+            @Override
+            public void onSubscribe(Subscription subscription) {
+                if (state.get() == State.CANCELLED) {
+                    return;
+                }
+                if (state.get() != State.WAITING_NEXT_SUBSCRIPTION) {
+                    // TODO protocol failure
+                }
+                currentUpstream = subscription;
+                state.set(State.EMITTING);
+                long pending = demand.get();
+                if (pending > 0L) {
+                    currentUpstream.request(pending);
+                }
+            }
+
+            @Override
+            public void onItem(O item) {
+                if (state.get() == State.CANCELLED) {
+                    return;
+                }
+                downstream.onItem(item);
+                demand.decrementAndGet();
+            }
+
+            @Override
+            public void onFailure(Throwable failure) {
+                if (state.get() == State.CANCELLED) {
+                    return;
+                }
+                ConcatMapSubscriber.this.onFailure(failure);
+            }
+
+            @Override
+            public void onCompletion() {
+                if (state.get() == State.CANCELLED) {
+                    return;
+                }
+                if (!upstreamHasCompleted) {
+                    state.set(State.WAITING_NEXT_PUBLISHER);
+                    if (demand.get() > 0L) {
+                        upstream.request(1L);
+                    }
+                } else {
+                    state.set(State.COMPLETED);
+                    downstream.onCompletion();
+                }
+            }
+        };
+
+        @Override
+        public void onSubscribe(Subscription subscription) {
+            if (upstream == null) {
+                upstream = subscription;
+                downstream.onSubscribe(this);
+            } else {
+                subscription.cancel();
+            }
+        }
+
+        @Override
+        public void onItem(I item) {
+            if (state.get() == State.CANCELLED) {
+                return;
+            }
+            if (state.compareAndSet(State.WAITING_NEXT_PUBLISHER, State.WAITING_NEXT_SUBSCRIPTION)) {
+                try {
+                    Publisher<? extends O> publisher = mapper.apply(item);
+                    if (publisher == null) {
+                        throw new NullPointerException("The mapper produced a null publisher");
+                    }
+                    publisher.subscribe(innerSubscriber);
+                } catch (Throwable err) {
+                    onFailure(err);
+                }
+            } else {
+                // TODO protocol error
+            }
+        }
+
+        @Override
+        public void onFailure(Throwable failure) {
+            if (state.get() == State.CANCELLED) {
+                return;
+            }
+            // TODO + handle postponed failures
+        }
+
+        @Override
+        public void onCompletion() {
+            if (state.get() == State.CANCELLED) {
+                return;
+            }
+            upstreamHasCompleted = true;
+            // TODO mark as pending inner completion
+        }
+
+        @Override
+        public void request(long n) {
+            if (state.get() == State.CANCELLED) {
+                return;
+            }
+            if (n <= 0) {
+                state.set(State.CANCELLED);
+                downstream.onFailure(Subscriptions.getInvalidRequestException());
+            } else {
+                Subscriptions.add(demand, n);
+                if (state.compareAndSet(State.INIT, State.WAITING_NEXT_PUBLISHER)) {
+                    upstream.request(1L);
+                } else if (state.get() == State.EMITTING) {
+                    currentUpstream.request(n);
+                }
+            }
+        }
+
+        @Override
+        public void cancel() {
+            if (state.getAndSet(State.CANCELLED) != State.CANCELLED) {
+                if (upstream != null) {
+                    upstream.cancel();
+                }
+                if (currentUpstream != null) {
+                    currentUpstream.cancel();
+                }
+            }
+        }
     }
 
     public static final class ConcatMapMainSubscriber<I, O> implements MultiSubscriber<I>, Subscription, ContextSupport {
