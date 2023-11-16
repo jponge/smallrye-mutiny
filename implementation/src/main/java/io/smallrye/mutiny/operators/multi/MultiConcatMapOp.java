@@ -1,5 +1,6 @@
 package io.smallrye.mutiny.operators.multi;
 
+import io.smallrye.mutiny.CompositeException;
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.ParameterValidation;
@@ -76,6 +77,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         private Subscription upstream;
         private Subscription currentUpstream;
         private boolean upstreamHasCompleted = false;
+        private Throwable failure;
 
         ConcatMapSubscriber(MultiSubscriber<? super O> downstream) {
             this.downstream = downstream;
@@ -168,7 +170,21 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
             if (state.get() == State.CANCELLED) {
                 return;
             }
-            // TODO + handle postponed failures
+            if (this.failure != null) {
+                if (this.failure instanceof CompositeException) {
+                    this.failure = new CompositeException((CompositeException) this.failure, failure);
+                } else {
+                    this.failure = new CompositeException(this.failure, failure);
+                }
+            } else {
+                this.failure = failure;
+            }
+            if (postponeFailurePropagation) {
+                // TODO let's continue
+            } else {
+                state.set(State.CANCELLED);
+                downstream.onFailure(this.failure);
+            }
         }
 
         @Override
