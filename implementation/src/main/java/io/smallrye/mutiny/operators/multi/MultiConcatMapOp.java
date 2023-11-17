@@ -66,7 +66,6 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         WAITING_NEXT_SUBSCRIPTION,
         EMITTING,
         CANCELLED,
-        COMPLETED
     }
 
     final class ConcatMapSubscriber implements MultiSubscriber<I>, Subscription {
@@ -128,8 +127,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                     state.set(State.WAITING_NEXT_PUBLISHER);
                     upstream.request(1L);
                 } else {
-                    state.set(State.COMPLETED);
-                    downstream.onCompletion();
+                    completeOrFail();
                 }
             }
         };
@@ -180,10 +178,18 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 this.failure = failure;
             }
             if (postponeFailurePropagation) {
-                // TODO let's continue
+                innerSubscriber.onCompletion();
             } else {
-                state.set(State.CANCELLED);
-                downstream.onFailure(this.failure);
+                completeOrFail();
+            }
+        }
+
+        private void completeOrFail() {
+            state.set(State.CANCELLED);
+            if (failure != null) {
+                downstream.onFailure(failure);
+            } else {
+                downstream.onComplete();
             }
         }
 
@@ -193,8 +199,8 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 return;
             }
             upstreamHasCompleted = true;
-            if (state.compareAndSet(State.WAITING_NEXT_PUBLISHER, State.COMPLETED)) {
-                downstream.onCompletion();
+            if (state.compareAndSet(State.WAITING_NEXT_PUBLISHER, State.CANCELLED)) {
+                completeOrFail();
             }
         }
 
