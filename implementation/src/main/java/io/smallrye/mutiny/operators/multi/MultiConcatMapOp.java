@@ -1,5 +1,14 @@
 package io.smallrye.mutiny.operators.multi;
 
+import java.util.concurrent.Flow.Publisher;
+import java.util.concurrent.Flow.Subscription;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
+import java.util.function.Function;
+
 import io.smallrye.mutiny.CompositeException;
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Multi;
@@ -9,15 +18,6 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.smallrye.mutiny.subscription.SwitchableSubscriptionSubscriber;
-
-import java.util.concurrent.Flow.Publisher;
-import java.util.concurrent.Flow.Subscription;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
-import java.util.function.Function;
 
 /**
  * ConcatMap operator without prefetching items from the upstream.
@@ -40,8 +40,8 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
     private final boolean postponeFailurePropagation;
 
     public MultiConcatMapOp(Multi<? extends I> upstream,
-                            Function<? super I, ? extends Publisher<? extends O>> mapper,
-                            boolean postponeFailurePropagation) {
+            Function<? super I, ? extends Publisher<? extends O>> mapper,
+            boolean postponeFailurePropagation) {
         super(upstream);
         this.mapper = mapper;
         this.postponeFailurePropagation = postponeFailurePropagation;
@@ -68,7 +68,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         CANCELLED,
     }
 
-    final class ConcatMapSubscriber implements MultiSubscriber<I>, Subscription {
+    final class ConcatMapSubscriber implements MultiSubscriber<I>, Subscription, ContextSupport {
 
         private final MultiSubscriber<? super O> downstream;
         private final AtomicLong demand = new AtomicLong();
@@ -80,6 +80,15 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
         ConcatMapSubscriber(MultiSubscriber<? super O> downstream) {
             this.downstream = downstream;
+        }
+
+        @Override
+        public Context context() {
+            if (downstream instanceof ContextSupport) {
+                return ((ContextSupport) downstream).context();
+            } else {
+                return Context.empty();
+            }
         }
 
         private final MultiSubscriber<O> innerSubscriber = new MultiSubscriber<>() {
@@ -187,16 +196,12 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                     this.failure = new CompositeException(this.failure, failure);
                 }
             } else {
-                if (postponeFailurePropagation) {
-                    this.failure = new CompositeException(failure);
-                } else {
-                    this.failure = failure;
-                }
+                this.failure = failure;
             }
         }
 
         private void completeOrFail() {
-            state.set(State.CANCELLED);
+            cancel();
             if (failure != null) {
                 downstream.onFailure(failure);
             } else {
