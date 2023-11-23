@@ -14,7 +14,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import io.smallrye.mutiny.CompositeException;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.MultiFlatten;
@@ -197,7 +196,7 @@ class MultiConcatMapNoPrefetchTest {
                 .concatenate();
         AssertSubscriber<Integer> ts = new AssertSubscriber<>(5);
         result.subscribe(ts);
-        ts.assertHasNotReceivedAnyItem().assertFailedWith(CompositeException.class);
+        ts.assertHasNotReceivedAnyItem().assertFailedWith(NullPointerException.class);
     }
 
     @Test
