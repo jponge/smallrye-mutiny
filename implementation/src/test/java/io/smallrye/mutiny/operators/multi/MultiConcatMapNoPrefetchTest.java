@@ -283,4 +283,12 @@ class MultiConcatMapNoPrefetchTest {
         ts.awaitCompletion();
     }
 
+    @Test
+    void testUpfrontCompletion() {
+        AssertSubscriber<Integer> sub = Multi.createFrom().empty()
+                .onItem().transformToMultiAndConcatenate(n -> Multi.createFrom().items(1, 2, 3))
+                .subscribe().withSubscriber(AssertSubscriber.create());
+
+        sub.assertCompleted().assertHasNotReceivedAnyItem();
+    }
 }

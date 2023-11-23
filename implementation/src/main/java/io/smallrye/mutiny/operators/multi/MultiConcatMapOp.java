@@ -215,7 +215,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 return;
             }
             upstreamHasCompleted = true;
-            if (state.compareAndSet(State.WAITING_NEXT_PUBLISHER, State.CANCELLED)) {
+            if (state.compareAndSet(State.WAITING_NEXT_PUBLISHER, State.CANCELLED) || state.compareAndSet(State.INIT, State.CANCELLED)) {
                 completeOrFail();
             }
         }
