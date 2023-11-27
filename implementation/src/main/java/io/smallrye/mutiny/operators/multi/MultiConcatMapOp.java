@@ -215,7 +215,8 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 return;
             }
             upstreamHasCompleted = true;
-            if (state.compareAndSet(State.WAITING_NEXT_PUBLISHER, State.CANCELLED) || state.compareAndSet(State.INIT, State.CANCELLED)) {
+            if (state.compareAndSet(State.WAITING_NEXT_PUBLISHER, State.CANCELLED)
+                    || state.compareAndSet(State.INIT, State.CANCELLED)) {
                 completeOrFail();
             }
         }
@@ -227,7 +228,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 return;
             }
             if (n <= 0) {
-                state.set(State.CANCELLED);
+                cancel();
                 downstream.onFailure(Subscriptions.getInvalidRequestException());
             } else {
                 Subscriptions.add(demand, n);
@@ -245,13 +246,15 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
         @Override
         public void cancel() {
-            if (state.getAndSet(State.CANCELLED) != State.CANCELLED) {
-                if (upstream != null) {
-                    upstream.cancel();
-                }
-                if (currentUpstream != null) {
-                    currentUpstream.cancel();
-                }
+            State previousState = state.getAndSet(State.CANCELLED);
+            if (previousState == State.CANCELLED) {
+                return;
+            }
+            if (previousState == State.EMITTING) {
+                currentUpstream.cancel();
+                upstream.cancel();
+            } else if (upstream != null) {
+                upstream.cancel();
             }
         }
     }
