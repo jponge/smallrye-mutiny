@@ -47,19 +47,23 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         if (subscriber == null) {
             throw new NullPointerException("The subscriber must not be `null`");
         }
-        upstream.subscribe(Infrastructure.onMultiSubscription(upstream, new ConcatMapSubscriber(subscriber)));
+        ConcatMapSubscriber<I, O> concatMapSubscriber = new ConcatMapSubscriber<>(mapper, postponeFailurePropagation,
+                subscriber);
+        upstream.subscribe(Infrastructure.onMultiSubscription(upstream, concatMapSubscriber));
     }
 
-    private enum State {
-        INIT,
-        WAITING_NEXT_PUBLISHER,
-        WAITING_NEXT_SUBSCRIPTION,
-        EMITTING,
-        CANCELLED,
-    }
+    static class ConcatMapSubscriber<I, O> implements MultiSubscriber<I>, Subscription, ContextSupport {
 
-    final class ConcatMapSubscriber implements MultiSubscriber<I>, Subscription, ContextSupport {
+        private enum State {
+            INIT,
+            WAITING_NEXT_PUBLISHER,
+            WAITING_NEXT_SUBSCRIPTION,
+            EMITTING,
+            CANCELLED,
+        }
 
+        private final Function<? super I, ? extends Publisher<? extends O>> mapper;
+        private final boolean postponeFailurePropagation;
         private final MultiSubscriber<? super O> downstream;
         private final AtomicLong demand = new AtomicLong();
         private final AtomicReference<State> state = new AtomicReference<>(State.INIT);
@@ -68,8 +72,11 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         private boolean upstreamHasCompleted = false;
         private Throwable failure;
 
-        ConcatMapSubscriber(MultiSubscriber<? super O> downstream) {
+        ConcatMapSubscriber(Function<? super I, ? extends Publisher<? extends O>> mapper, boolean postponeFailurePropagation,
+                MultiSubscriber<? super O> downstream) {
             this.downstream = downstream;
+            this.mapper = mapper;
+            this.postponeFailurePropagation = postponeFailurePropagation;
         }
 
         @Override
