@@ -91,62 +91,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
             }
         }
 
-        private final MultiSubscriber<O> innerSubscriber = new MultiSubscriber<>() {
-
-            @Override
-            public void onSubscribe(Subscription subscription) {
-                if (state.get() == State.CANCELLED) {
-                    return;
-                }
-                if (state.get() != State.WAITING_NEXT_SUBSCRIPTION) {
-                    // TODO protocol failure
-                    System.out.println("woops");
-                }
-                currentUpstream = subscription;
-                state.set(State.EMITTING);
-                long pending = demand.get();
-                if (pending > 0L) {
-                    currentUpstream.request(pending);
-                }
-            }
-
-            @Override
-            public void onItem(O item) {
-                if (state.get() == State.CANCELLED) {
-                    return;
-                }
-                downstream.onItem(item);
-                demand.decrementAndGet();
-            }
-
-            @Override
-            public void onFailure(Throwable failure) {
-                if (state.get() == State.CANCELLED) {
-                    return;
-                }
-                addFailure(failure);
-                if (!postponeFailurePropagation) {
-                    completeOrFail();
-                } else {
-                    onCompletion();
-                }
-            }
-
-            @Override
-            public void onCompletion() {
-                if (state.get() == State.CANCELLED) {
-                    return;
-                }
-                if (!upstreamHasCompleted) {
-                    state.set(State.WAITING_NEXT_PUBLISHER);
-                    if (demand.get() > 0L) {
-                        upstream.request(1L);
-                    }
-                } else {
-                    completeOrFail();
-                }
-            }
-        };
+        private final MultiSubscriber<O> innerSubscriber = new InnerSubscriber();
 
         @Override
         public void onSubscribe(Subscription subscription) {
@@ -255,6 +200,72 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 upstream.cancel();
             } else if (upstream != null) {
                 upstream.cancel();
+            }
+        }
+
+        class InnerSubscriber implements MultiSubscriber<O>, ContextSupport {
+
+            @Override
+            public void onSubscribe(Subscription subscription) {
+                if (state.get() == State.CANCELLED) {
+                    return;
+                }
+                if (state.get() != State.WAITING_NEXT_SUBSCRIPTION) {
+                    // TODO protocol failure
+                    System.out.println("woops");
+                }
+                currentUpstream = subscription;
+                state.set(State.EMITTING);
+                long pending = demand.get();
+                if (pending > 0L) {
+                    currentUpstream.request(pending);
+                }
+            }
+
+            @Override
+            public void onItem(O item) {
+                if (state.get() == State.CANCELLED) {
+                    return;
+                }
+                downstream.onItem(item);
+                demand.decrementAndGet();
+            }
+
+            @Override
+            public void onFailure(Throwable failure) {
+                if (state.get() == State.CANCELLED) {
+                    return;
+                }
+                addFailure(failure);
+                if (!postponeFailurePropagation) {
+                    completeOrFail();
+                } else {
+                    onCompletion();
+                }
+            }
+
+            @Override
+            public void onCompletion() {
+                if (state.get() == State.CANCELLED) {
+                    return;
+                }
+                if (!upstreamHasCompleted) {
+                    state.set(State.WAITING_NEXT_PUBLISHER);
+                    if (demand.get() > 0L) {
+                        upstream.request(1L);
+                    }
+                } else {
+                    completeOrFail();
+                }
+            }
+
+            @Override
+            public Context context() {
+                if (downstream instanceof ContextSupport) {
+                    return ((ContextSupport) downstream).context();
+                } else {
+                    return Context.empty();
+                }
             }
         }
     }
