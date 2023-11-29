@@ -220,8 +220,8 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 if (state == State.CANCELLED) {
                     return;
                 }
-                downstream.onItem(item);
                 DEMAND_UPDATER.decrementAndGet(ConcatMapSubscriber.this);
+                downstream.onItem(item);
             }
 
             @Override
