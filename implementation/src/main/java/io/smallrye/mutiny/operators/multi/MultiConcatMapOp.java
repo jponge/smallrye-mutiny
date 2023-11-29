@@ -2,7 +2,7 @@ package io.smallrye.mutiny.operators.multi;
 
 import java.util.concurrent.Flow.Publisher;
 import java.util.concurrent.Flow.Subscription;
-import java.util.concurrent.atomic.AtomicLongFieldUpdater;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.Function;
 
@@ -65,7 +65,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         private final Function<? super I, ? extends Publisher<? extends O>> mapper;
         private final boolean postponeFailurePropagation;
         private final MultiSubscriber<? super O> downstream;
-        private volatile long demand = 0L;
+        private final AtomicLong demand = new AtomicLong(0L);
         private volatile State state = State.INIT;
         private volatile Subscription upstream;
         private Subscription currentUpstream;
@@ -76,8 +76,6 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 .newUpdater(ConcatMapSubscriber.class, Subscription.class, "upstream");
         private static final AtomicReferenceFieldUpdater<ConcatMapSubscriber, State> STATE_UPDATER = AtomicReferenceFieldUpdater
                 .newUpdater(ConcatMapSubscriber.class, State.class, "state");
-        private static final AtomicLongFieldUpdater<ConcatMapSubscriber> DEMAND_UPDATER = AtomicLongFieldUpdater
-                .newUpdater(ConcatMapSubscriber.class, "demand");
 
         ConcatMapSubscriber(Function<? super I, ? extends Publisher<? extends O>> mapper, boolean postponeFailurePropagation,
                 MultiSubscriber<? super O> downstream) {
@@ -173,7 +171,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 cancel();
                 downstream.onFailure(Subscriptions.getInvalidRequestException());
             } else {
-                Subscriptions.add(DEMAND_UPDATER, this, n);
+                Subscriptions.add(demand, n);
                 if (STATE_UPDATER.compareAndSet(this, State.INIT, State.WAITING_NEXT_PUBLISHER)) {
                     upstream.request(1L);
                 } else {
@@ -209,7 +207,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 }
                 currentUpstream = subscription;
                 state = State.EMITTING;
-                long pending = demand;
+                long pending = demand.get();
                 if (pending > 0L) {
                     currentUpstream.request(pending);
                 }
@@ -221,7 +219,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                     return;
                 }
                 downstream.onItem(item);
-                DEMAND_UPDATER.decrementAndGet(ConcatMapSubscriber.this);
+                demand.decrementAndGet();
             }
 
             @Override
@@ -246,7 +244,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 }
                 if (!upstreamHasCompleted) {
                     state = State.WAITING_NEXT_PUBLISHER;
-                    if (demand > 0L) {
+                    if (demand.get() > 0L) {
                         upstream.request(1L);
                     }
                 } else {
