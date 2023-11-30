@@ -165,8 +165,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
         @Override
         public void request(long n) {
-            State currentState = state;
-            if (currentState == State.CANCELLED) {
+            if (state == State.CANCELLED) {
                 return;
             }
             if (n <= 0) {
@@ -177,9 +176,9 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 if (STATE_UPDATER.compareAndSet(this, State.INIT, State.WAITING_NEXT_PUBLISHER)) {
                     upstream.request(1L);
                 } else {
-                    if (currentState == State.WAITING_NEXT_PUBLISHER) {
+                    if (state == State.WAITING_NEXT_PUBLISHER) {
                         upstream.request(1L);
-                    } else if (currentState == State.EMITTING) {
+                    } else if (state == State.EMITTING) {
                         currentUpstream.request(n);
                     }
                 }
@@ -229,6 +228,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 if (state == State.CANCELLED) {
                     return;
                 }
+                state = State.WAITING_NEXT_PUBLISHER;
                 Throwable err = addFailure(failure);
                 if (postponeFailurePropagation) {
                     onCompletion();
