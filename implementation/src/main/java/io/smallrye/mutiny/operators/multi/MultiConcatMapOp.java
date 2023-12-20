@@ -2,8 +2,8 @@ package io.smallrye.mutiny.operators.multi;
 
 import java.util.concurrent.Flow;
 import java.util.concurrent.Flow.Publisher;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
+import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.Function;
 
@@ -73,13 +73,17 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         private volatile Throwable failure;
         private volatile boolean mainCompleted;
         private volatile boolean innerCompleted;
-        private final AtomicLong demand = new AtomicLong();
-        private final AtomicInteger terminationWorkInProgress = new AtomicInteger();
+        private volatile long demand;
+        private volatile int terminationWorkInProgress;
 
-        private static final AtomicReferenceFieldUpdater<MultiConcatMapOp.MainSubscriber, Flow.Subscription> UPSTREAM_UPDATER = AtomicReferenceFieldUpdater
-                .newUpdater(MultiConcatMapOp.MainSubscriber.class, Flow.Subscription.class, "upstream");
-        private static final AtomicReferenceFieldUpdater<MultiConcatMapOp.MainSubscriber, State> STATE_UPDATER = AtomicReferenceFieldUpdater
-                .newUpdater(MultiConcatMapOp.MainSubscriber.class, State.class, "state");
+        private static final AtomicReferenceFieldUpdater<MainSubscriber, Flow.Subscription> UPSTREAM_UPDATER = AtomicReferenceFieldUpdater
+                .newUpdater(MainSubscriber.class, Flow.Subscription.class, "upstream");
+        private static final AtomicReferenceFieldUpdater<MainSubscriber, State> STATE_UPDATER = AtomicReferenceFieldUpdater
+                .newUpdater(MainSubscriber.class, State.class, "state");
+        private static final AtomicLongFieldUpdater<MainSubscriber> DEMAND_UPDATER = AtomicLongFieldUpdater
+                .newUpdater(MainSubscriber.class, "demand");
+        private static final AtomicIntegerFieldUpdater<MainSubscriber> TERMINATION_WIP_UPDATER = AtomicIntegerFieldUpdater
+                .newUpdater(MainSubscriber.class, "terminationWorkInProgress");
 
         private MainSubscriber(Function<? super I, ? extends Publisher<? extends O>> mapper, boolean postponeFailurePropagation,
                 MultiSubscriber<? super O> downstream) {
@@ -139,7 +143,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 downstream.onFailure(Subscriptions.getInvalidRequestException());
                 return;
             }
-            Subscriptions.add(demand, n);
+            Subscriptions.add(DEMAND_UPDATER, this, n);
             if (state == State.EMITTING) {
                 innerSubscriber.currentUpstream.request(n);
             } else if (STATE_UPDATER.compareAndSet(this, State.INIT, State.NEXT_PUBLISHER_REQUESTED)) {
@@ -181,7 +185,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         }
 
         private void handlePossiblyTerminalEvent() {
-            if (terminationWorkInProgress.getAndIncrement() > 0) {
+            if (TERMINATION_WIP_UPDATER.getAndIncrement(this) > 0) {
                 return;
             }
             do {
@@ -200,14 +204,14 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                     return;
                 } else if (innerHasCompleted) {
                     innerCompleted = false;
-                    if (demand.get() > 0L) {
+                    if (demand > 0L) {
                         state = State.NEXT_PUBLISHER_REQUESTED;
                         upstream.request(1L);
                     } else {
                         state = State.INIT;
                     }
                 }
-            } while (terminationWorkInProgress.decrementAndGet() > 0);
+            } while (TERMINATION_WIP_UPDATER.decrementAndGet(this) > 0);
         }
 
         private class InnerSubscriber implements MultiSubscriber<O>, ContextSupport {
@@ -218,7 +222,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
             public void onSubscribe(Flow.Subscription subscription) {
                 if (STATE_UPDATER.compareAndSet(MainSubscriber.this, State.NEXT_PUBLISHER_INCOMING, State.EMITTING)) {
                     currentUpstream = subscription;
-                    long pending = demand.get();
+                    long pending = demand;
                     if (pending > 0L) {
                         currentUpstream.request(pending);
                     }
@@ -230,7 +234,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 if (state == State.DONE) {
                     return;
                 }
-                demand.decrementAndGet(); // TODO detect overflow?
+                DEMAND_UPDATER.decrementAndGet(MainSubscriber.this); // TODO detect overflow?
                 downstream.onItem(item);
             }
 
