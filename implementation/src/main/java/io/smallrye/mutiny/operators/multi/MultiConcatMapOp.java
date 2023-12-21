@@ -192,6 +192,9 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 State currentState = state;
                 boolean mainHasCompleted = mainCompleted;
                 boolean innerHasCompleted = innerCompleted;
+                if (currentState == State.DONE) {
+                    return;
+                }
                 if (mainHasCompleted && (innerHasCompleted
                         || currentState == State.NEXT_PUBLISHER_REQUESTED
                         || currentState == State.INIT)) {
@@ -201,7 +204,6 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                     } else {
                         downstream.onFailure(failure);
                     }
-                    return;
                 } else if (innerHasCompleted) {
                     innerCompleted = false;
                     if (demand > 0L) {
