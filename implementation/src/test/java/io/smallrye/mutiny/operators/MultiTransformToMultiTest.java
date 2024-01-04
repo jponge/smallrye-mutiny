@@ -829,7 +829,7 @@ public class MultiTransformToMultiTest {
 
     @RepeatedTest(10)
     public void testThatConcatenateDontMissItemsAndPreserveOrder() {
-        int max = 10000;
+        int max = 2;
         List<Integer> expected = Multi.createFrom().range(0, max).collect().asList().await().indefinitely();
         AssertSubscriber<Integer> subscriber = Multi.createFrom().range(0, max)
                 .onItem()

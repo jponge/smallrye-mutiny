@@ -55,7 +55,6 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
     private enum State {
         INIT,
         NEXT_PUBLISHER_REQUESTED,
-        NEXT_PUBLISHER_INCOMING,
         EMITTING,
         DONE,
     }
@@ -103,18 +102,19 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
         @Override
         public void onItem(I item) {
-            if (STATE_UPDATER.compareAndSet(this, State.NEXT_PUBLISHER_REQUESTED, State.NEXT_PUBLISHER_INCOMING)) {
-                try {
-                    Publisher<? extends O> publisher = mapper.apply(item);
-                    if (publisher == null) {
-                        throw new NullPointerException("The mapper produced a null publisher");
-                    }
-                    publisher.subscribe(innerSubscriber);
-                } catch (Throwable err) {
-                    state = State.DONE;
-                    upstream.cancel();
-                    downstream.onFailure(addFailure(err));
+            if (state == State.DONE) {
+                return;
+            }
+            try {
+                Publisher<? extends O> publisher = mapper.apply(item);
+                if (publisher == null) {
+                    throw new NullPointerException("The mapper produced a null publisher");
                 }
+                publisher.subscribe(innerSubscriber);
+            } catch (Throwable err) {
+                state = State.DONE;
+                upstream.cancel();
+                downstream.onFailure(addFailure(err));
             }
         }
 
@@ -139,7 +139,8 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
             if (state == State.DONE) {
                 return;
             }
-            if (n <= 0 && STATE_UPDATER.getAndSet(this, State.DONE) != State.DONE) {
+            if (n <= 0) {
+                state = State.DONE;
                 downstream.onFailure(Subscriptions.getInvalidRequestException());
                 return;
             }
@@ -147,6 +148,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
             if (state == State.EMITTING) {
                 innerSubscriber.currentUpstream.request(n);
             } else if (STATE_UPDATER.compareAndSet(this, State.INIT, State.NEXT_PUBLISHER_REQUESTED)) {
+                state = State.NEXT_PUBLISHER_REQUESTED;
                 upstream.request(1L);
             }
         }
@@ -195,17 +197,27 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 if (currentState == State.DONE) {
                     return;
                 }
-                if (mainHasCompleted && (innerHasCompleted
-                        || currentState == State.NEXT_PUBLISHER_REQUESTED
-                        || currentState == State.INIT)) {
+                //                if (mainHasCompleted && (innerHasCompleted
+                //                        || currentState == State.INIT
+                //                        || currentState == State.NEXT_PUBLISHER_REQUESTED)) {
+                //                    state = State.DONE;
+                //                    if (failure == null) {
+                //                        downstream.onCompletion();
+                //                    } else {
+                //                        downstream.onFailure(failure);
+                //                    }
+                //                    return;
+                //                }
+                if (mainHasCompleted && (innerHasCompleted || currentState == State.INIT)) {
                     state = State.DONE;
                     if (failure == null) {
                         downstream.onCompletion();
                     } else {
                         downstream.onFailure(failure);
                     }
-                } else if (innerHasCompleted) {
-                    innerCompleted = false;
+                    return;
+                }
+                if (innerHasCompleted) {
                     if (demand > 0L) {
                         state = State.NEXT_PUBLISHER_REQUESTED;
                         upstream.request(1L);
@@ -222,8 +234,9 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
             @Override
             public void onSubscribe(Flow.Subscription subscription) {
-                if (STATE_UPDATER.compareAndSet(MainSubscriber.this, State.NEXT_PUBLISHER_INCOMING, State.EMITTING)) {
+                if (STATE_UPDATER.compareAndSet(MainSubscriber.this, State.NEXT_PUBLISHER_REQUESTED, State.EMITTING)) {
                     currentUpstream = subscription;
+                    innerCompleted = false;
                     long pending = demand;
                     if (pending > 0L) {
                         currentUpstream.request(pending);
