@@ -59,8 +59,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         PUBLISHER_REQUESTED,
         EMITTING,
         EMITTING_FINAL,
-        DONE,
-        CANCELLED
+        DONE
     }
 
     private static class MainSubscriber<I, O> implements MultiSubscriber<I>, Flow.Subscription, ContextSupport {
@@ -95,7 +94,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
         @Override
         public void onItem(I item) {
-            if (state.get() == State.CANCELLED) {
+            if (state.get() == State.DONE) {
                 return;
             }
             if (state.compareAndSet(State.PUBLISHER_REQUESTED, State.EMITTING)) {
@@ -104,7 +103,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                             "The mapper produced a null publisher");
                     publisher.subscribe(innerSubscriber);
                 } catch (Throwable err) {
-                    state.set(State.CANCELLED);
+                    state.set(State.DONE);
                     mainUpstream.cancel();
                     downstream.onFailure(addFailure(err));
                 }
@@ -112,7 +111,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         }
 
         private void innerOnItem(O item) {
-            if (state.get() != State.CANCELLED) {
+            if (state.get() != State.DONE) {
                 demand.decrementAndGet();
                 downstream.onItem(item);
             }
@@ -120,7 +119,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
         @Override
         public void onFailure(Throwable failure) {
-            if (state.getAndSet(State.CANCELLED) != State.CANCELLED) {
+            if (state.getAndSet(State.DONE) != State.DONE) {
                 if (innerUpstream != null) {
                     innerUpstream.cancel();
                 }
@@ -140,13 +139,13 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                             state.set(State.READY);
                         }
                     } else {
-                        state.set(State.CANCELLED);
+                        state.set(State.DONE);
                         mainUpstream.cancel();
                         downstream.onFailure(throwable);
                     }
                     break;
                 case EMITTING_FINAL:
-                    state.set(State.CANCELLED);
+                    state.set(State.DONE);
                     mainUpstream.cancel();
                     downstream.onFailure(throwable);
             }
@@ -201,11 +200,10 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         }
 
         private void terminate() {
+            state.set(State.DONE);
             if (failure != null) {
-                state.set(State.CANCELLED);
                 downstream.onFailure(failure);
             } else {
-                state.set(State.DONE);
                 downstream.onCompletion();
             }
         }
@@ -213,7 +211,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         @Override
         public void request(long n) {
             if (n <= 0) {
-                state.set(State.CANCELLED);
+                state.set(State.DONE);
                 downstream.onFailure(Subscriptions.getInvalidRequestException());
             } else {
                 Subscriptions.add(demand, n);
