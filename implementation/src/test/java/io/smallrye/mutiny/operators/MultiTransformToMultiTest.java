@@ -15,9 +15,11 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Flow.Subscriber;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.assertj.core.api.Assertions;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.ResourceAccessMode;
@@ -839,6 +841,7 @@ public class MultiTransformToMultiTest {
                 .subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
 
         subscriber.awaitCompletion();
+//        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(subscriber::hasCompleted);
 
         assertThat(subscriber.getItems()).containsExactlyElementsOf(expected);
     }

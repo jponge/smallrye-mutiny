@@ -1,10 +1,11 @@
 package io.smallrye.mutiny.operators.multi;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.concurrent.Flow;
 import java.util.concurrent.Flow.Publisher;
-import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
-import java.util.concurrent.atomic.AtomicLongFieldUpdater;
-import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 import io.smallrye.mutiny.CompositeException;
@@ -52,37 +53,23 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         upstream.subscribe(Infrastructure.onMultiSubscription(upstream, sub));
     }
 
-    private enum State {
+    private enum SubscriberState {
         INIT,
-        NEXT_PUBLISHER_REQUESTED,
-        EMITTING,
-        DONE,
+        ACTIVE,
+        DONE
     }
 
     private static class MainSubscriber<I, O> implements MultiSubscriber<I>, Flow.Subscription, ContextSupport {
 
         private final Function<? super I, ? extends Publisher<? extends O>> mapper;
         private final boolean postponeFailurePropagation;
-
         private final MultiSubscriber<? super O> downstream;
-        private volatile Flow.Subscription upstream;
+
+        private final AtomicLong demand = new AtomicLong();
+        private final AtomicReference<Flow.Subscription> mainUpstream = new AtomicReference<>();
+        private final AtomicReference<SubscriberState> mainSubscriberState = new AtomicReference<>(SubscriberState.INIT);
         private final InnerSubscriber innerSubscriber = new InnerSubscriber();
-
-        private volatile State state = State.INIT;
-        private volatile Throwable failure;
-        private volatile boolean mainCompleted;
-        private volatile boolean innerCompleted;
-        private volatile long demand;
-        private volatile int terminationWorkInProgress;
-
-        private static final AtomicReferenceFieldUpdater<MainSubscriber, Flow.Subscription> UPSTREAM_UPDATER = AtomicReferenceFieldUpdater
-                .newUpdater(MainSubscriber.class, Flow.Subscription.class, "upstream");
-        private static final AtomicReferenceFieldUpdater<MainSubscriber, State> STATE_UPDATER = AtomicReferenceFieldUpdater
-                .newUpdater(MainSubscriber.class, State.class, "state");
-        private static final AtomicLongFieldUpdater<MainSubscriber> DEMAND_UPDATER = AtomicLongFieldUpdater
-                .newUpdater(MainSubscriber.class, "demand");
-        private static final AtomicIntegerFieldUpdater<MainSubscriber> TERMINATION_WIP_UPDATER = AtomicIntegerFieldUpdater
-                .newUpdater(MainSubscriber.class, "terminationWorkInProgress");
+        private Throwable failure;
 
         private MainSubscriber(Function<? super I, ? extends Publisher<? extends O>> mapper, boolean postponeFailurePropagation,
                 MultiSubscriber<? super O> downstream) {
@@ -93,7 +80,8 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
         @Override
         public void onSubscribe(Flow.Subscription subscription) {
-            if (UPSTREAM_UPDATER.compareAndSet(this, null, subscription)) {
+            if (mainUpstream.compareAndSet(null, subscription)) {
+                mainSubscriberState.set(SubscriberState.ACTIVE);
                 downstream.onSubscribe(this);
             } else {
                 subscription.cancel();
@@ -102,65 +90,66 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
         @Override
         public void onItem(I item) {
-            if (state == State.DONE) {
+            if (mainSubscriberState.get() == SubscriberState.DONE) {
                 return;
             }
             try {
-                Publisher<? extends O> publisher = mapper.apply(item);
-                if (publisher == null) {
-                    throw new NullPointerException("The mapper produced a null publisher");
-                }
+                Publisher<? extends O> publisher = requireNonNull(mapper.apply(item), "The mapper produced a null publisher");
+                innerSubscriber.state.set(SubscriberState.INIT);
                 publisher.subscribe(innerSubscriber);
             } catch (Throwable err) {
-                state = State.DONE;
-                upstream.cancel();
+                mainUpstream.get().cancel();
+                mainSubscriberState.set(SubscriberState.DONE);
                 downstream.onFailure(addFailure(err));
             }
         }
 
         @Override
         public void onFailure(Throwable failure) {
-            if (STATE_UPDATER.getAndSet(this, State.DONE) != State.DONE) {
+            if (mainSubscriberState.getAndSet(SubscriberState.DONE) != SubscriberState.DONE) {
                 downstream.onFailure(addFailure(failure));
             }
         }
 
         @Override
         public void onCompletion() {
-            if (state == State.DONE) {
+            if (mainSubscriberState.getAndSet(SubscriberState.DONE) == SubscriberState.DONE) {
                 return;
             }
-            mainCompleted = true;
-            handlePossiblyTerminalEvent();
+            if (innerSubscriber.state.get() != SubscriberState.ACTIVE) {
+                terminate();
+            }
         }
 
         @Override
         public void request(long n) {
-            if (state == State.DONE) {
+            if (mainSubscriberState.get() == SubscriberState.DONE && innerSubscriber.state.get() == SubscriberState.DONE) {
                 return;
             }
             if (n <= 0) {
-                state = State.DONE;
+                mainSubscriberState.set(SubscriberState.DONE);
                 downstream.onFailure(Subscriptions.getInvalidRequestException());
                 return;
             }
-            Subscriptions.add(DEMAND_UPDATER, this, n);
-            if (state == State.EMITTING) {
-                innerSubscriber.currentUpstream.request(n);
-            } else if (STATE_UPDATER.compareAndSet(this, State.INIT, State.NEXT_PUBLISHER_REQUESTED)) {
-                state = State.NEXT_PUBLISHER_REQUESTED;
-                upstream.request(1L);
+            Subscriptions.add(demand, n);
+            switch (innerSubscriber.state.get()) {
+                case INIT:
+                case DONE:
+                    mainUpstream.get().request(1L);
+                    break;
+                case ACTIVE:
+                    innerSubscriber.upstream.get().request(n);
+                    break;
             }
         }
 
         @Override
         public void cancel() {
-            State previousState = STATE_UPDATER.getAndSet(this, State.DONE);
-            if (previousState != State.DONE) {
-                upstream.cancel();
-                if (previousState == State.EMITTING && innerSubscriber.currentUpstream != null) {
-                    innerSubscriber.currentUpstream.cancel();
-                }
+            if (mainSubscriberState.compareAndSet(SubscriberState.ACTIVE, SubscriberState.DONE)) {
+                mainUpstream.get().cancel();
+            }
+            if (innerSubscriber.state.compareAndSet(SubscriberState.ACTIVE, SubscriberState.DONE)) {
+                innerSubscriber.upstream.get().cancel();
             }
         }
 
@@ -186,101 +175,75 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
             return this.failure;
         }
 
-        private void handlePossiblyTerminalEvent() {
-            if (TERMINATION_WIP_UPDATER.getAndIncrement(this) > 0) {
-                return;
+        private void terminate() {
+            if (failure != null) {
+                downstream.onFailure(failure);
+            } else {
+                downstream.onCompletion();
             }
-            do {
-                State currentState = state;
-                boolean mainHasCompleted = mainCompleted;
-                boolean innerHasCompleted = innerCompleted;
-                if (currentState == State.DONE) {
-                    return;
-                }
-                //                if (mainHasCompleted && (innerHasCompleted
-                //                        || currentState == State.INIT
-                //                        || currentState == State.NEXT_PUBLISHER_REQUESTED)) {
-                //                    state = State.DONE;
-                //                    if (failure == null) {
-                //                        downstream.onCompletion();
-                //                    } else {
-                //                        downstream.onFailure(failure);
-                //                    }
-                //                    return;
-                //                }
-                if (mainHasCompleted && (innerHasCompleted || currentState == State.INIT)) {
-                    state = State.DONE;
-                    if (failure == null) {
-                        downstream.onCompletion();
-                    } else {
-                        downstream.onFailure(failure);
-                    }
-                    return;
-                }
-                if (innerHasCompleted) {
-                    if (demand > 0L) {
-                        state = State.NEXT_PUBLISHER_REQUESTED;
-                        upstream.request(1L);
-                    } else {
-                        state = State.INIT;
-                    }
-                }
-            } while (TERMINATION_WIP_UPDATER.decrementAndGet(this) > 0);
         }
 
         private class InnerSubscriber implements MultiSubscriber<O>, ContextSupport {
 
-            private Flow.Subscription currentUpstream;
+            private final AtomicReference<SubscriberState> state = new AtomicReference<>(SubscriberState.INIT);
+            private final AtomicReference<Flow.Subscription> upstream = new AtomicReference<>();
 
             @Override
             public void onSubscribe(Flow.Subscription subscription) {
-                if (STATE_UPDATER.compareAndSet(MainSubscriber.this, State.NEXT_PUBLISHER_REQUESTED, State.EMITTING)) {
-                    currentUpstream = subscription;
-                    innerCompleted = false;
-                    long pending = demand;
-                    if (pending > 0L) {
-                        currentUpstream.request(pending);
+                if (state.compareAndSet(SubscriberState.INIT, SubscriberState.ACTIVE)) {
+                    upstream.set(subscription);
+                    long n = demand.get();
+                    if (n > 0L) {
+                        subscription.request(n);
                     }
                 }
             }
 
             @Override
             public void onItem(O item) {
-                if (state == State.DONE) {
-                    return;
+                if (state.get() == SubscriberState.ACTIVE) {
+                    demand.decrementAndGet();
+                    downstream.onItem(item);
                 }
-                DEMAND_UPDATER.decrementAndGet(MainSubscriber.this); // TODO detect overflow?
-                downstream.onItem(item);
             }
 
             @Override
             public void onFailure(Throwable failure) {
-                if (state == State.DONE) {
+                if (state.getAndSet(SubscriberState.DONE) == SubscriberState.DONE) {
                     return;
                 }
-                Throwable err = addFailure(failure);
+                Throwable throwable = addFailure(failure);
                 if (postponeFailurePropagation) {
-                    innerCompleted = true; // TODO ensure we reset on continuation
-                    handlePossiblyTerminalEvent();
+                    if (mainSubscriberState.get() == SubscriberState.DONE) {
+                        terminate();
+                    } else {
+                        mainUpstream.get().request(1L);
+                    }
                 } else {
-                    state = State.DONE;
-                    upstream.cancel();
-                    downstream.onFailure(err);
+                    mainSubscriberState.set(SubscriberState.DONE);
+                    mainUpstream.get().cancel();
+                    downstream.onFailure(throwable);
                 }
             }
 
             @Override
             public void onCompletion() {
-                if (state == State.DONE) {
-                    return;
+                if (state.compareAndSet(SubscriberState.ACTIVE, SubscriberState.DONE)) {
+                    if (mainSubscriberState.get() == SubscriberState.DONE) {
+                        terminate();
+                    } else if (demand.get() > 0L) {
+                        mainUpstream.get().request(1L);
+                    }
                 }
-                innerCompleted = true;
-                handlePossiblyTerminalEvent();
             }
 
             @Override
             public Context context() {
-                return MainSubscriber.this.context();
+                if (downstream instanceof ContextSupport) {
+                    return ((ContextSupport) downstream).context();
+                } else {
+                    return Context.empty();
+                }
             }
         }
     }
