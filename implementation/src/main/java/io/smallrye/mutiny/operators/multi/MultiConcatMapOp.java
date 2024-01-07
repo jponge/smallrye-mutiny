@@ -53,10 +53,14 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         upstream.subscribe(Infrastructure.onMultiSubscription(upstream, sub));
     }
 
-    private enum SubscriberState {
+    private enum State {
         INIT,
-        ACTIVE,
-        DONE
+        READY,
+        PUBLISHER_REQUESTED,
+        EMITTING,
+        EMITTING_FINAL,
+        DONE,
+        CANCELLED
     }
 
     private static class MainSubscriber<I, O> implements MultiSubscriber<I>, Flow.Subscription, ContextSupport {
@@ -66,10 +70,11 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         private final MultiSubscriber<? super O> downstream;
 
         private final AtomicLong demand = new AtomicLong();
-        private final AtomicReference<Flow.Subscription> mainUpstream = new AtomicReference<>();
-        private final AtomicReference<SubscriberState> mainSubscriberState = new AtomicReference<>(SubscriberState.INIT);
+        private final AtomicReference<State> state = new AtomicReference<>(State.INIT);
         private final InnerSubscriber innerSubscriber = new InnerSubscriber();
-        private Throwable failure;
+        private volatile Throwable failure;
+        private Flow.Subscription mainUpstream;
+        private volatile Flow.Subscription innerUpstream;
 
         private MainSubscriber(Function<? super I, ? extends Publisher<? extends O>> mapper, boolean postponeFailurePropagation,
                 MultiSubscriber<? super O> downstream) {
@@ -80,8 +85,8 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
         @Override
         public void onSubscribe(Flow.Subscription subscription) {
-            if (mainUpstream.compareAndSet(null, subscription)) {
-                mainSubscriberState.set(SubscriberState.ACTIVE);
+            if (state.compareAndSet(State.INIT, State.READY)) {
+                mainUpstream = subscription;
                 downstream.onSubscribe(this);
             } else {
                 subscription.cancel();
@@ -90,75 +95,60 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
         @Override
         public void onItem(I item) {
-            if (mainSubscriberState.get() == SubscriberState.DONE) {
+            if (state.get() == State.CANCELLED) {
                 return;
             }
-            try {
-                Publisher<? extends O> publisher = requireNonNull(mapper.apply(item), "The mapper produced a null publisher");
-                innerSubscriber.state.set(SubscriberState.INIT);
-                publisher.subscribe(innerSubscriber);
-            } catch (Throwable err) {
-                mainUpstream.get().cancel();
-                mainSubscriberState.set(SubscriberState.DONE);
-                downstream.onFailure(addFailure(err));
+            if (state.compareAndSet(State.PUBLISHER_REQUESTED, State.EMITTING)) {
+                try {
+                    Publisher<? extends O> publisher = requireNonNull(mapper.apply(item),
+                            "The mapper produced a null publisher");
+                    publisher.subscribe(innerSubscriber);
+                } catch (Throwable err) {
+                    state.set(State.CANCELLED);
+                    mainUpstream.cancel();
+                    downstream.onFailure(addFailure(err));
+                }
+            }
+        }
+
+        private void innerOnItem(O item) {
+            if (state.get() != State.CANCELLED) {
+                demand.decrementAndGet();
+                downstream.onItem(item);
             }
         }
 
         @Override
         public void onFailure(Throwable failure) {
-            if (mainSubscriberState.getAndSet(SubscriberState.DONE) != SubscriberState.DONE) {
+            if (state.getAndSet(State.CANCELLED) != State.CANCELLED) {
+                if (innerUpstream != null) {
+                    innerUpstream.cancel();
+                }
                 downstream.onFailure(addFailure(failure));
             }
         }
 
-        @Override
-        public void onCompletion() {
-            if (mainSubscriberState.getAndSet(SubscriberState.DONE) == SubscriberState.DONE) {
-                return;
-            }
-            if (innerSubscriber.state.get() != SubscriberState.ACTIVE) {
-                terminate();
-            }
-        }
-
-        @Override
-        public void request(long n) {
-            if (mainSubscriberState.get() == SubscriberState.DONE && innerSubscriber.state.get() == SubscriberState.DONE) {
-                return;
-            }
-            if (n <= 0) {
-                mainSubscriberState.set(SubscriberState.DONE);
-                downstream.onFailure(Subscriptions.getInvalidRequestException());
-                return;
-            }
-            Subscriptions.add(demand, n);
-            switch (innerSubscriber.state.get()) {
-                case INIT:
-                case DONE:
-                    mainUpstream.get().request(1L);
+        private void innerOnFailure(Throwable failure) {
+            Throwable throwable = addFailure(failure);
+            switch (state.get()) {
+                case EMITTING:
+                    if (postponeFailurePropagation) {
+                        if (demand.get() > 0L) {
+                            state.set(State.PUBLISHER_REQUESTED);
+                            mainUpstream.request(1L);
+                        } else {
+                            state.set(State.READY);
+                        }
+                    } else {
+                        state.set(State.CANCELLED);
+                        mainUpstream.cancel();
+                        downstream.onFailure(throwable);
+                    }
                     break;
-                case ACTIVE:
-                    innerSubscriber.upstream.get().request(n);
-                    break;
-            }
-        }
-
-        @Override
-        public void cancel() {
-            if (mainSubscriberState.compareAndSet(SubscriberState.ACTIVE, SubscriberState.DONE)) {
-                mainUpstream.get().cancel();
-            }
-            if (innerSubscriber.state.compareAndSet(SubscriberState.ACTIVE, SubscriberState.DONE)) {
-                innerSubscriber.upstream.get().cancel();
-            }
-        }
-
-        @Override
-        public Context context() {
-            if (downstream instanceof ContextSupport) {
-                return ((ContextSupport) downstream).context();
-            } else {
-                return Context.empty();
+                case EMITTING_FINAL:
+                    state.set(State.CANCELLED);
+                    mainUpstream.cancel();
+                    downstream.onFailure(throwable);
             }
         }
 
@@ -175,66 +165,121 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
             return this.failure;
         }
 
+        @Override
+        public void onCompletion() {
+            synchronized (innerSubscriber) {
+                switch (state.get()) {
+                    case EMITTING:
+                        state.set(State.EMITTING_FINAL);
+                        break;
+                    case READY:
+                    case PUBLISHER_REQUESTED:
+                        terminate();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        private void innerOnCompletion() {
+            synchronized (innerSubscriber) {
+                switch (state.get()) {
+                    case EMITTING:
+                        if (demand.get() > 0L) {
+                            state.set(State.PUBLISHER_REQUESTED);
+                            mainUpstream.request(1L);
+                        } else {
+                            state.set(State.READY);
+                        }
+                        break;
+                    case EMITTING_FINAL:
+                        terminate();
+                        break;
+                }
+            }
+        }
+
         private void terminate() {
             if (failure != null) {
+                state.set(State.CANCELLED);
                 downstream.onFailure(failure);
             } else {
+                state.set(State.DONE);
                 downstream.onCompletion();
+            }
+        }
+
+        @Override
+        public void request(long n) {
+            if (n <= 0) {
+                state.set(State.CANCELLED);
+                downstream.onFailure(Subscriptions.getInvalidRequestException());
+            } else {
+                Subscriptions.add(demand, n);
+                boolean retry;
+                do {
+                    retry = false;
+                    switch (state.get()) {
+                        case EMITTING:
+                        case EMITTING_FINAL:
+                            innerUpstream.request(n);
+                            break;
+                        case READY:
+                            if (state.compareAndSet(State.READY, State.PUBLISHER_REQUESTED)) {
+                                mainUpstream.request(1L);
+                            } else {
+                                retry = true;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                } while (retry);
+            }
+        }
+
+        @Override
+        public void cancel() {
+            mainUpstream.cancel();
+            if (innerUpstream != null) {
+                innerUpstream.cancel();
+            }
+        }
+
+        @Override
+        public Context context() {
+            if (downstream instanceof ContextSupport) {
+                return ((ContextSupport) downstream).context();
+            } else {
+                return Context.empty();
             }
         }
 
         private class InnerSubscriber implements MultiSubscriber<O>, ContextSupport {
 
-            private final AtomicReference<SubscriberState> state = new AtomicReference<>(SubscriberState.INIT);
-            private final AtomicReference<Flow.Subscription> upstream = new AtomicReference<>();
-
             @Override
             public void onSubscribe(Flow.Subscription subscription) {
-                if (state.compareAndSet(SubscriberState.INIT, SubscriberState.ACTIVE)) {
-                    upstream.set(subscription);
-                    long n = demand.get();
-                    if (n > 0L) {
-                        subscription.request(n);
-                    }
+                innerUpstream = subscription;
+                long n = demand.get();
+                if (n > 0L) {
+                    subscription.request(n);
                 }
             }
 
             @Override
             public void onItem(O item) {
-                if (state.get() == SubscriberState.ACTIVE) {
-                    demand.decrementAndGet();
-                    downstream.onItem(item);
-                }
+                innerOnItem(item);
             }
 
             @Override
             public void onFailure(Throwable failure) {
-                if (state.getAndSet(SubscriberState.DONE) == SubscriberState.DONE) {
-                    return;
-                }
-                Throwable throwable = addFailure(failure);
-                if (postponeFailurePropagation) {
-                    if (mainSubscriberState.get() == SubscriberState.DONE) {
-                        terminate();
-                    } else {
-                        mainUpstream.get().request(1L);
-                    }
-                } else {
-                    mainSubscriberState.set(SubscriberState.DONE);
-                    mainUpstream.get().cancel();
-                    downstream.onFailure(throwable);
-                }
+                innerOnFailure(failure);
             }
 
             @Override
             public void onCompletion() {
-                if (state.compareAndSet(SubscriberState.ACTIVE, SubscriberState.DONE)) {
-                    if (mainSubscriberState.get() == SubscriberState.DONE) {
-                        terminate();
-                    } else if (demand.get() > 0L) {
-                        mainUpstream.get().request(1L);
-                    }
-                }
+                innerOnCompletion();
             }
 
             @Override

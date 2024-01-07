@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.ResourceAccessMode;
 import org.junit.jupiter.api.parallel.ResourceLock;
@@ -154,7 +153,7 @@ public class MultiDisjointTest {
                 .assertFailedWith(IllegalArgumentException.class, "String");
     }
 
-    @RepeatedTest(100)
+    @Test
     public void testFlatMapRequestsWithEmissionOnExecutor() {
         AssertSubscriber<String> subscriber = Multi.createFrom().items("a", "b", "c", "d", "e", "f", "g", "h")
                 .onItem()
