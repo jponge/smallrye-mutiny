@@ -4,8 +4,8 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.concurrent.Flow;
 import java.util.concurrent.Flow.Publisher;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicLongFieldUpdater;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.Function;
 
 import io.smallrye.mutiny.CompositeException;
@@ -68,8 +68,14 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         private final boolean postponeFailurePropagation;
         private final MultiSubscriber<? super O> downstream;
 
-        private final AtomicLong demand = new AtomicLong();
-        private final AtomicReference<State> state = new AtomicReference<>(State.INIT);
+        private volatile State state = State.INIT;
+        private static final AtomicReferenceFieldUpdater<MainSubscriber, State> STATE_UPDATER = AtomicReferenceFieldUpdater
+                .newUpdater(MainSubscriber.class, State.class, "state");
+
+        private volatile long demand = 0L;
+        private static final AtomicLongFieldUpdater<MainSubscriber> DEMAND_UPDATER = AtomicLongFieldUpdater
+                .newUpdater(MainSubscriber.class, "demand");
+
         private final InnerSubscriber innerSubscriber = new InnerSubscriber();
         private volatile Throwable failure;
         private Flow.Subscription mainUpstream;
@@ -84,7 +90,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
         @Override
         public void onSubscribe(Flow.Subscription subscription) {
-            if (state.compareAndSet(State.INIT, State.READY)) {
+            if (STATE_UPDATER.compareAndSet(this, State.INIT, State.READY)) {
                 mainUpstream = subscription;
                 downstream.onSubscribe(this);
             } else {
@@ -94,16 +100,16 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
         @Override
         public void onItem(I item) {
-            if (state.get() == State.DONE) {
+            if (state == State.DONE) {
                 return;
             }
-            if (state.compareAndSet(State.PUBLISHER_REQUESTED, State.EMITTING)) {
+            if (STATE_UPDATER.compareAndSet(this, State.PUBLISHER_REQUESTED, State.EMITTING)) {
                 try {
                     Publisher<? extends O> publisher = requireNonNull(mapper.apply(item),
                             "The mapper produced a null publisher");
                     publisher.subscribe(innerSubscriber);
                 } catch (Throwable err) {
-                    state.set(State.DONE);
+                    state = State.DONE;
                     mainUpstream.cancel();
                     downstream.onFailure(addFailure(err));
                 }
@@ -111,15 +117,15 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         }
 
         private void innerOnItem(O item) {
-            if (state.get() != State.DONE) {
-                demand.decrementAndGet();
+            if (state != State.DONE) {
+                DEMAND_UPDATER.decrementAndGet(this);
                 downstream.onItem(item);
             }
         }
 
         @Override
         public void onFailure(Throwable failure) {
-            if (state.getAndSet(State.DONE) != State.DONE) {
+            if (STATE_UPDATER.getAndSet(this, State.DONE) != State.DONE) {
                 if (innerUpstream != null) {
                     innerUpstream.cancel();
                 }
@@ -129,23 +135,23 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
         private void innerOnFailure(Throwable failure) {
             Throwable throwable = addFailure(failure);
-            switch (state.get()) {
+            switch (state) {
                 case EMITTING:
                     if (postponeFailurePropagation) {
-                        if (demand.get() > 0L) {
-                            state.set(State.PUBLISHER_REQUESTED);
+                        if (demand > 0L) {
+                            state = State.PUBLISHER_REQUESTED;
                             mainUpstream.request(1L);
                         } else {
-                            state.set(State.READY);
+                            state = State.READY;
                         }
                     } else {
-                        state.set(State.DONE);
+                        state = State.DONE;
                         mainUpstream.cancel();
                         downstream.onFailure(throwable);
                     }
                     break;
                 case EMITTING_FINAL:
-                    state.set(State.DONE);
+                    state = State.DONE;
                     mainUpstream.cancel();
                     downstream.onFailure(throwable);
             }
@@ -167,9 +173,9 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         @Override
         public void onCompletion() {
             synchronized (innerSubscriber) {
-                switch (state.get()) {
+                switch (state) {
                     case EMITTING:
-                        state.set(State.EMITTING_FINAL);
+                        state = State.EMITTING_FINAL;
                         break;
                     case READY:
                     case PUBLISHER_REQUESTED:
@@ -183,13 +189,13 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
         private void innerOnCompletion() {
             synchronized (innerSubscriber) {
-                switch (state.get()) {
+                switch (state) {
                     case EMITTING:
-                        if (demand.get() > 0L) {
-                            state.set(State.PUBLISHER_REQUESTED);
+                        if (demand > 0L) {
+                            state = State.PUBLISHER_REQUESTED;
                             mainUpstream.request(1L);
                         } else {
-                            state.set(State.READY);
+                            state = State.READY;
                         }
                         break;
                     case EMITTING_FINAL:
@@ -200,7 +206,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         }
 
         private void terminate() {
-            state.set(State.DONE);
+            state = State.DONE;
             if (failure != null) {
                 downstream.onFailure(failure);
             } else {
@@ -211,20 +217,20 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         @Override
         public void request(long n) {
             if (n <= 0) {
-                state.set(State.DONE);
+                state = State.DONE;
                 downstream.onFailure(Subscriptions.getInvalidRequestException());
             } else {
-                Subscriptions.add(demand, n);
+                Subscriptions.add(DEMAND_UPDATER, this, n);
                 boolean retry;
                 do {
                     retry = false;
-                    switch (state.get()) {
+                    switch (state) {
                         case EMITTING:
                         case EMITTING_FINAL:
                             innerUpstream.request(n);
                             break;
                         case READY:
-                            if (state.compareAndSet(State.READY, State.PUBLISHER_REQUESTED)) {
+                            if (STATE_UPDATER.compareAndSet(this, State.READY, State.PUBLISHER_REQUESTED)) {
                                 mainUpstream.request(1L);
                             } else {
                                 retry = true;
@@ -259,7 +265,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
             @Override
             public void onSubscribe(Flow.Subscription subscription) {
                 innerUpstream = subscription;
-                long n = demand.get();
+                long n = demand;
                 if (n > 0L) {
                     subscription.request(n);
                 }
