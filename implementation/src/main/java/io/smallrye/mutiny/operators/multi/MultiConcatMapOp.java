@@ -135,26 +135,33 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
         private void innerOnFailure(Throwable failure) {
             Throwable throwable = addFailure(failure);
-            switch (state) {
-                case EMITTING:
-                    if (postponeFailurePropagation) {
-                        if (demand > 0L) {
-                            state = State.PUBLISHER_REQUESTED;
-                            mainUpstream.request(1L);
+            boolean retry;
+            do {
+                retry = false;
+                switch (state) {
+                    case EMITTING:
+                        if (postponeFailurePropagation) {
+                            if (demand > 0L) {
+                                retry = !STATE_UPDATER.compareAndSet(this, State.EMITTING, State.PUBLISHER_REQUESTED);
+                                if (!retry) {
+                                    state = State.PUBLISHER_REQUESTED;
+                                    mainUpstream.request(1L);
+                                }
+                            } else {
+                                retry = !STATE_UPDATER.compareAndSet(this, State.EMITTING, State.READY);
+                            }
                         } else {
-                            state = State.READY;
+                            state = State.DONE;
+                            mainUpstream.cancel();
+                            downstream.onFailure(throwable);
                         }
-                    } else {
+                        break;
+                    case EMITTING_FINAL:
                         state = State.DONE;
                         mainUpstream.cancel();
                         downstream.onFailure(throwable);
-                    }
-                    break;
-                case EMITTING_FINAL:
-                    state = State.DONE;
-                    mainUpstream.cancel();
-                    downstream.onFailure(throwable);
-            }
+                }
+            } while (retry);
         }
 
         private Throwable addFailure(Throwable failure) {
@@ -206,11 +213,12 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         }
 
         private void terminate() {
-            state = State.DONE;
-            if (failure != null) {
-                downstream.onFailure(failure);
-            } else {
-                downstream.onCompletion();
+            if (STATE_UPDATER.getAndSet(this, State.DONE) != State.DONE) {
+                if (failure != null) {
+                    downstream.onFailure(failure);
+                } else {
+                    downstream.onCompletion();
+                }
             }
         }
 
@@ -230,10 +238,9 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                             innerUpstream.request(n);
                             break;
                         case READY:
-                            if (STATE_UPDATER.compareAndSet(this, State.READY, State.PUBLISHER_REQUESTED)) {
+                            retry = !STATE_UPDATER.compareAndSet(this, State.READY, State.PUBLISHER_REQUESTED);
+                            if (!retry) {
                                 mainUpstream.request(1L);
-                            } else {
-                                retry = true;
                             }
                             break;
                         default:
