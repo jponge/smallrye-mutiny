@@ -6,6 +6,7 @@ import java.util.concurrent.Flow;
 import java.util.concurrent.Flow.Publisher;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 
 import io.smallrye.mutiny.CompositeException;
@@ -77,6 +78,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 .newUpdater(MainSubscriber.class, "demand");
 
         private final InnerSubscriber innerSubscriber = new InnerSubscriber();
+        private final ReentrantLock stateLock = new ReentrantLock();
         private volatile Throwable failure;
         private Flow.Subscription mainUpstream;
         private volatile Flow.Subscription innerUpstream;
@@ -137,31 +139,35 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
         private void innerOnFailure(Throwable failure) {
             Throwable throwable = addFailure(failure);
-            synchronized (innerSubscriber) {
-                switch (state) {
-                    case EMITTING:
-                        if (postponeFailurePropagation) {
-                            if (demand > 0L) {
-                                state = State.PUBLISHER_REQUESTED;
-                                mainUpstream.request(1L);
-                            } else {
-                                state = State.READY;
-                            }
+            stateLock.lock();
+            switch (state) {
+                case EMITTING:
+                    if (postponeFailurePropagation) {
+                        if (demand > 0L) {
+                            state = State.PUBLISHER_REQUESTED;
+                            stateLock.unlock();
+                            mainUpstream.request(1L);
                         } else {
-                            state = State.DONE;
-                            mainUpstream.cancel();
-                            downstream.onFailure(throwable);
+                            state = State.READY;
+                            stateLock.unlock();
                         }
-                        break;
-                    case EMITTING_FINAL:
+                    } else {
                         state = State.DONE;
+                        stateLock.unlock();
                         mainUpstream.cancel();
                         downstream.onFailure(throwable);
-                        break;
-                    default:
-                        Infrastructure.handleDroppedException(failure);
-                        break;
-                }
+                    }
+                    break;
+                case EMITTING_FINAL:
+                    state = State.DONE;
+                    stateLock.unlock();
+                    mainUpstream.cancel();
+                    downstream.onFailure(throwable);
+                    break;
+                default:
+                    stateLock.unlock();
+                    Infrastructure.handleDroppedException(failure);
+                    break;
             }
         }
 
@@ -180,36 +186,43 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
         @Override
         public void onCompletion() {
-            synchronized (innerSubscriber) {
-                switch (state) {
-                    case EMITTING:
-                        state = State.EMITTING_FINAL;
-                        break;
-                    case READY:
-                    case PUBLISHER_REQUESTED:
-                        terminate();
-                        break;
-                    default:
-                        break;
-                }
+            stateLock.lock();
+            switch (state) {
+                case EMITTING:
+                    state = State.EMITTING_FINAL;
+                    stateLock.unlock();
+                    break;
+                case READY:
+                case PUBLISHER_REQUESTED:
+                    stateLock.unlock();
+                    terminate();
+                    break;
+                default:
+                    stateLock.unlock();
+                    break;
             }
         }
 
         private void innerOnCompletion() {
-            synchronized (innerSubscriber) {
-                switch (state) {
-                    case EMITTING:
-                        if (demand > 0L) {
-                            state = State.PUBLISHER_REQUESTED;
-                            mainUpstream.request(1L);
-                        } else {
-                            state = State.READY;
-                        }
-                        break;
-                    case EMITTING_FINAL:
-                        terminate();
-                        break;
-                }
+            stateLock.lock();
+            switch (state) {
+                case EMITTING:
+                    if (demand > 0L) {
+                        state = State.PUBLISHER_REQUESTED;
+                        stateLock.unlock();
+                        mainUpstream.request(1L);
+                    } else {
+                        state = State.READY;
+                        stateLock.unlock();
+                    }
+                    break;
+                case EMITTING_FINAL:
+                    stateLock.unlock();
+                    terminate();
+                    break;
+                default:
+                    stateLock.unlock();
+                    break;
             }
         }
 
@@ -230,19 +243,21 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 downstream.onFailure(Subscriptions.getInvalidRequestException());
             } else {
                 Subscriptions.add(DEMAND_UPDATER, this, n);
-                synchronized (innerSubscriber) {
-                    switch (state) {
-                        case EMITTING:
-                        case EMITTING_FINAL:
-                            innerUpstream.request(n);
-                            break;
-                        case READY:
-                            state = State.PUBLISHER_REQUESTED;
-                            mainUpstream.request(1L);
-                            break;
-                        default:
-                            break;
-                    }
+                stateLock.lock();
+                switch (state) {
+                    case EMITTING:
+                    case EMITTING_FINAL:
+                        stateLock.unlock();
+                        innerUpstream.request(n);
+                        break;
+                    case READY:
+                        state = State.PUBLISHER_REQUESTED;
+                        stateLock.unlock();
+                        mainUpstream.request(1L);
+                        break;
+                    default:
+                        stateLock.unlock();
+                        break;
                 }
             }
         }
