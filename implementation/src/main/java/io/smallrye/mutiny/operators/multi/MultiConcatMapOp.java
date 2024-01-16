@@ -130,6 +130,8 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                     innerUpstream.cancel();
                 }
                 downstream.onFailure(addFailure(failure));
+            } else {
+                Infrastructure.handleDroppedException(failure);
             }
         }
 
@@ -155,6 +157,10 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                         state = State.DONE;
                         mainUpstream.cancel();
                         downstream.onFailure(throwable);
+                        break;
+                    default:
+                        Infrastructure.handleDroppedException(failure);
+                        break;
                 }
             }
         }
