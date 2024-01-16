@@ -135,20 +135,15 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
         private void innerOnFailure(Throwable failure) {
             Throwable throwable = addFailure(failure);
-            boolean retry;
-            do {
-                retry = false;
+            synchronized (innerSubscriber) {
                 switch (state) {
                     case EMITTING:
                         if (postponeFailurePropagation) {
                             if (demand > 0L) {
-                                retry = !STATE_UPDATER.compareAndSet(this, State.EMITTING, State.PUBLISHER_REQUESTED);
-                                if (!retry) {
-                                    state = State.PUBLISHER_REQUESTED;
-                                    mainUpstream.request(1L);
-                                }
+                                state = State.PUBLISHER_REQUESTED;
+                                mainUpstream.request(1L);
                             } else {
-                                retry = !STATE_UPDATER.compareAndSet(this, State.EMITTING, State.READY);
+                                state = State.READY;
                             }
                         } else {
                             state = State.DONE;
@@ -161,7 +156,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                         mainUpstream.cancel();
                         downstream.onFailure(throwable);
                 }
-            } while (retry);
+            }
         }
 
         private Throwable addFailure(Throwable failure) {
@@ -229,24 +224,21 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 downstream.onFailure(Subscriptions.getInvalidRequestException());
             } else {
                 Subscriptions.add(DEMAND_UPDATER, this, n);
-                boolean retry;
-                do {
-                    retry = false;
+                synchronized (innerSubscriber) {
                     switch (state) {
                         case EMITTING:
                         case EMITTING_FINAL:
                             innerUpstream.request(n);
                             break;
                         case READY:
-                            retry = !STATE_UPDATER.compareAndSet(this, State.READY, State.PUBLISHER_REQUESTED);
-                            if (!retry) {
-                                mainUpstream.request(1L);
-                            }
+                            state = State.PUBLISHER_REQUESTED;
+                            mainUpstream.request(1L);
                             break;
                         default:
                             break;
                     }
-                } while (retry);
+                }
+                ;
             }
         }
 
