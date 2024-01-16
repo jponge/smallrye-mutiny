@@ -238,7 +238,6 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                             break;
                     }
                 }
-                ;
             }
         }
 
