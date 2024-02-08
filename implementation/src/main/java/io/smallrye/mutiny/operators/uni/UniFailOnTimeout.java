@@ -87,6 +87,7 @@ public class UniFailOnTimeout<I> extends UniOperator<I, I> {
         public void cancel() {
             if (timeoutFuture != null) {
                 timeoutFuture.cancel(false);
+                timeoutFuture = null;
             }
             super.cancel();
         }
