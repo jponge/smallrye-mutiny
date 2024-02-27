@@ -93,6 +93,15 @@
         "code": "java.field.removed",
         "old": "field io.smallrye.mutiny.helpers.queues.Queues.BUFFER_XS",
         "justification": "Refactoring of internal APIs"
+      },
+      {
+        "ignore": true,
+        "code": "java.method.visibilityIncreased",
+        "old": "method java.time.Duration io.smallrye.mutiny.helpers.ExponentialBackoff::getNextDelay(java.time.Duration, java.time.Duration, double, int)",
+        "new": "method java.time.Duration io.smallrye.mutiny.helpers.ExponentialBackoff::getNextDelay(java.time.Duration, java.time.Duration, double, int)",
+        "oldVisibility": "private",
+        "newVisibility": "public",
+        "justification": "Refactoring of internal APIs"
       }
     ]
   }

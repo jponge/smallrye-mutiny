@@ -51,7 +51,7 @@ public class ExponentialBackoff {
                 }).concatenate();
     }
 
-    private static Duration getNextDelay(Duration firstBackoff, Duration maxBackoff, double jitterFactor, int iteration) {
+    public static Duration getNextDelay(Duration firstBackoff, Duration maxBackoff, double jitterFactor, int iteration) {
         Duration nextBackoff = getNextAttemptDelay(firstBackoff, maxBackoff, iteration);
 
         // Compute the jitter
