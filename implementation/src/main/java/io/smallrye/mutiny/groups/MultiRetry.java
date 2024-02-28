@@ -4,6 +4,7 @@ import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 import static io.smallrye.mutiny.helpers.ParameterValidation.validate;
 
 import java.time.Duration;
+import java.util.concurrent.Flow;
 import java.util.concurrent.Flow.Publisher;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
@@ -97,7 +98,6 @@ public class MultiRetry<T> {
      * @return a new {@link Multi} retrying to subscribe to the current
      *         {@link Multi} until it gets an item or until expiration {@code expireAt}. When the expiration is reached,
      *         the last failure is propagated.
-     *
      * @throws IllegalArgumentException if back off not configured,
      */
     @CheckReturnValue
@@ -126,7 +126,6 @@ public class MultiRetry<T> {
      * @return a new {@link Multi} retrying to subscribe to the current
      *         {@link Multi} until it gets an item or until expiration {@code expireIn}. When the expiration is reached,
      *         the last failure is propagated.
-     *
      * @throws IllegalArgumentException if back off not configured,
      */
     @CheckReturnValue
@@ -146,23 +145,47 @@ public class MultiRetry<T> {
     @CheckReturnValue
     public Multi<T> until(Predicate<? super Throwable> predicate) {
         Predicate<? super Throwable> actual = Infrastructure.decorate(nonNull(predicate, "predicate"));
-        if (backOffConfigured) {
-            throw new IllegalArgumentException(
-                    "Invalid retry configuration, `until` cannot be used with a back-off configuration");
-        }
-        Function<Multi<Throwable>, Publisher<Long>> whenStreamFactory = stream -> stream.onItem()
-                .transformToUni(failure -> Uni.createFrom().<Long> emitter(emitter -> {
-                    try {
-                        if (actual.test(failure)) {
-                            emitter.complete(1L);
-                        } else {
-                            emitter.fail(failure);
+        Function<Multi<Throwable>, Publisher<Long>> whenStreamFactory;
+        if (!backOffConfigured) {
+            whenStreamFactory = stream -> stream.onItem()
+                    .transformToUniAndConcatenate(failure -> {
+                        try {
+                            if (predicate.test(failure)) {
+                                return Uni.createFrom().item(1L);
+                            } else {
+                                return Uni.createFrom().failure(failure);
+                            }
+                        } catch (Throwable err) {
+                            return Uni.createFrom().failure(err);
                         }
-                    } catch (Throwable ex) {
-                        emitter.fail(ex);
-                    }
-                }))
-                .concatenate();
+                    });
+        } else {
+            ScheduledExecutorService pool = (this.executor == null) ? Infrastructure.getDefaultWorkerPool() : this.executor;
+            whenStreamFactory = new Function<>() {
+                int index = 0;
+
+                @Override
+                public Flow.Publisher<Long> apply(Multi<Throwable> stream) {
+                    return stream.onItem()
+                            .transformToUniAndConcatenate(failure -> {
+                                int iteration = index++;
+                                try {
+                                    if (predicate.test(failure)) {
+                                        Duration delay = ExponentialBackoff.getNextDelay(initialBackOff, maxBackoff, jitter,
+                                                iteration);
+                                        return Uni.createFrom().item((long) iteration)
+                                                .onItem().delayIt().onExecutor(pool).by(delay);
+                                    } else {
+                                        return Uni.createFrom().failure(failure);
+                                    }
+                                } catch (Throwable err) {
+                                    failure.addSuppressed(err);
+                                    return Uni.createFrom().failure(failure);
+                                }
+                            });
+                }
+            };
+        }
         return Infrastructure
                 .onMultiCreation(new MultiRetryWhenOp<>(upstream, onFailurePredicate, whenStreamFactory));
     }
