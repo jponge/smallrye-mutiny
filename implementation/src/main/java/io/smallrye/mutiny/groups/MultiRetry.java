@@ -1,10 +1,11 @@
 package io.smallrye.mutiny.groups;
 
+import static io.smallrye.mutiny.helpers.ExponentialBackoff.backoffWithPredicateFactory;
+import static io.smallrye.mutiny.helpers.ExponentialBackoff.noBackoffPredicateFactory;
 import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 import static io.smallrye.mutiny.helpers.ParameterValidation.validate;
 
 import java.time.Duration;
-import java.util.concurrent.Flow;
 import java.util.concurrent.Flow.Publisher;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
@@ -12,7 +13,6 @@ import java.util.function.Predicate;
 
 import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.ExponentialBackoff;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
@@ -146,48 +146,13 @@ public class MultiRetry<T> {
     public Multi<T> until(Predicate<? super Throwable> predicate) {
         Predicate<? super Throwable> actual = Infrastructure.decorate(nonNull(predicate, "predicate"));
         Function<Multi<Throwable>, Publisher<Long>> whenStreamFactory;
-        if (!backOffConfigured) {
-            whenStreamFactory = stream -> stream.onItem()
-                    .transformToUniAndConcatenate(failure -> {
-                        try {
-                            if (predicate.test(failure)) {
-                                return Uni.createFrom().item(1L);
-                            } else {
-                                return Uni.createFrom().failure(failure);
-                            }
-                        } catch (Throwable err) {
-                            return Uni.createFrom().failure(err);
-                        }
-                    });
-        } else {
+        if (backOffConfigured) {
             ScheduledExecutorService pool = (this.executor == null) ? Infrastructure.getDefaultWorkerPool() : this.executor;
-            whenStreamFactory = new Function<>() {
-                int index = 0;
-
-                @Override
-                public Flow.Publisher<Long> apply(Multi<Throwable> stream) {
-                    return stream.onItem()
-                            .transformToUniAndConcatenate(failure -> {
-                                int iteration = index++;
-                                try {
-                                    if (predicate.test(failure)) {
-                                        Duration delay = ExponentialBackoff.getNextDelay(initialBackOff, maxBackoff, jitter,
-                                                iteration);
-                                        return Uni.createFrom().item((long) iteration)
-                                                .onItem().delayIt().onExecutor(pool).by(delay);
-                                    } else {
-                                        return Uni.createFrom().failure(failure);
-                                    }
-                                } catch (Throwable err) {
-                                    failure.addSuppressed(err);
-                                    return Uni.createFrom().failure(failure);
-                                }
-                            });
-                }
-            };
+            whenStreamFactory = backoffWithPredicateFactory(initialBackOff, jitter, maxBackoff, predicate, pool);
+        } else {
+            whenStreamFactory = noBackoffPredicateFactory(predicate);
         }
-        return Infrastructure
-                .onMultiCreation(new MultiRetryWhenOp<>(upstream, onFailurePredicate, whenStreamFactory));
+        return Infrastructure.onMultiCreation(new MultiRetryWhenOp<>(upstream, onFailurePredicate, whenStreamFactory));
     }
 
     /**
