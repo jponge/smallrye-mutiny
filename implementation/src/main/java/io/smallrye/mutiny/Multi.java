@@ -10,8 +10,10 @@ import java.util.concurrent.Flow.Subscription;
 import java.util.function.*;
 
 import io.smallrye.common.annotation.CheckReturnValue;
+import io.smallrye.common.annotation.Experimental;
 import io.smallrye.mutiny.groups.*;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
+import io.smallrye.mutiny.operators.multi.MultiGatherOperator;
 import io.smallrye.mutiny.operators.multi.split.MultiSplitter;
 
 public interface Multi<T> extends Publisher<T> {
@@ -665,5 +667,11 @@ public interface Multi<T> extends Publisher<T> {
     @CheckReturnValue
     default <K extends Enum<K>> MultiSplitter<T, K> split(Class<K> keyType, Function<T, K> splitter) {
         return new MultiSplitter<>(this, keyType, splitter);
+    }
+
+    @CheckReturnValue
+    @Experimental("This is an experimental API that is subject to changes and removal")
+    default <S, O> Multi<O> gather(Supplier<S> stateSupplier, BiConsumer<S, T> appender, Function<S, Multi<O>> extractor) {
+        return new MultiGatherOperator<>(this, stateSupplier, appender, extractor);
     }
 }
