@@ -16,7 +16,7 @@ class MultiGatherTest {
         AssertSubscriber<String> sub = Multi.createFrom().iterable(chunks)
                 .gather()
                 .toState(StringBuilder::new)
-                .withAppender((builder, chunk) -> {
+                .withStateUpdater((builder, chunk) -> {
                     builder.append(chunk);
                     return builder;
                 })
@@ -40,7 +40,7 @@ class MultiGatherTest {
     void api_design() {
         Multi.createFrom().range(1, 20)
                 .gather().toState(AtomicInteger::new)
-                .withAppender((acc, n) -> {
+                .withStateUpdater((acc, n) -> {
                     acc.addAndGet(n);
                     return acc;
                 })

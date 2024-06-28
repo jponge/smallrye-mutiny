@@ -4,7 +4,6 @@ import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.operators.multi.MultiGatherToState;
 
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -58,7 +57,7 @@ public class MultiGather<T> {
         }
 
         @CheckReturnValue
-        public StateGathererAppender<T, S> withAppender(BiFunction<S, T, S> appender) {
+        public StateGathererAppender<T, S> withStateUpdater(BiFunction<S, T, S> appender) {
             return new StateGathererAppender<>(upstream, stateSupplier, appender);
         }
     }
