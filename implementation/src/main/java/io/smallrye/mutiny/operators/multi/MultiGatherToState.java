@@ -7,6 +7,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+// TODO context support
 public class MultiGatherToState<T, S, O> extends AbstractMultiOperator<T, O> {
 
     private final Supplier<S> stateSupplier;
