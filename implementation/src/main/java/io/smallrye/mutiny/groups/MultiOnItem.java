@@ -456,6 +456,12 @@ public class MultiOnItem<T> {
 
     @Experimental("This API is still being designed and may change in the future")
     @CheckReturnValue
+    public MultiOnItemGather<T> gather() {
+        return new MultiOnItemGather<>(upstream);
+    }
+
+    @Experimental("This API is still being designed and may change in the future")
+    @CheckReturnValue
     public <ACC, O> Multi<O> gather(
             Supplier<ACC> initialAccumulatorSupplier,
             BiFunction<ACC, T, ACC> accumulator,
