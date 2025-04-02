@@ -459,18 +459,4 @@ public class MultiOnItem<T> {
     public MultiOnItemGather<T> gather() {
         return new MultiOnItemGather<>(upstream);
     }
-
-    @Experimental("This API is still being designed and may change in the future")
-    @CheckReturnValue
-    public <ACC, O> Multi<O> gather(
-            Supplier<ACC> initialAccumulatorSupplier,
-            BiFunction<ACC, T, ACC> accumulator,
-            Function<ACC, Optional<Tuple2<ACC, O>>> mapper,
-            Function<ACC, Optional<O>> finalizer) {
-        return new MultiGather<>(upstream,
-                nonNull(initialAccumulatorSupplier, "initialAccumulatorSupplier"),
-                nonNull(accumulator, "accumulator"),
-                nonNull(mapper, "mapper"),
-                nonNull(finalizer, "finalizer"));
-    }
 }
