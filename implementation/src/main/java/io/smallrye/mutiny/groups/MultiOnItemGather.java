@@ -9,6 +9,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
+
 public class MultiOnItemGather<I> {
 
     private final Multi<I> upstream;
@@ -18,6 +20,7 @@ public class MultiOnItemGather<I> {
     }
 
     public <ACC> InitialAccumulatorStep<ACC> withAccumulator(Supplier<ACC> initialAccumulatorSupplier) {
+        nonNull(initialAccumulatorSupplier, "initialAccumulatorSupplier");
         return new InitialAccumulatorStep<>(initialAccumulatorSupplier);
     }
 
@@ -29,6 +32,7 @@ public class MultiOnItemGather<I> {
         }
 
         public ExtractStep<ACC> accumulate(BiFunction<ACC, I, ACC> accumulator) {
+            nonNull(accumulator, "accumulator");
             return new ExtractStep<>(initialAccumulatorSupplier, accumulator);
         }
     }
@@ -43,6 +47,7 @@ public class MultiOnItemGather<I> {
         }
 
         public <O> FinalizerStep<ACC, O> extract(Function<ACC, Optional<Tuple2<ACC, O>>> extractor) {
+            nonNull(extractor, "extractor");
             return new FinalizerStep<>(initialAccumulatorSupplier, accumulator, extractor);
         }
     }
@@ -61,6 +66,7 @@ public class MultiOnItemGather<I> {
         }
 
         public Multi<O> finalize(Function<ACC, Optional<O>> finalizer) {
+            nonNull(finalizer, "finalizer");
             return new MultiGather<>(upstream, initialAccumulatorSupplier, accumulator, extractor, finalizer);
         }
     }
