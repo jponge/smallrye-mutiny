@@ -1,15 +1,15 @@
 package io.smallrye.mutiny.operators.multi;
 
-import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.helpers.Subscriptions;
-import io.smallrye.mutiny.subscription.MultiSubscriber;
-import io.smallrye.mutiny.tuples.Tuple2;
-
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.helpers.Subscriptions;
+import io.smallrye.mutiny.subscription.MultiSubscriber;
+import io.smallrye.mutiny.tuples.Tuple2;
 
 public class MultiGather<I, ACC, O> extends AbstractMultiOperator<I, O> {
 
@@ -19,10 +19,10 @@ public class MultiGather<I, ACC, O> extends AbstractMultiOperator<I, O> {
     Function<ACC, Optional<O>> finalizer;
 
     public MultiGather(Multi<? extends I> upstream,
-                       Supplier<ACC> initialAccumulatorSupplier,
-                       BiFunction<ACC, I, ACC> accumulator,
-                       Function<ACC, Optional<Tuple2<ACC, O>>> mapper,
-                       Function<ACC, Optional<O>> finalizer) {
+            Supplier<ACC> initialAccumulatorSupplier,
+            BiFunction<ACC, I, ACC> accumulator,
+            Function<ACC, Optional<Tuple2<ACC, O>>> mapper,
+            Function<ACC, Optional<O>> finalizer) {
         super(upstream);
         this.initialAccumulatorSupplier = initialAccumulatorSupplier;
         this.accumulator = accumulator;

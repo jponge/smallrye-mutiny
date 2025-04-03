@@ -1,15 +1,15 @@
 package io.smallrye.mutiny.groups;
 
-import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.operators.multi.MultiGather;
-import io.smallrye.mutiny.tuples.Tuple2;
+import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.operators.multi.MultiGather;
+import io.smallrye.mutiny.tuples.Tuple2;
 
 public class MultiOnItemGather<I> {
 
@@ -19,7 +19,7 @@ public class MultiOnItemGather<I> {
         this.upstream = upstream;
     }
 
-    public <ACC> InitialAccumulatorStep<ACC> withAccumulator(Supplier<ACC> initialAccumulatorSupplier) {
+    public <ACC> InitialAccumulatorStep<ACC> into(Supplier<ACC> initialAccumulatorSupplier) {
         nonNull(initialAccumulatorSupplier, "initialAccumulatorSupplier");
         return new InitialAccumulatorStep<>(initialAccumulatorSupplier);
     }
@@ -58,8 +58,8 @@ public class MultiOnItemGather<I> {
         private final Function<ACC, Optional<Tuple2<ACC, O>>> extractor;
 
         private FinalizerStep(Supplier<ACC> initialAccumulatorSupplier,
-                              BiFunction<ACC, I, ACC> accumulator,
-                              Function<ACC, Optional<Tuple2<ACC, O>>> extractor) {
+                BiFunction<ACC, I, ACC> accumulator,
+                Function<ACC, Optional<Tuple2<ACC, O>>> extractor) {
             this.initialAccumulatorSupplier = initialAccumulatorSupplier;
             this.accumulator = accumulator;
             this.extractor = extractor;

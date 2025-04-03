@@ -1,20 +1,8 @@
 package io.smallrye.mutiny.groups;
 
-import io.smallrye.common.annotation.CheckReturnValue;
-import io.smallrye.common.annotation.Experimental;
-import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
-import io.smallrye.mutiny.operators.multi.MultiGather;
-import io.smallrye.mutiny.operators.multi.MultiIgnoreOp;
-import io.smallrye.mutiny.operators.multi.MultiMapOp;
-import io.smallrye.mutiny.operators.multi.MultiOnItemInvoke;
-import io.smallrye.mutiny.operators.multi.MultiScanOp;
-import io.smallrye.mutiny.operators.multi.MultiScanWithSeedOp;
-import io.smallrye.mutiny.tuples.Tuple2;
+import static io.smallrye.mutiny.helpers.ParameterValidation.*;
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.Flow.Publisher;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
@@ -22,7 +10,16 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static io.smallrye.mutiny.helpers.ParameterValidation.*;
+import io.smallrye.common.annotation.CheckReturnValue;
+import io.smallrye.common.annotation.Experimental;
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
+import io.smallrye.mutiny.operators.multi.MultiIgnoreOp;
+import io.smallrye.mutiny.operators.multi.MultiMapOp;
+import io.smallrye.mutiny.operators.multi.MultiOnItemInvoke;
+import io.smallrye.mutiny.operators.multi.MultiScanOp;
+import io.smallrye.mutiny.operators.multi.MultiScanWithSeedOp;
 
 public class MultiOnItem<T> {
 
@@ -40,7 +37,7 @@ public class MultiOnItem<T> {
      * <p>
      *
      * @param mapper the mapper function, must not be {@code null}
-     * @param <R>    the type of item produced by the mapper function
+     * @param <R> the type of item produced by the mapper function
      * @return the new {@link Multi}
      */
     @CheckReturnValue
@@ -178,7 +175,7 @@ public class MultiOnItem<T> {
      * by the returned {@link Publisher Publishers or Multis} are propagated to the downstream.
      *
      * @param mapper the mapper, must not be {@code null}, must not produce {@code null}
-     * @param <O>    the type of item emitted by the {@link Multi} produced by the mapper.
+     * @param <O> the type of item emitted by the {@link Multi} produced by the mapper.
      * @return the object to configure the flatten behavior.
      */
     @CheckReturnValue
@@ -206,7 +203,7 @@ public class MultiOnItem<T> {
      * more items will be emitted.
      *
      * @param mapper the mapper, must not be {@code null}, must not produce {@code null}
-     * @param <O>    the type of item emitted by the {@link Multi} produced by the mapper.
+     * @param <O> the type of item emitted by the {@link Multi} produced by the mapper.
      * @return the resulting multi
      */
     @CheckReturnValue
@@ -233,7 +230,7 @@ public class MultiOnItem<T> {
      * more items will be emitted.
      *
      * @param mapper the mapper, must not be {@code null}, must not produce {@code null}
-     * @param <O>    the type of item emitted by the {@link Multi} produced by the mapper.
+     * @param <O> the type of item emitted by the {@link Multi} produced by the mapper.
      * @return the resulting multi
      */
     @CheckReturnValue
@@ -248,7 +245,7 @@ public class MultiOnItem<T> {
      * a synchronous construct, this method concatenates the items produced by the different returns iterables.
      *
      * @param mapper the mapper, must not be {@code null}, must not produce {@code null}
-     * @param <O>    the type of item contained by the {@link Iterable} produced by the mapper.
+     * @param <O> the type of item contained by the {@link Iterable} produced by the mapper.
      * @return the object to configure the flatten behavior.
      */
     @CheckReturnValue
@@ -270,7 +267,7 @@ public class MultiOnItem<T> {
      * by the returned {@link Uni Unis} are propagated to the downstream.
      *
      * @param mapper the mapper, must not be {@code null}, must not produce {@code null}
-     * @param <O>    the type of item emitted by the {@link Multi} produced by the mapper.
+     * @param <O> the type of item emitted by the {@link Multi} produced by the mapper.
      * @return the object to configure the flatten behavior.
      */
     @CheckReturnValue
@@ -305,7 +302,7 @@ public class MultiOnItem<T> {
      * more items will be emitted.
      *
      * @param mapper the mapper, must not be {@code null}, must not produce {@code null}
-     * @param <O>    the type of item emitted by the {@link Multi} produced by the mapper.
+     * @param <O> the type of item emitted by the {@link Multi} produced by the mapper.
      * @return the resulting multi
      */
     @CheckReturnValue
@@ -333,7 +330,7 @@ public class MultiOnItem<T> {
      * more items will be emitted.
      *
      * @param mapper the mapper, must not be {@code null}, must not produce {@code null}
-     * @param <O>    the type of item emitted by the {@link Multi} produced by the mapper.
+     * @param <O> the type of item emitted by the {@link Multi} produced by the mapper.
      * @return the resulting multi
      */
     @CheckReturnValue
@@ -367,7 +364,7 @@ public class MultiOnItem<T> {
      * Produces an {@link Multi} emitting the item events based on the upstream events but casted to the target class.
      *
      * @param target the target class
-     * @param <O>    the type of item emitted by the produced uni
+     * @param <O> the type of item emitted by the produced uni
      * @return the new {@link Multi}
      */
     @CheckReturnValue
@@ -385,10 +382,10 @@ public class MultiOnItem<T> {
      * first value.
      *
      * @param initialStateProducer the producer called to provides the initial value passed to the accumulator operation.
-     * @param accumulator          the reduction {@link BiFunction}, the resulting {@link Multi} emits the results of
-     *                             this method. The method is called for every item emitted by this Multi.
-     * @param <S>                  the type of item emitted by the produced {@link Multi}. It's the type returned by the
-     *                             {@code accumulator} operation.
+     * @param accumulator the reduction {@link BiFunction}, the resulting {@link Multi} emits the results of
+     *        this method. The method is called for every item emitted by this Multi.
+     * @param <S> the type of item emitted by the produced {@link Multi}. It's the type returned by the
+     *        {@code accumulator} operation.
      * @return the produced {@link Multi}
      */
     @CheckReturnValue
@@ -408,7 +405,7 @@ public class MultiOnItem<T> {
      * item emitted by this {@link Multi} as initial value.
      *
      * @param accumulator the reduction {@link BiFunction}, the resulting {@link Multi} emits the results of this method.
-     *                    The method is called for every item emitted by this Multi.
+     *        The method is called for every item emitted by this Multi.
      * @return the produced {@link Multi}
      */
     @CheckReturnValue
