@@ -1,6 +1,7 @@
 package io.smallrye.mutiny.operators.multi;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -112,5 +113,22 @@ class MultiGatherTest {
 
         sub.awaitNextItem().assertCompleted();
         assertThat(sub.getItems()).containsExactly("a1", "b1", "c1", "d1");
+    }
+
+    @Test
+    void rejectNullParamsInApi() {
+        Multi<Integer> multi = Multi.createFrom().range(1, 100);
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> multi.onItem().gather().into(null))
+                .withMessageContaining("initialAccumulatorSupplier");
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> multi.onItem().gather().into(ArrayList<Integer>::new).accumulate(null))
+                .withMessageContaining("accumulator");
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> multi.onItem().gather().into(ArrayList<Integer>::new).accumulate((a, b) -> a).extract(null))
+                .withMessageContaining("extractor");
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> multi.onItem().gather().into(ArrayList<Integer>::new).accumulate((a, b) -> a).extract(a -> Optional.empty()).finalize(null))
+                .withMessageContaining("finalizer");
     }
 }
