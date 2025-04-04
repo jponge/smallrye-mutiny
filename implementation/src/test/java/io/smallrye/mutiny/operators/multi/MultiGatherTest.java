@@ -80,4 +80,37 @@ class MultiGatherTest {
                 "",
                 "");
     }
+
+    @Test
+    void checkCompletionCorrectness() {
+        List<String> chunks = List.of(
+                "a", "1,b1,c1,d1"
+        );
+        AssertSubscriber<String> sub = Multi.createFrom().iterable(chunks)
+                .onItem().gather()
+                    .into(StringBuilder::new)
+                    .accumulate(StringBuilder::append)
+                    .extract(sb -> {
+                        String str = sb.toString();
+                        if (str.contains(",")) {
+                            String[] lines = str.split(",", 2);
+                            return Optional.of(Tuple2.of(new StringBuilder(lines[1]), lines[0]));
+                        }
+                        return Optional.empty();
+                    })
+                    .finalize(sb -> Optional.of(sb.toString()))
+                .subscribe().withSubscriber(AssertSubscriber.create());
+
+        sub.awaitNextItem().assertNotTerminated();
+        assertThat(sub.getItems()).containsExactly("a1");
+
+        sub.awaitNextItem().assertNotTerminated();
+        assertThat(sub.getItems()).containsExactly("a1", "b1");
+
+        sub.awaitNextItem().assertNotTerminated();
+        assertThat(sub.getItems()).containsExactly("a1", "b1", "c1");
+
+        sub.awaitNextItem().assertCompleted();
+        assertThat(sub.getItems()).containsExactly("a1", "b1", "c1", "d1");
+    }
 }
