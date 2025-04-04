@@ -1,15 +1,16 @@
 package io.smallrye.mutiny.operators.multi;
 
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.smallrye.mutiny.tuples.Tuple2;
+
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class MultiGather<I, ACC, O> extends AbstractMultiOperator<I, O> {
 
@@ -19,10 +20,10 @@ public class MultiGather<I, ACC, O> extends AbstractMultiOperator<I, O> {
     Function<ACC, Optional<O>> finalizer;
 
     public MultiGather(Multi<? extends I> upstream,
-            Supplier<ACC> initialAccumulatorSupplier,
-            BiFunction<ACC, I, ACC> accumulator,
-            Function<ACC, Optional<Tuple2<ACC, O>>> mapper,
-            Function<ACC, Optional<O>> finalizer) {
+                       Supplier<ACC> initialAccumulatorSupplier,
+                       BiFunction<ACC, I, ACC> accumulator,
+                       Function<ACC, Optional<Tuple2<ACC, O>>> mapper,
+                       Function<ACC, Optional<O>> finalizer) {
         super(upstream);
         this.initialAccumulatorSupplier = initialAccumulatorSupplier;
         this.accumulator = accumulator;
@@ -39,6 +40,8 @@ public class MultiGather<I, ACC, O> extends AbstractMultiOperator<I, O> {
 
         private ACC acc;
         private final AtomicLong demand = new AtomicLong();
+        private volatile boolean upstreamHasCompleted;
+        private final AtomicInteger drainWip = new AtomicInteger();
 
         public MultiGatherProcessor(MultiSubscriber<? super O> downstream) {
             super(downstream);
@@ -56,7 +59,11 @@ public class MultiGather<I, ACC, O> extends AbstractMultiOperator<I, O> {
             }
             if (upstream != Subscriptions.CANCELLED) {
                 Subscriptions.add(demand, numberOfItems);
-                upstream.request(1L);
+                if (upstreamHasCompleted) {
+                    drainRemainingElements();
+                } else {
+                    upstream.request(1L);
+                }
             }
         }
 
@@ -102,13 +109,56 @@ public class MultiGather<I, ACC, O> extends AbstractMultiOperator<I, O> {
             if (upstream == Subscriptions.CANCELLED) {
                 return;
             }
-            Optional<O> finalValue = finalizer.apply(acc);
-            if (finalValue == null) {
-                onFailure(new NullPointerException("The finalizer returned a null value"));
+            upstreamHasCompleted = true;
+            drainRemainingElements();
+        }
+
+        private void drainRemainingElements() {
+            if (drainWip.getAndIncrement() > 0) {
                 return;
             }
-            finalValue.ifPresent(o -> downstream.onItem(o));
-            downstream.onCompletion();
+            while (true) {
+                long pending = demand.get();
+                long emitted = 0L;
+                while (emitted < pending) {
+                    if (upstream == Subscriptions.CANCELLED) {
+                        return;
+                    }
+                    Optional<Tuple2<ACC, O>> mapping = mapper.apply(acc);
+                    if (mapping == null) {
+                        onFailure(new NullPointerException("The mapper returned a null value"));
+                        return;
+                    }
+                    if (mapping.isPresent()) {
+                        Tuple2<ACC, O> tuple = mapping.get();
+                        acc = tuple.getItem1();
+                        O value = tuple.getItem2();
+                        if (acc == null) {
+                            onFailure(new NullPointerException("The mapper returned a null accumulator value"));
+                            return;
+                        }
+                        if (value == null) {
+                            onFailure(new NullPointerException("The mapper returned a null value to emit"));
+                            return;
+                        }
+                        downstream.onItem(value);
+                        emitted = emitted + 1L;
+                    } else {
+                        Optional<O> finalValue = finalizer.apply(acc);
+                        if (finalValue == null) {
+                            onFailure(new NullPointerException("The finalizer returned a null value"));
+                            return;
+                        }
+                        finalValue.ifPresent(o -> downstream.onItem(o));
+                        downstream.onCompletion();
+                        return;
+                    }
+                }
+                demand.addAndGet(-emitted);
+                if (drainWip.decrementAndGet() == 0) {
+                    return;
+                }
+            }
         }
     }
 }

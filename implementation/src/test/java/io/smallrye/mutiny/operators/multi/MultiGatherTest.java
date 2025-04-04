@@ -50,7 +50,7 @@ class MultiGatherTest {
                 "Hello", " ", "world!\n",
                 "This is a test\n",
                 "==\n==",
-                "\n\nThis", " is", " ", "amazing");
+                "\n\nThis", " is", " ", "amazing\n\n");
         AssertSubscriber<String> sub = Multi.createFrom().iterable(chunks)
                 .onItem().gather()
                 .into(StringBuilder::new)
@@ -76,6 +76,8 @@ class MultiGatherTest {
                 "==",
                 "==",
                 "",
-                "This is amazing");
+                "This is amazing",
+                "",
+                "");
     }
 }
