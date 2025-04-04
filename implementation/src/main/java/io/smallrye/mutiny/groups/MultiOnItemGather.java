@@ -7,6 +7,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.common.annotation.Experimental;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.operators.multi.MultiGather;
@@ -30,6 +31,7 @@ public class MultiOnItemGather<I> {
      * @param <ACC> the type of the accumulator
      * @return the next step in the builder
      */
+    @CheckReturnValue
     public <ACC> InitialAccumulatorStep<ACC> into(Supplier<ACC> initialAccumulatorSupplier) {
         nonNull(initialAccumulatorSupplier, "initialAccumulatorSupplier");
         return new InitialAccumulatorStep<>(initialAccumulatorSupplier);
@@ -51,6 +53,7 @@ public class MultiOnItemGather<I> {
          *        upstream, and returns the new accumulator
          * @return the next step in the builder
          */
+        @CheckReturnValue
         public ExtractStep<ACC> accumulate(BiFunction<ACC, I, ACC> accumulator) {
             nonNull(accumulator, "accumulator");
             return new ExtractStep<>(initialAccumulatorSupplier, accumulator);
@@ -80,6 +83,7 @@ public class MultiOnItemGather<I> {
          * @param <O> the type of the value to emit
          * @return the next step in the builder
          */
+        @CheckReturnValue
         public <O> FinalizerStep<ACC, O> extract(Function<ACC, Optional<Tuple2<ACC, O>>> extractor) {
             nonNull(extractor, "extractor");
             return new FinalizerStep<>(initialAccumulatorSupplier, accumulator, extractor);
@@ -111,6 +115,7 @@ public class MultiOnItemGather<I> {
          *        containing the value to emit before the completion signal, if any
          * @return the gathering {@link Multi}
          */
+        @CheckReturnValue
         public Multi<O> finalize(Function<ACC, Optional<O>> finalizer) {
             nonNull(finalizer, "finalizer");
             return new MultiGather<>(upstream, initialAccumulatorSupplier, accumulator, extractor, finalizer);
