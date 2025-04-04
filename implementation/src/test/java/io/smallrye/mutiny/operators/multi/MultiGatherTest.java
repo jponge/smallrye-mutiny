@@ -85,21 +85,20 @@ class MultiGatherTest {
     @Test
     void checkCompletionCorrectness() {
         List<String> chunks = List.of(
-                "a", "1,b1,c1,d1"
-        );
+                "a", "1,b1,c1,d1");
         AssertSubscriber<String> sub = Multi.createFrom().iterable(chunks)
                 .onItem().gather()
-                    .into(StringBuilder::new)
-                    .accumulate(StringBuilder::append)
-                    .extract(sb -> {
-                        String str = sb.toString();
-                        if (str.contains(",")) {
-                            String[] lines = str.split(",", 2);
-                            return Optional.of(Tuple2.of(new StringBuilder(lines[1]), lines[0]));
-                        }
-                        return Optional.empty();
-                    })
-                    .finalize(sb -> Optional.of(sb.toString()))
+                .into(StringBuilder::new)
+                .accumulate(StringBuilder::append)
+                .extract(sb -> {
+                    String str = sb.toString();
+                    if (str.contains(",")) {
+                        String[] lines = str.split(",", 2);
+                        return Optional.of(Tuple2.of(new StringBuilder(lines[1]), lines[0]));
+                    }
+                    return Optional.empty();
+                })
+                .finalize(sb -> Optional.of(sb.toString()))
                 .subscribe().withSubscriber(AssertSubscriber.create());
 
         sub.awaitNextItem().assertNotTerminated();
@@ -128,7 +127,8 @@ class MultiGatherTest {
                 .isThrownBy(() -> multi.onItem().gather().into(ArrayList<Integer>::new).accumulate((a, b) -> a).extract(null))
                 .withMessageContaining("extractor");
         assertThatIllegalArgumentException()
-                .isThrownBy(() -> multi.onItem().gather().into(ArrayList<Integer>::new).accumulate((a, b) -> a).extract(a -> Optional.empty()).finalize(null))
+                .isThrownBy(() -> multi.onItem().gather().into(ArrayList<Integer>::new).accumulate((a, b) -> a)
+                        .extract(a -> Optional.empty()).finalize(null))
                 .withMessageContaining("finalizer");
     }
 
@@ -172,6 +172,36 @@ class MultiGatherTest {
     }
 
     @Test
+    void rejectNullInExtractorOptionalTupleLeft() {
+        AssertSubscriber<Object> sub = Multi.createFrom().range(1, 100)
+                .onItem().gather()
+                .into(ArrayList::new)
+                .accumulate((acc, next) -> {
+                    acc.add(next);
+                    return acc;
+                })
+                .extract(acc -> Optional.of(Tuple2.of(null, "ok")))
+                .finalize(acc -> Optional.empty())
+                .subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+        sub.assertFailedWith(NullPointerException.class, "The extractor returned a null accumulator value");
+    }
+
+    @Test
+    void rejectNullInExtractorOptionalTupleRight() {
+        AssertSubscriber<Object> sub = Multi.createFrom().range(1, 100)
+                .onItem().gather()
+                .into(ArrayList::new)
+                .accumulate((acc, next) -> {
+                    acc.add(next);
+                    return acc;
+                })
+                .extract(acc -> Optional.of(Tuple2.of(new ArrayList<>(), null)))
+                .finalize(acc -> Optional.empty())
+                .subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+        sub.assertFailedWith(NullPointerException.class, "The extractor returned a null value to emit");
+    }
+
+    @Test
     void rejectNullInFinalizer() {
         AssertSubscriber<Object> sub = Multi.createFrom().range(1, 100)
                 .onItem().gather()
@@ -184,5 +214,100 @@ class MultiGatherTest {
                 .finalize(acc -> null)
                 .subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
         sub.assertFailedWith(NullPointerException.class, "The finalizer returned a null value");
+    }
+
+    @Test
+    void rejectExceptionInInitialAccumulatorSupplier() {
+        AssertSubscriber<Object> sub = Multi.createFrom().range(1, 100)
+                .onItem().gather()
+                .into(() -> {
+                    throw new RuntimeException("boom");
+                })
+                .accumulate((acc, next) -> "")
+                .extract(acc -> Optional.empty())
+                .finalize(acc -> Optional.empty())
+                .subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+        sub.assertFailedWith(RuntimeException.class, "boom");
+    }
+
+    @Test
+    void rejectExceptionInAccumulator() {
+        AssertSubscriber<Object> sub = Multi.createFrom().range(1, 100)
+                .onItem().gather()
+                .into(ArrayList::new)
+                .accumulate((acc, next) -> {
+                    throw new RuntimeException("boom");
+                })
+                .extract(acc -> Optional.empty())
+                .finalize(acc -> Optional.empty())
+                .subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+        sub.assertFailedWith(RuntimeException.class, "boom");
+    }
+
+    @Test
+    void rejectExceptionInExtractor() {
+        AssertSubscriber<Object> sub = Multi.createFrom().range(1, 100)
+                .onItem().gather()
+                .into(ArrayList::new)
+                .accumulate((acc, next) -> {
+                    acc.add(next);
+                    return acc;
+                })
+                .extract(acc -> {
+                    throw new RuntimeException("boom");
+                })
+                .finalize(acc -> Optional.empty())
+                .subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+        sub.assertFailedWith(RuntimeException.class, "boom");
+    }
+
+    @Test
+    void rejectExceptionInFinalizer() {
+        AssertSubscriber<Object> sub = Multi.createFrom().range(1, 100)
+                .onItem().gather()
+                .into(ArrayList::new)
+                .accumulate((acc, next) -> {
+                    acc.add(next);
+                    return acc;
+                })
+                .extract(acc -> Optional.empty())
+                .finalize(acc -> {
+                    throw new RuntimeException("boom");
+                })
+                .subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+        sub.assertFailedWith(RuntimeException.class, "boom");
+    }
+
+    @Test
+    void errorHandling() {
+        AssertSubscriber<Object> sub = Multi.createFrom().items("foo", "bar")
+                .onItem().transformToMultiAndConcatenate(s -> Multi.createFrom().failure(() -> new RuntimeException("boom")))
+                .onItem().gather()
+                .into(StringBuilder::new)
+                .accumulate(StringBuilder::append)
+                .extract(sb -> Optional.empty())
+                .finalize(acc -> Optional.of(acc.toString()))
+                .subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+        sub.assertFailedWith(RuntimeException.class, "boom");
+        sub.request(Long.MAX_VALUE);
+        sub.assertHasNotReceivedAnyItem();
+    }
+
+    @Test
+    void rejectBadRequests() {
+        Multi<Object> multi = Multi.createFrom().items("foo", "bar")
+                .onItem().gather()
+                .into(StringBuilder::new)
+                .accumulate(StringBuilder::append)
+                .extract(sb -> Optional.empty())
+                .finalize(acc -> Optional.of(acc.toString()));
+
+        AssertSubscriber<Object> sub = multi.subscribe().withSubscriber(AssertSubscriber.create());
+        sub.request(0L).assertFailedWith(IllegalArgumentException.class,
+                "The number of items requested must be strictly positive");
+
+        sub = multi.subscribe().withSubscriber(AssertSubscriber.create());
+        sub.request(-10L).assertFailedWith(IllegalArgumentException.class,
+                "The number of items requested must be strictly positive");
     }
 }
