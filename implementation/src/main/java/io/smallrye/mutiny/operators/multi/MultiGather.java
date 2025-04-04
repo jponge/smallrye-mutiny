@@ -103,8 +103,8 @@ public class MultiGather<I, ACC, O> extends AbstractMultiOperator<I, O> {
                     if (value == null) {
                         throw new NullPointerException("The extractor returned a null value to emit");
                     }
-                    downstream.onItem(value);
                     long remaining = demand.decrementAndGet();
+                    downstream.onItem(value);
                     if (remaining > 0L) {
                         upstream.request(1L);
                     }
