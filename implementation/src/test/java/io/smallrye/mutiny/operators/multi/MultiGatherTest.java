@@ -131,4 +131,58 @@ class MultiGatherTest {
                 .isThrownBy(() -> multi.onItem().gather().into(ArrayList<Integer>::new).accumulate((a, b) -> a).extract(a -> Optional.empty()).finalize(null))
                 .withMessageContaining("finalizer");
     }
+
+    @Test
+    void rejectNullInInitialAccumulatorSupplier() {
+        AssertSubscriber<Object> sub = Multi.createFrom().range(1, 100)
+                .onItem().gather()
+                .into(() -> null)
+                .accumulate((acc, next) -> "")
+                .extract(acc -> Optional.empty())
+                .finalize(acc -> Optional.empty())
+                .subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+        sub.assertFailedWith(NullPointerException.class, "The initial accumulator cannot be null");
+    }
+
+    @Test
+    void rejectNullInAccumulator() {
+        AssertSubscriber<Object> sub = Multi.createFrom().range(1, 100)
+                .onItem().gather()
+                .into(ArrayList::new)
+                .accumulate((acc, next) -> null)
+                .extract(acc -> Optional.empty())
+                .finalize(acc -> Optional.empty())
+                .subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+        sub.assertFailedWith(NullPointerException.class, "The accumulator returned a null value");
+    }
+
+    @Test
+    void rejectNullInExtractor() {
+        AssertSubscriber<Object> sub = Multi.createFrom().range(1, 100)
+                .onItem().gather()
+                .into(ArrayList::new)
+                .accumulate((acc, next) -> {
+                    acc.add(next);
+                    return acc;
+                })
+                .extract(acc -> null)
+                .finalize(acc -> Optional.empty())
+                .subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+        sub.assertFailedWith(NullPointerException.class, "The extractor returned a null value");
+    }
+
+    @Test
+    void rejectNullInFinalizer() {
+        AssertSubscriber<Object> sub = Multi.createFrom().range(1, 100)
+                .onItem().gather()
+                .into(ArrayList::new)
+                .accumulate((acc, next) -> {
+                    acc.add(next);
+                    return acc;
+                })
+                .extract(acc -> Optional.empty())
+                .finalize(acc -> null)
+                .subscribe().withSubscriber(AssertSubscriber.create(Long.MAX_VALUE));
+        sub.assertFailedWith(NullPointerException.class, "The finalizer returned a null value");
+    }
 }

@@ -6,6 +6,7 @@ import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.smallrye.mutiny.tuples.Tuple2;
 
 import java.util.Optional;
+import java.util.concurrent.Flow;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiFunction;
@@ -45,10 +46,17 @@ public class MultiGather<I, ACC, O> extends AbstractMultiOperator<I, O> {
 
         public MultiGatherProcessor(MultiSubscriber<? super O> downstream) {
             super(downstream);
+        }
+
+        @Override
+        public void onSubscribe(Flow.Subscription subscription) {
             this.acc = initialAccumulatorSupplier.get();
-            if (accumulator == null) {
-                throw new IllegalArgumentException("The initial accumulator cannot be null");
+            if (this.acc == null) {
+                downstream.onSubscribe(Subscriptions.CANCELLED);
+                onFailure(new NullPointerException("The initial accumulator cannot be null"));
+                return;
             }
+            super.onSubscribe(subscription);
         }
 
         @Override
@@ -79,7 +87,7 @@ public class MultiGather<I, ACC, O> extends AbstractMultiOperator<I, O> {
             }
             Optional<Tuple2<ACC, O>> mapping = mapper.apply(acc);
             if (mapping == null) {
-                onFailure(new NullPointerException("The mapper returned a null value"));
+                onFailure(new NullPointerException("The extractor returned a null value"));
                 return;
             }
             if (mapping.isPresent()) {
