@@ -451,6 +451,12 @@ public class MultiOnItem<T> {
         }));
     }
 
+    /**
+     * Gather each item into an accumulator, and emit new items based on an extractor function.
+     * <p>
+     *
+     * @return a new {@link MultiOnItemGather} that lets you configure the gathering of items emitted by the upstream
+     */
     @Experimental("This API is still being designed and may change in the future")
     @CheckReturnValue
     public MultiOnItemGather<T> gather() {
