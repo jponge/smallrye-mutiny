@@ -1,5 +1,18 @@
 package io.smallrye.mutiny.operators.multi;
 
+import java.io.IOException;
+import java.util.Queue;
+import java.util.Random;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.Flow;
+import java.util.concurrent.Flow.Subscription;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+
+import io.smallrye.mutiny.CompositeException;
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.ParameterValidation;
@@ -10,19 +23,10 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 
-import java.util.Queue;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.Flow;
-import java.util.concurrent.Flow.Subscription;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
-
 public final class SimplerMultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
     private final Function<? super I, ? extends Flow.Publisher<? extends O>> mapper;
 
-    private final boolean postponeFailurePropagation;
+    private final boolean postponeFailurePropagation; // TODO Docs: "Instructs the flatMap operation to consume all the streams returned by the mapper before propagating a failure if any of the stream has produced a failure."
     private final int maxConcurrency;
     private final int prefetch;
 
@@ -59,7 +63,6 @@ public final class SimplerMultiFlatMapOp<I, O> extends AbstractMultiOperator<I, 
         final boolean postponeFailurePropagation;
         final int maxConcurrency;
         final int prefetch;
-        final int replenishThreshold;
 
         MainSubscriber(MultiSubscriber<? super O> downstream, Function<? super I, ? extends Flow.Publisher<? extends O>> mapper,
                        boolean postponeFailurePropagation,
@@ -70,7 +73,6 @@ public final class SimplerMultiFlatMapOp<I, O> extends AbstractMultiOperator<I, 
             this.postponeFailurePropagation = postponeFailurePropagation;
             this.maxConcurrency = maxConcurrency;
             this.prefetch = prefetch;
-            this.replenishThreshold = Subscriptions.unboundedOrLimit(prefetch); // TODO not sure this is a good idea, fast producers might overflow if we refill before reaching the prefetch value
         }
 
         static final Subscription CANCELLED = Subscriptions.empty();
@@ -78,10 +80,12 @@ public final class SimplerMultiFlatMapOp<I, O> extends AbstractMultiOperator<I, 
 
         final AtomicReference<Subscription> mainUpstream = new AtomicReference<>();
         final AtomicReference<Throwable> failures = new AtomicReference<>();
-        final Queue<O> itemsQueue = Queues.createMpscQueue();
+        final Queue<O> itemsQueue = Queues.createMpscQueue(); // TODO we need a bounded queue
         final AtomicInteger wip = new AtomicInteger();
         final AtomicLong demand = new AtomicLong();
         final CopyOnWriteArraySet<InnerSubscriber<I, O>> innerSubscribers = new CopyOnWriteArraySet<>();
+        final AtomicBoolean initialRequestHasBeenMade = new AtomicBoolean();
+        final AtomicInteger refillRequests = new AtomicInteger();
 
         // TODO make sure collections get eventually cleared to prevent memory leaks
 
@@ -89,7 +93,6 @@ public final class SimplerMultiFlatMapOp<I, O> extends AbstractMultiOperator<I, 
         public void onSubscribe(Subscription subscription) {
             if (mainUpstream.compareAndSet(null, subscription)) {
                 downstream.onSubscribe(this);
-                subscription.request(Subscriptions.unboundedOrRequests(maxConcurrency));
             } else {
                 subscription.cancel();
             }
@@ -111,7 +114,7 @@ public final class SimplerMultiFlatMapOp<I, O> extends AbstractMultiOperator<I, 
             } catch (Throwable err) {
                 Subscriptions.addFailure(failures, err);
                 cancel();
-                // TODO handle terminal cases (onFailure vs onCompletion)
+                terminate();
             }
         }
 
@@ -120,6 +123,9 @@ public final class SimplerMultiFlatMapOp<I, O> extends AbstractMultiOperator<I, 
             if (cancelled()) {
                 return;
             }
+            cancel();
+            Subscriptions.addFailure(failures, failure);
+            terminate();
         }
 
         @Override
@@ -128,14 +134,22 @@ public final class SimplerMultiFlatMapOp<I, O> extends AbstractMultiOperator<I, 
                 return;
             }
             mainUpstream.set(COMPLETED);
+            drain();
         }
 
         @Override
         public void request(long n) {
             if (n > 0) {
+                if (cancelled()) {
+                    return;
+                }
                 Subscriptions.add(demand, n);
+                if (initialRequestHasBeenMade.compareAndSet(false, true)) {
+                    mainUpstream.get().request(Subscriptions.unboundedOrRequests(maxConcurrency));
+                }
                 drain();
             } else {
+                cancel();
                 downstream.onFailure(Subscriptions.getInvalidRequestException());
             }
         }
@@ -168,6 +182,10 @@ public final class SimplerMultiFlatMapOp<I, O> extends AbstractMultiOperator<I, 
             return mainUpstream.get() == COMPLETED;
         }
 
+        boolean failed() {
+            return failures.get() != null;
+        }
+
         void drain() {
             if (wip.getAndIncrement() != 0) {
                 return;
@@ -178,14 +196,36 @@ public final class SimplerMultiFlatMapOp<I, O> extends AbstractMultiOperator<I, 
         void drainLoop() {
             do {
 
+                // Cancellation check
+                if (cancelled()) {
+                    return;
+                }
+
+                // Check for failure
+                if (failed() && !postponeFailurePropagation) {
+                    cancel();
+                    terminate();
+                    return;
+                }
+
+                // Inner loop over the queue
                 long emitted = 0L;
                 long outstandingDemand = demand.get();
                 while (emitted < outstandingDemand) {
 
+                    // Cancellation check
                     if (cancelled()) {
                         return;
                     }
 
+                    // Check for failure
+                    if (failed() && !postponeFailurePropagation) {
+                        cancel();
+                        terminate();
+                        return;
+                    }
+
+                    // Item dispatch
                     O item = itemsQueue.poll();
                     if (item == null) {
                         break;
@@ -194,24 +234,50 @@ public final class SimplerMultiFlatMapOp<I, O> extends AbstractMultiOperator<I, 
                     emitted++;
                 }
 
-
+                // Demand tracking when bounded
                 if (outstandingDemand != Long.MAX_VALUE) {
                     demand.addAndGet(-emitted);
                 }
 
+                // Replenish inners
                 int numberOfInner = 0;
                 for (InnerSubscriber<I, O> inner : innerSubscribers) {
+                    if (cancelled()) {
+                        return;
+                    }
                     numberOfInner++;
                     if (inner.emittedOnCurrentBatch >= prefetch) {
                         inner.emittedOnCurrentBatch = 0L;
                         inner.request(prefetch);
                     }
                 }
-                if (demand.get() > 0 && numberOfInner < maxConcurrency && !completed()) {
-                    mainUpstream.get().request(maxConcurrency - numberOfInner);
+
+                // Replenish main
+                if (cancelled()) {
+                    return;
+                }
+                int refillCount = refillRequests.getAndSet(0);
+                if (refillCount > 0 && !completed() && !cancelled()) {
+                    mainUpstream.get().request(Math.min(maxConcurrency, refillCount));
+                }
+
+                // Check for completion
+                if (numberOfInner == 0 && itemsQueue.isEmpty() && completed() && !cancelled()) {
+                    mainUpstream.set(CANCELLED);
+                    terminate();
+                    return;
                 }
 
             } while (wip.decrementAndGet() > 0);
+        }
+
+        void terminate() {
+            Throwable collectedFailures = failures.getAndSet(null);
+            if (collectedFailures == null) {
+                downstream.onComplete();
+            } else {
+                downstream.onFailure(collectedFailures);
+            }
         }
 
         void innerOnItem(O item) {
@@ -231,6 +297,7 @@ public final class SimplerMultiFlatMapOp<I, O> extends AbstractMultiOperator<I, 
             Subscriptions.addFailure(failures, err);
             innerSubscribers.remove(inner);
             if (postponeFailurePropagation) {
+                refillRequests.incrementAndGet();
                 drain();
             } else {
                 cancel();
@@ -243,9 +310,7 @@ public final class SimplerMultiFlatMapOp<I, O> extends AbstractMultiOperator<I, 
                 return;
             }
             innerSubscribers.remove(inner);
-//            if (!completed()) {
-//                mainUpstream.get().request(1L);
-//            }
+            refillRequests.incrementAndGet();
             drain();
         }
     }
@@ -296,7 +361,7 @@ public final class SimplerMultiFlatMapOp<I, O> extends AbstractMultiOperator<I, 
         @Override
         public void cancel() {
             Subscription sub = upstream.getAndSet(MainSubscriber.CANCELLED);
-            if (sub != null && sub != MainSubscriber.CANCELLED) {
+            if (sub != MainSubscriber.CANCELLED && sub != null) {
                 sub.cancel();
             }
         }
@@ -308,19 +373,161 @@ public final class SimplerMultiFlatMapOp<I, O> extends AbstractMultiOperator<I, 
     }
 
     // TODO this is a scratchpad
-    public static void main(String[] args) {
 
-        Multi<Integer> multi = Multi.createFrom().range(1, 10).log();
-        SimplerMultiFlatMapOp<Integer, Integer> flatMap = new SimplerMultiFlatMapOp<>(
-                multi,
-                n -> Multi.createFrom().items(n, n * 10, n * 100),
-                false,
-                1,
-                2);
+    static class Main_1 {
+        public static void main(String[] args) {
 
-        AssertSubscriber<Integer> sub = flatMap.subscribe().withSubscriber(AssertSubscriber.create());
-        sub.request(3);
-        sub.request(2);
-        System.out.println(sub.getItems());
+            Multi<Integer> multi = Multi.createFrom().range(1, 10).log();
+            SimplerMultiFlatMapOp<Integer, Integer> flatMap = new SimplerMultiFlatMapOp<>(
+                    multi,
+                    n -> Multi.createFrom().items(n, n * 10, n * 100),
+                    false,
+                    1,
+                    2);
+
+            AssertSubscriber<Integer> sub = flatMap.subscribe().withSubscriber(AssertSubscriber.create());
+
+            sub.request(3);
+            System.out.println(sub.getItems());
+
+            sub.request(2);
+            System.out.println(sub.getItems());
+
+            //sub.request(Long.MAX_VALUE);
+            //System.out.println(sub.getItems());
+        }
+    }
+
+    static class Main_2 {
+        public static void main(String[] args) {
+
+            Random random = new Random();
+            Multi<Integer> multi = Multi.createFrom().range(1, 10).log();
+            SimplerMultiFlatMapOp<Integer, Integer> flatMap = new SimplerMultiFlatMapOp<>(
+                    multi,
+                    n -> Multi.createFrom().emitter(em -> {
+                        new Thread(() -> {
+                            try {
+                                Thread.sleep(random.nextInt(500));
+                                em.emit(n);
+                                Thread.sleep(random.nextInt(500));
+                                em.emit(n * 10);
+                                Thread.sleep(random.nextInt(500));
+                                em.emit(n * 100);
+                                em.complete();
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }).start();
+                    }),
+                    false,
+                    2,
+                    16);
+
+            AssertSubscriber<Integer> sub = flatMap.subscribe().withSubscriber(AssertSubscriber.create());
+
+            sub.awaitNextItems(3);
+            System.out.println(sub.getItems());
+
+            sub.awaitNextItems(2);
+            System.out.println(sub.getItems());
+
+            sub.awaitNextItems(4);
+            System.out.println(sub.getItems());
+
+            sub.request(Long.MAX_VALUE);
+            sub.awaitCompletion();
+
+            System.out.println(sub.getItems());
+            System.out.println(sub.getItems().size());
+        }
+    }
+
+    static class Main_3 {
+        public static void main(String[] args) {
+
+            Multi<Integer> multi = Multi.createFrom().range(1, 10).log();
+            SimplerMultiFlatMapOp<Integer, String> flatMap = new SimplerMultiFlatMapOp<>(
+                    multi,
+                    n -> Multi.createFrom().emitter(emitter -> {
+                        emitter.emit(n + ": foo");
+                        emitter.emit(n + ": bar");
+                        emitter.emit(n + ": baz");
+                        emitter.fail(new IOException(n + " // boom"));
+                    }),
+                    true,
+                    2,
+                    2);
+
+            AssertSubscriber<String> sub = flatMap.subscribe().withSubscriber(AssertSubscriber.create());
+
+            System.out.println("req(2)");
+            sub.request(2);
+            System.out.println(sub.getItems());
+            System.out.println("!!! " + sub.getFailure());
+
+            System.out.println("req(2)");
+            sub.request(2);
+            System.out.println(sub.getItems());
+            System.out.println("!!! " + sub.getFailure());
+
+            System.out.println("req(max)");
+            sub.request(Long.MAX_VALUE);
+            System.out.println(sub.getItems());
+            System.out.println("!!! " + sub.getFailure());
+
+            sub.assertFailedWith(CompositeException.class);
+        }
+    }
+
+    static class Main_3_OldOperatorGoesWrong {
+
+        // Our friends at Reactor have it right, our current flatMap... not :-)
+        // What we want is to consume all the current and future streams, then eventually fail
+
+//        Flux<String> flux = Flux.range(1, 9)
+//                .flatMapDelayError(n -> Flux.create(sink -> {
+//                    sink.next(n + ": foo");
+//                    sink.next(n + ": bar");
+//                    sink.next(n + ": baz");
+//                    sink.error(new IOException(n + ": boom"));
+//                }), 2, 2);
+//
+//        flux.subscribe(
+//        item -> System.out.println(">>> " + item),
+//        Throwable::printStackTrace);
+
+        public static void main(String[] args) {
+
+            Multi<Integer> multi = Multi.createFrom().range(1, 10).log();
+            MultiFlatMapOp<Integer, String> flatMap = new MultiFlatMapOp<>(
+                    multi,
+                    n -> Multi.createFrom().emitter(emitter -> {
+                        emitter.emit(n + ": foo");
+                        emitter.emit(n + ": bar");
+                        emitter.emit(n + ": baz");
+                        emitter.fail(new IOException(n + " // boom"));
+                    }),
+                    true,
+                    2,
+                    2);
+
+            AssertSubscriber<String> sub = flatMap.subscribe().withSubscriber(AssertSubscriber.create());
+
+            System.out.println("req(2)");
+            sub.request(2);
+            System.out.println(sub.getItems());
+            System.out.println("!!! " + sub.getFailure());
+
+            System.out.println("req(2)");
+            sub.request(2);
+            System.out.println(sub.getItems());
+            System.out.println("!!! " + sub.getFailure());
+
+            System.out.println("req(max)");
+            sub.request(Long.MAX_VALUE);
+            System.out.println(sub.getItems());
+            System.out.println("!!! " + sub.getFailure());
+        }
     }
 }
