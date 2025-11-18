@@ -31,10 +31,10 @@ public final class SimplerMultiFlatMapOp<I, O> extends AbstractMultiOperator<I, 
     private final int prefetch;
 
     public SimplerMultiFlatMapOp(Multi<? extends I> upstream,
-                                 Function<? super I, ? extends Flow.Publisher<? extends O>> mapper,
-                                 boolean postponeFailurePropagation,
-                                 int maxConcurrency,
-                                 int prefetch) {
+            Function<? super I, ? extends Flow.Publisher<? extends O>> mapper,
+            boolean postponeFailurePropagation,
+            int maxConcurrency,
+            int prefetch) {
         super(upstream);
         this.mapper = ParameterValidation.nonNull(mapper, "mapper");
         this.postponeFailurePropagation = postponeFailurePropagation;
@@ -65,9 +65,9 @@ public final class SimplerMultiFlatMapOp<I, O> extends AbstractMultiOperator<I, 
         final int prefetch;
 
         MainSubscriber(MultiSubscriber<? super O> downstream, Function<? super I, ? extends Flow.Publisher<? extends O>> mapper,
-                       boolean postponeFailurePropagation,
-                       int maxConcurrency,
-                       int prefetch) {
+                boolean postponeFailurePropagation,
+                int maxConcurrency,
+                int prefetch) {
             this.downstream = downstream;
             this.mapper = mapper;
             this.postponeFailurePropagation = postponeFailurePropagation;
@@ -486,17 +486,17 @@ public final class SimplerMultiFlatMapOp<I, O> extends AbstractMultiOperator<I, 
         // Our friends at Reactor have it right, our current flatMap... not :-)
         // What we want is to consume all the current and future streams, then eventually fail
 
-//        Flux<String> flux = Flux.range(1, 9)
-//                .flatMapDelayError(n -> Flux.create(sink -> {
-//                    sink.next(n + ": foo");
-//                    sink.next(n + ": bar");
-//                    sink.next(n + ": baz");
-//                    sink.error(new IOException(n + ": boom"));
-//                }), 2, 2);
-//
-//        flux.subscribe(
-//        item -> System.out.println(">>> " + item),
-//        Throwable::printStackTrace);
+        //        Flux<String> flux = Flux.range(1, 9)
+        //                .flatMapDelayError(n -> Flux.create(sink -> {
+        //                    sink.next(n + ": foo");
+        //                    sink.next(n + ": bar");
+        //                    sink.next(n + ": baz");
+        //                    sink.error(new IOException(n + ": boom"));
+        //                }), 2, 2);
+        //
+        //        flux.subscribe(
+        //        item -> System.out.println(">>> " + item),
+        //        Throwable::printStackTrace);
 
         public static void main(String[] args) {
 

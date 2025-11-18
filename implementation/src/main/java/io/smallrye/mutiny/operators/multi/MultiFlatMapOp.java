@@ -42,7 +42,7 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         if (subscriber == null) {
             throw new NullPointerException("The subscriber must not be `null`");
         }
-        FlatMapMainSubscriber<I, O> sub = new FlatMapMainSubscriber<>(subscriber,
+        SimplerMultiFlatMapOp.MainSubscriber<I, O> sub = new SimplerMultiFlatMapOp.MainSubscriber<>(subscriber,
                 mapper,
                 postponeFailurePropagation,
                 maxConcurrency,

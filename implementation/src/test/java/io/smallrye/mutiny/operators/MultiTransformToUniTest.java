@@ -125,6 +125,7 @@ public class MultiTransformToUniTest {
                 .merge()
                 .subscribe().withSubscriber(subscriber);
 
+        subscriber.request(Long.MAX_VALUE);
         subscriber.assertFailedWith(RuntimeException.class, "boom");
     }
 
@@ -140,6 +141,7 @@ public class MultiTransformToUniTest {
                 .merge()
                 .subscribe().withSubscriber(subscriber);
 
+        subscriber.request(Long.MAX_VALUE);
         subscriber.assertFailedWith(RuntimeException.class, "boom");
     }
 
@@ -153,6 +155,7 @@ public class MultiTransformToUniTest {
                 .merge()
                 .subscribe().withSubscriber(subscriber);
 
+        subscriber.request(Long.MAX_VALUE);
         subscriber.assertHasNotReceivedAnyItem().assertCompleted();
     }
 
