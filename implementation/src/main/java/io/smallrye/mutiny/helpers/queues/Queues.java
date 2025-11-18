@@ -91,6 +91,17 @@ public class Queues {
     }
 
     /**
+     * Creates a new multi-producer single consumer unbounded queue.
+     *
+     * @param chunkSize the chunk size
+     * @param <T> the type of item
+     * @return the queue
+     */
+    public static <T> Queue<T> createMpscQueue(int chunkSize) {
+        return new MpscUnboundedAtomicUnpaddedArrayQueue<>(chunkSize);
+    }
+
+    /**
      * Creates an unbounded single producer / single consumer queue.
      *
      * @param chunkSize the chunk size

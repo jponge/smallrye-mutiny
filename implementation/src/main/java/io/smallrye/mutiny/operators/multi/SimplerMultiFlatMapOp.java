@@ -73,6 +73,7 @@ public final class SimplerMultiFlatMapOp<I, O> extends AbstractMultiOperator<I, 
             this.postponeFailurePropagation = postponeFailurePropagation;
             this.maxConcurrency = maxConcurrency;
             this.prefetch = prefetch;
+            this.itemsQueue = Queues.createMpscQueue(Math.max(prefetch, 256));
         }
 
         static final Subscription CANCELLED = Subscriptions.empty();
@@ -80,7 +81,7 @@ public final class SimplerMultiFlatMapOp<I, O> extends AbstractMultiOperator<I, 
 
         final AtomicReference<Subscription> mainUpstream = new AtomicReference<>();
         final AtomicReference<Throwable> failures = new AtomicReference<>();
-        final Queue<O> itemsQueue = Queues.createMpscQueue(); // TODO we need a bounded queue
+        final Queue<O> itemsQueue;
         final AtomicInteger wip = new AtomicInteger();
         final AtomicLong demand = new AtomicLong();
         final CopyOnWriteArraySet<InnerSubscriber<I, O>> innerSubscribers = new CopyOnWriteArraySet<>();
