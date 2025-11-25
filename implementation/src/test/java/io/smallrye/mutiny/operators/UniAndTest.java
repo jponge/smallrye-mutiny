@@ -9,9 +9,11 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 import io.smallrye.mutiny.CompositeException;
@@ -298,4 +300,15 @@ public class UniAndTest {
                 .assertItem(1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9);
     }
 
+    @RepeatedTest(100_000)
+    public void raceConditionCheck() {
+        Uni<String> a = Uni.createFrom().completionStage(() -> CompletableFuture.supplyAsync(() -> "A"));
+        Uni<String> b = Uni.createFrom().completionStage(() -> CompletableFuture.supplyAsync(() -> "B"));
+        Uni<String> c = Uni.createFrom().completionStage(() -> CompletableFuture.supplyAsync(() -> "C"));
+        Uni<Tuple3<String, String, String>> uni = Uni.combine().all().unis(a, b, c).usingConcurrencyOf(3).asTuple();
+
+        UniAssertSubscriber<Tuple3<String, String, String>> sub = uni.subscribe().withSubscriber(UniAssertSubscriber.create());
+        sub.awaitItem(Duration.ofSeconds(5))
+                .assertItem(Tuple3.of("A", "B", "C"));
+    }
 }
