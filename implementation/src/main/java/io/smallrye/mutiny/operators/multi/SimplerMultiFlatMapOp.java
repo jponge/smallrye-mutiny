@@ -253,17 +253,13 @@ public final class SimplerMultiFlatMapOp<I, O> extends AbstractMultiOperator<I, 
                     }
                 }
 
-                // Replenish main
-                if (cancelled()) {
-                    return;
-                }
+                // Replenish main, or complete if we have reached all ends
                 int refillCount = refillRequests.getAndSet(0);
                 if (refillCount > 0 && !completed() && !cancelled()) {
+                    // We request one more item
                     mainUpstream.get().request(Math.min(maxConcurrency, refillCount));
-                }
-
-                // Check for completion
-                if (numberOfInner == 0 && itemsQueue.isEmpty() && completed() && !cancelled()) {
+                } else if (numberOfInner == 0 && itemsQueue.isEmpty() && completed() && !cancelled()) {
+                    // We have completed
                     mainUpstream.set(CANCELLED);
                     terminate();
                     return;
