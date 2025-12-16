@@ -77,7 +77,7 @@ class SimplerMultiFlatMapOpTest {
             assertThat(sub.getItems())
                     .hasSize(27)
                     .startsWith(1, 10, 100, 2, 20, 200)
-                    .endsWith(9, 90, 900); // FIXME ends with 8, not 9, so completion issue
+                    .endsWith(9, 90, 900);
         } else {
             assertThat(sub.getItems())
                     .hasSize(27)
