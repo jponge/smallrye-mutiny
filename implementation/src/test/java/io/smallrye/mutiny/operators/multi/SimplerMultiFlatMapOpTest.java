@@ -1,24 +1,19 @@
 package io.smallrye.mutiny.operators.multi;
 
-import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.helpers.test.AssertSubscriber;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
-import org.assertj.core.api.Assertions;
-import org.assertj.core.api.ListAssert;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.util.List;
-import java.util.concurrent.atomic.LongAdder;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.helpers.test.AssertSubscriber;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 
 class SimplerMultiFlatMapOpTest {
 
     @ParameterizedTest
-    @ValueSource(ints = {1, 2, Integer.MAX_VALUE})
+    @ValueSource(ints = { 1, 2, Integer.MAX_VALUE })
     void simple_steps_over_range(int concurrency) {
         Multi<Integer> multi = Multi.createFrom().range(1, 4);
         SimplerMultiFlatMapOp<Integer, Integer> flatMap = new SimplerMultiFlatMapOp<>(
@@ -52,12 +47,12 @@ class SimplerMultiFlatMapOpTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"1, true", "2, false"})
+    @CsvSource({ "1, true", "2, false" })
     void simple_steps_over_range_with_interleaving(int concurrency, boolean ordered) {
         Multi<Integer> multi = Multi.createFrom().range(1, 10);
         SimplerMultiFlatMapOp<Integer, Integer> flatMap = new SimplerMultiFlatMapOp<>(
                 multi,
-                n -> Multi.createFrom().<Integer>emitter(emitter -> {
+                n -> Multi.createFrom().<Integer> emitter(emitter -> {
                     emitter.emit(n);
                     sleep(50 - n);
                     emitter.emit(n * 10);
