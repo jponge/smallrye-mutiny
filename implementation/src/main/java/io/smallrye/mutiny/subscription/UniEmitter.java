@@ -1,7 +1,8 @@
 package io.smallrye.mutiny.subscription;
 
-import io.smallrye.mutiny.Uni;
 import org.jspecify.annotations.Nullable;
+
+import io.smallrye.mutiny.Uni;
 
 /**
  * An object allowing to send signals to the downstream {@link Uni}.

@@ -1,3 +1,4 @@
+@org.jspecify.annotations.NullMarked
 open module io.smallrye.mutiny {
 
     requires transitive io.smallrye.common.annotation;

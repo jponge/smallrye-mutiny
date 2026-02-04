@@ -11,6 +11,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Implementation of a {@link UniSubscriber} based on callbacks.
@@ -18,7 +19,7 @@ import io.smallrye.mutiny.subscription.UniSubscription;
  *
  * @param <T> the type of item received by this subscriber
  */
-public class UniCallbackSubscriber<T> implements UniSubscriber<T>, UniSubscription {
+public class UniCallbackSubscriber<T extends @Nullable Object> implements UniSubscriber<T>, UniSubscription {
 
     private volatile UniSubscription subscription;
     private static final AtomicReferenceFieldUpdater<UniCallbackSubscriber, UniSubscription> SUBSCRIPTION_UPDATER = AtomicReferenceFieldUpdater

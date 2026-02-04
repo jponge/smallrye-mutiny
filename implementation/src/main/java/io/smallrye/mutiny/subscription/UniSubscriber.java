@@ -2,9 +2,10 @@ package io.smallrye.mutiny.subscription;
 
 import java.util.concurrent.Executor;
 
+import org.jspecify.annotations.Nullable;
+
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.UniSubscribe;
-import org.jspecify.annotations.Nullable;
 
 /**
  * Will receive call to {@link #onSubscribe(UniSubscription)} once after passing an instance of this {@link UniSubscriber}

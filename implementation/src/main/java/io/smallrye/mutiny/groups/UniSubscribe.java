@@ -14,6 +14,7 @@ import io.smallrye.mutiny.subscription.Cancellable;
 import io.smallrye.mutiny.subscription.UniSerializedSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Allow subscribing to a {@link Uni} to be notified of the different events coming from {@code upstream}.
@@ -25,7 +26,7 @@ import io.smallrye.mutiny.subscription.UniSubscription;
  *
  * @param <T> the type of item
  */
-public class UniSubscribe<T> {
+public class UniSubscribe<T extends @Nullable Object> {
 
     private final AbstractUni<T> upstream;
 

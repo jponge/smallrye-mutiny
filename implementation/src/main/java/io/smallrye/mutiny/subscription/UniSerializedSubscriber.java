@@ -3,13 +3,14 @@ package io.smallrye.mutiny.subscription;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.jspecify.annotations.Nullable;
+
 import io.smallrye.mutiny.CompositeException;
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.helpers.EmptyUniSubscription;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractUni;
-import org.jspecify.annotations.Nullable;
 
 /**
  * An implementation of {@link UniSubscriber} and {@link UniSubscription} making sure event handlers are only called once.

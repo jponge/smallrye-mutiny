@@ -6,6 +6,9 @@ import java.util.concurrent.Executor;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -14,8 +17,6 @@ import io.smallrye.mutiny.groups.*;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.uni.*;
 import io.smallrye.mutiny.subscription.UniSubscriber;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
 public abstract class AbstractUni<T extends @Nullable Object> implements Uni<T> {
 
