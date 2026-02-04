@@ -14,8 +14,10 @@ import io.smallrye.mutiny.groups.*;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.uni.*;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
-public abstract class AbstractUni<T> implements Uni<T> {
+public abstract class AbstractUni<T extends @Nullable Object> implements Uni<T> {
 
     public abstract void subscribe(UniSubscriber<? super T> subscriber);
 
@@ -115,7 +117,7 @@ public abstract class AbstractUni<T> implements Uni<T> {
     }
 
     @Override
-    public Multi<T> toMulti() {
+    public Multi<@NonNull T> toMulti() {
         return Multi.createFrom().safePublisher(new UniToMultiPublisher<>(this));
     }
 

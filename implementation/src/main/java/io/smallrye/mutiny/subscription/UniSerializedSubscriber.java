@@ -9,11 +9,12 @@ import io.smallrye.mutiny.helpers.EmptyUniSubscription;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractUni;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An implementation of {@link UniSubscriber} and {@link UniSubscription} making sure event handlers are only called once.
  */
-public class UniSerializedSubscriber<T> implements UniSubscriber<T>, UniSubscription {
+public class UniSerializedSubscriber<T extends @Nullable Object> implements UniSubscriber<T>, UniSubscription {
 
     private static final int INIT = 0;
     /**

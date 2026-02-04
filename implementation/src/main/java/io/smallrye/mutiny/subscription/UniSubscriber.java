@@ -4,6 +4,7 @@ import java.util.concurrent.Executor;
 
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.UniSubscribe;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Will receive call to {@link #onSubscribe(UniSubscription)} once after passing an instance of this {@link UniSubscriber}
@@ -22,7 +23,7 @@ import io.smallrye.mutiny.groups.UniSubscribe;
  *
  * @param <T> the expected type of item
  */
-public interface UniSubscriber<T> extends ContextSupport {
+public interface UniSubscriber<T extends @Nullable Object> extends ContextSupport {
 
     /**
      * Event handler called once the subscribed {@link Uni} has taken into account the subscription. The {@link Uni}
@@ -55,7 +56,7 @@ public interface UniSubscriber<T> extends ContextSupport {
      *
      * @param item the item, may be {@code null}.
      */
-    void onItem(T item);
+    void onItem(@Nullable T item);
 
     /**
      * Called if the computation of the item by the subscriber {@link Uni} failed.

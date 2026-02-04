@@ -1,8 +1,9 @@
 package io.smallrye.mutiny.operators;
 
 import io.smallrye.mutiny.Uni;
+import org.jspecify.annotations.Nullable;
 
-public abstract class UniOperator<I, O> extends AbstractUni<O> {
+public abstract class UniOperator<I extends @Nullable Object, O extends @Nullable Object> extends AbstractUni<O> {
 
     private final Uni<? extends I> upstream;
 

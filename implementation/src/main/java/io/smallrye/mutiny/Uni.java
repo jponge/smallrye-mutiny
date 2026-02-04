@@ -7,6 +7,9 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
 import java.util.function.*;
 
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+
 import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.mutiny.groups.*;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
@@ -34,7 +37,7 @@ import io.smallrye.mutiny.tuples.Functions;
  *
  * @param <T> the type of item produced by the {@link Uni}
  */
-public interface Uni<T> {
+public interface Uni<T extends @Nullable Object> {
 
     /**
      * Creates a new {@link Uni} from various sources such as {@link CompletionStage},
@@ -358,7 +361,7 @@ public interface Uni<T> {
      * @return a new {@link Uni} computing an item of type {@code <O>}.
      */
     @CheckReturnValue
-    default <O> Uni<O> map(Function<? super T, ? extends O> mapper) {
+    default <O extends @Nullable Object> Uni<O> map(Function<? super T, ? extends O> mapper) {
         return onItem().transform(nonNull(mapper, "mapper"));
     }
 
@@ -453,7 +456,7 @@ public interface Uni<T> {
      *         in an asynchronous manner.
      */
     @CheckReturnValue
-    default <O> Uni<O> flatMap(Function<? super T, Uni<? extends O>> mapper) {
+    default <O extends @Nullable Object> Uni<O> flatMap(Function<? super T, Uni<? extends O>> mapper) {
         return onItem().transformToUni(nonNull(mapper, "mapper"));
     }
 
@@ -486,7 +489,7 @@ public interface Uni<T> {
      * @see #chain(Supplier)
      */
     @CheckReturnValue
-    default <O> Uni<O> chain(Function<? super T, Uni<? extends O>> mapper) {
+    default <O extends @Nullable Object> Uni<O> chain(Function<? super T, Uni<? extends O>> mapper) {
         Function<? super T, Uni<? extends O>> actual = nonNull(mapper, "mapper");
         return onItem().transformToUni(actual);
     }
@@ -519,7 +522,7 @@ public interface Uni<T> {
      * @see #chain(Supplier)
      */
     @CheckReturnValue
-    default <O> Uni<O> chain(Supplier<Uni<? extends O>> supplier) {
+    default <O extends @Nullable Object> Uni<O> chain(Supplier<Uni<? extends O>> supplier) {
         Supplier<Uni<? extends O>> actual = nonNull(supplier, "supplier");
         return onItem().transformToUni(ignored -> actual.get());
     }
@@ -577,7 +580,7 @@ public interface Uni<T> {
      * @see #onItemOrFailure()
      */
     @CheckReturnValue
-    default <O> Uni<T> eventually(Supplier<Uni<? extends O>> supplier) {
+    default <O extends @Nullable Object> Uni<T> eventually(Supplier<Uni<? extends O>> supplier) {
         Supplier<Uni<? extends O>> actual = nonNull(supplier, "supplier");
         return onTermination().call((item, err, cancelled) -> actual.get());
     }
@@ -621,7 +624,7 @@ public interface Uni<T> {
      * @return the produced {@link Multi}, never {@code null}
      */
     @CheckReturnValue
-    Multi<T> toMulti();
+    Multi<@NonNull T> toMulti();
 
     /**
      * Allows configuring repeating behavior.
@@ -660,7 +663,7 @@ public interface Uni<T> {
      * @return the new {@link Uni}
      */
     @CheckReturnValue
-    default <R> Uni<R> plug(Function<Uni<T>, Uni<R>> operatorProvider) {
+    default <R extends @Nullable Object> Uni<R> plug(Function<Uni<T>, Uni<R>> operatorProvider) {
         Function<Uni<T>, Uni<R>> provider = nonNull(operatorProvider, "operatorProvider");
         return Infrastructure.onUniCreation(nonNull(provider.apply(this), "uni"));
     }
@@ -675,7 +678,7 @@ public interface Uni<T> {
      * @return the new {@link Uni}
      */
     @CheckReturnValue
-    default <O> Uni<O> replaceWith(O item) {
+    default <O extends @Nullable Object> Uni<O> replaceWith(O item) {
         return onItem().transform(ignore -> item);
     }
 
@@ -689,7 +692,7 @@ public interface Uni<T> {
      * @return the new {@link Uni}
      */
     @CheckReturnValue
-    default <O> Uni<O> replaceWith(Supplier<O> supplier) {
+    default <O extends @Nullable Object> Uni<O> replaceWith(Supplier<O> supplier) {
         return onItem().transform(ignore -> supplier.get());
     }
 
@@ -703,7 +706,7 @@ public interface Uni<T> {
      * @return the new {@link Uni}
      */
     @CheckReturnValue
-    default <O> Uni<O> replaceWith(Uni<O> uni) {
+    default <O extends @Nullable Object> Uni<O> replaceWith(Uni<O> uni) {
         return onItem().transformToUni(ignore -> uni);
     }
 
@@ -832,7 +835,7 @@ public interface Uni<T> {
      * @return the resulting {@link Uni}
      */
     @CheckReturnValue
-    default <R> Uni<R> withContext(BiFunction<Uni<T>, Context, Uni<R>> builder) {
+    default <R extends @Nullable Object> Uni<R> withContext(BiFunction<Uni<T>, Context, Uni<R>> builder) {
         throw new UnsupportedOperationException("Default method added to limit binary incompatibility");
     }
 

@@ -3,8 +3,9 @@ package io.smallrye.mutiny.subscription;
 import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 
 import io.smallrye.mutiny.Context;
+import org.jspecify.annotations.Nullable;
 
-public class UniDelegatingSubscriber<I, O> implements UniSubscriber<I> {
+public class UniDelegatingSubscriber<I extends @Nullable Object, O extends @Nullable Object> implements UniSubscriber<I> {
 
     private final UniSubscriber<? super O> delegate;
 

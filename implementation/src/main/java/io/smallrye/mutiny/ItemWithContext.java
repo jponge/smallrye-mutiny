@@ -2,6 +2,8 @@ package io.smallrye.mutiny;
 
 import java.util.Objects;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Models an item flowing along a Mutiny pipeline with its subscriber context attached.
  *
@@ -9,7 +11,7 @@ import java.util.Objects;
  * @see Uni#attachContext()
  * @see Multi#attachContext()
  */
-public final class ItemWithContext<T> {
+public final class ItemWithContext<T extends @Nullable Object> {
 
     private final Context context;
     private final T item;

@@ -1,6 +1,7 @@
 package io.smallrye.mutiny.subscription;
 
 import io.smallrye.mutiny.Uni;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An object allowing to send signals to the downstream {@link Uni}.
@@ -8,7 +9,7 @@ import io.smallrye.mutiny.Uni;
  *
  * @param <T> the expected type of item.
  */
-public interface UniEmitter<T> extends ContextSupport {
+public interface UniEmitter<T extends @Nullable Object> extends ContextSupport {
 
     /**
      * Emits the {@code item} event downstream with the given (potentially {@code null}) item.

@@ -9,6 +9,8 @@ import java.util.concurrent.Flow;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * A context allows sharing key / value entries along with a subscriber in a Mutiny pipeline, so all operators can
  * share implicit data for a given subscription.
@@ -77,6 +79,7 @@ public final class Context {
         return new Context(requireNonNull(entries, "The entries map cannot be null"));
     }
 
+    @Nullable
     private volatile ConcurrentHashMap<String, Object> entries;
 
     private Context() {
@@ -94,10 +97,11 @@ public final class Context {
      * @return {@code true} when there is an entry for {@code key}, {@code false} otherwise
      */
     public boolean contains(String key) {
-        if (entries == null) {
+        ConcurrentHashMap<String, Object> map = entries;
+        if (map == null) {
             return false;
         } else {
-            return entries.containsKey(key);
+            return map.containsKey(key);
         }
     }
 
@@ -111,10 +115,11 @@ public final class Context {
      */
     @SuppressWarnings("unchecked")
     public <T> T get(String key) throws NoSuchElementException {
-        if (entries == null) {
+        ConcurrentHashMap<String, Object> map = entries;
+        if (map == null) {
             throw new NoSuchElementException("The context is empty");
         }
-        T value = (T) entries.get(key);
+        T value = (T) map.get(key);
         if (value == null) {
             throw new NoSuchElementException("The context does not have a value for key " + key);
         }
@@ -131,8 +136,9 @@ public final class Context {
      */
     @SuppressWarnings("unchecked")
     public <T> T getOrElse(String key, Supplier<? extends T> alternativeSupplier) {
-        if (entries != null) {
-            T value = (T) entries.get(key);
+        ConcurrentHashMap<String, Object> map = entries;
+        if (map != null) {
+            T value = (T) map.get(key);
             if (value != null) {
                 return value;
             }
@@ -155,7 +161,9 @@ public final class Context {
                 }
             }
         }
-        entries.put(key, value);
+        ConcurrentHashMap<String, Object> map = entries;
+        assert map != null;
+        map.put(key, value);
         return this;
     }
 
@@ -166,8 +174,9 @@ public final class Context {
      * @return this context
      */
     public Context delete(String key) {
-        if (entries != null) {
-            entries.remove(key);
+        ConcurrentHashMap<String, Object> map = entries;
+        if (map != null) {
+            map.remove(key);
         }
         return this;
     }
@@ -178,7 +187,8 @@ public final class Context {
      * @return {@code true} if the context is empty, {@code false} otherwise
      */
     public boolean isEmpty() {
-        return (this.entries == null) || (entries.isEmpty());
+        ConcurrentHashMap<String, Object> map = entries;
+        return (map == null) || (map.isEmpty());
     }
 
     /**
@@ -189,11 +199,12 @@ public final class Context {
      * @return the set of keys
      */
     public Set<String> keys() {
-        if (this.entries == null) {
+        ConcurrentHashMap<String, Object> map = entries;
+        if (map == null) {
             return Collections.emptySet();
         }
         HashSet<String> set = new HashSet<>();
-        Enumeration<String> enumeration = entries.keys();
+        Enumeration<String> enumeration = map.keys();
         while (enumeration.hasMoreElements()) {
             set.add(enumeration.nextElement());
         }
