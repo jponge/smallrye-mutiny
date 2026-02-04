@@ -13,6 +13,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A {@code multi} caching the events emitted from upstreams and replaying it to subscribers.
@@ -53,7 +54,7 @@ public class MultiCacheOp<T> extends AbstractMultiOperator<T, T> implements Subs
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> downstream) {
         CacheSubscription<T> consumer = new CacheSubscription<>(downstream, this);
         downstream.onSubscribe(consumer);
         addDownstreamSubscription(consumer);
@@ -83,7 +84,7 @@ public class MultiCacheOp<T> extends AbstractMultiOperator<T, T> implements Subs
     }
 
     @Override
-    public void onSubscribe(Subscription s) {
+    public void onSubscribe(@NotNull Subscription s) {
         s.request(Long.MAX_VALUE);
     }
 

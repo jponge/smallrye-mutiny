@@ -1,5 +1,7 @@
 package io.smallrye.mutiny.unchecked;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -21,7 +23,8 @@ public interface UncheckedConsumer<T> {
      * @param <T> the type of the input to the operation
      * @return the created {@code UncheckedConsumer}
      */
-    static <T> UncheckedConsumer<T> from(Consumer<T> consumer) {
+    @NotNull
+    static <T> UncheckedConsumer<T> from(@NotNull Consumer<T> consumer) {
         return consumer::accept;
     }
 
@@ -45,7 +48,8 @@ public interface UncheckedConsumer<T> {
      *         operation followed by the {@code after} operation
      * @throws NullPointerException if {@code after} is null
      */
-    default UncheckedConsumer<T> andThen(UncheckedConsumer<? super T> after) {
+    @NotNull
+    default UncheckedConsumer<T> andThen(@NotNull UncheckedConsumer<? super T> after) {
         Objects.requireNonNull(after);
         return (T t) -> {
             accept(t);
@@ -57,6 +61,7 @@ public interface UncheckedConsumer<T> {
      * @return the {@link Consumer} executing the operation associated to this {@link UncheckedConsumer}. If the
      *         operation throws an exception, the exception is rethrown, wrapped in a {@link RuntimeException} if needed.
      */
+    @NotNull
     default Consumer<T> toConsumer() {
         return x -> {
             try {

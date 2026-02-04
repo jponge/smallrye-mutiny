@@ -5,6 +5,8 @@ import java.util.*;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Eliminates the duplicated items from the upstream.
@@ -25,15 +27,16 @@ public final class MultiDistinctOp<T> extends AbstractMultiOperator<T, T> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> subscriber) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> subscriber) {
         upstream.subscribe(new DistinctProcessor<>(ParameterValidation.nonNullNpe(subscriber, "subscriber"), comparator));
     }
 
     static final class DistinctProcessor<T> extends MultiOperatorProcessor<T, T> {
 
+        @NotNull
         final Collection<T> collection;
 
-        DistinctProcessor(MultiSubscriber<? super T> downstream, Comparator<? super T> comparator) {
+        DistinctProcessor(MultiSubscriber<? super T> downstream, @Nullable Comparator<? super T> comparator) {
             super(downstream);
             if (comparator == null) {
                 this.collection = new HashSet<>();

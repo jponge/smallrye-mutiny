@@ -7,6 +7,7 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
 import io.smallrye.mutiny.Multi;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Interface for {@link Multi} demand pacers and the {@link Multi#paceDemand()} operator.
@@ -31,7 +32,7 @@ public interface DemandPacer {
          * @param demand the number of items, must be strictly positive
          * @param delay the delay, must not be {@code null}, must be strictly positive
          */
-        public Request(long demand, Duration delay) {
+        public Request(long demand, @NotNull Duration delay) {
             this.demand = positive(demand, "demand");
             this.delay = validate(delay, "delay");
             if (delay == ChronoUnit.FOREVER.getDuration()) {
@@ -59,6 +60,7 @@ public interface DemandPacer {
             return delay;
         }
 
+        @NotNull
         @Override
         public String toString() {
             return "Request{" +

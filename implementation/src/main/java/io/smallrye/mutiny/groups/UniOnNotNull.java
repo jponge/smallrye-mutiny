@@ -14,9 +14,11 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.UniEmitter;
+import org.jetbrains.annotations.NotNull;
 
 public class UniOnNotNull<T> {
 
+    @NotNull
     private final Uni<T> upstream;
 
     public UniOnNotNull(Uni<T> upstream) {

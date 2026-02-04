@@ -10,6 +10,8 @@ import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class StreamBasedMulti<T> extends AbstractMulti<T> {
 
@@ -20,7 +22,7 @@ public class StreamBasedMulti<T> extends AbstractMulti<T> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> downstream) {
         ParameterValidation.nonNullNpe(downstream, "subscriber");
 
         Stream<? extends T> stream;
@@ -55,7 +57,7 @@ public class StreamBasedMulti<T> extends AbstractMulti<T> {
         downstream.onSubscribe(new StreamSubscription<>(downstream, iterator, stream));
     }
 
-    private static void closeQuietly(AutoCloseable source) {
+    private static void closeQuietly(@Nullable AutoCloseable source) {
         if (source == null) {
             return;
         }

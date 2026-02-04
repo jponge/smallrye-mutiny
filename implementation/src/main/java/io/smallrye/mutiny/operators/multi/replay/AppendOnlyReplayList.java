@@ -1,5 +1,8 @@
 package io.smallrye.mutiny.operators.multi.replay;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 
 /*
@@ -116,7 +119,7 @@ public class AppendOnlyReplayList {
         this(numberOfItemsToReplay, null);
     }
 
-    public AppendOnlyReplayList(long numberOfItemsToReplay, Iterable<?> seed) {
+    public AppendOnlyReplayList(long numberOfItemsToReplay, @Nullable Iterable<?> seed) {
         assert numberOfItemsToReplay > 0;
         this.itemsToReplay = numberOfItemsToReplay;
         if (seed != null) {
@@ -124,7 +127,7 @@ public class AppendOnlyReplayList {
         }
     }
 
-    public void push(Object item) {
+    public void push(@NotNull Object item) {
         assert !(tail.value instanceof Terminal);
         Cell newCell = new Cell(nonNull(item, "item"), SENTINEL_END);
         if (head == SENTINEL_EMPTY) {
@@ -151,6 +154,7 @@ public class AppendOnlyReplayList {
         push(new Completion());
     }
 
+    @NotNull
     public Cursor newCursor() {
         return new Cursor();
     }

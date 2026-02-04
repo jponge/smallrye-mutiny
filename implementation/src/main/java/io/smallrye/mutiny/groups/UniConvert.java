@@ -10,9 +10,11 @@ import java.util.function.Function;
 import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.converters.uni.BuiltinConverters;
+import org.jetbrains.annotations.NotNull;
 
 public class UniConvert<T> {
 
+    @NotNull
     private final Uni<T> upstream;
 
     public UniConvert(Uni<T> upstream) {

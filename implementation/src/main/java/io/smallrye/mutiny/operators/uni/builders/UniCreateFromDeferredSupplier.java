@@ -9,6 +9,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class UniCreateFromDeferredSupplier<T> extends AbstractUni<T> {
     private final Supplier<Uni<? extends T>> supplier;
@@ -18,7 +19,7 @@ public class UniCreateFromDeferredSupplier<T> extends AbstractUni<T> {
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super T> subscriber) {
+    public void subscribe(@NotNull UniSubscriber<? super T> subscriber) {
         nonNull(subscriber, "subscriber");
         Uni<? extends T> uni;
         try {

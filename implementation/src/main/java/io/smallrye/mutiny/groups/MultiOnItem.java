@@ -21,9 +21,11 @@ import io.smallrye.mutiny.operators.multi.MultiMapOp;
 import io.smallrye.mutiny.operators.multi.MultiOnItemInvoke;
 import io.smallrye.mutiny.operators.multi.MultiScanOp;
 import io.smallrye.mutiny.operators.multi.MultiScanWithSeedOp;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiOnItem<T> {
 
+    @NotNull
     private final Multi<T> upstream;
 
     public MultiOnItem(Multi<T> upstream) {
@@ -179,6 +181,7 @@ public class MultiOnItem<T> {
      * @param <O> the type of item emitted by the {@link Multi} produced by the mapper.
      * @return the object to configure the flatten behavior.
      */
+    @NotNull
     @CheckReturnValue
     public <O> MultiFlatten<T, O> transformToMulti(Function<? super T, ? extends Publisher<? extends O>> mapper) {
         Function<? super T, ? extends Publisher<? extends O>> actual = Infrastructure
@@ -271,6 +274,7 @@ public class MultiOnItem<T> {
      * @param <O> the type of item emitted by the {@link Multi} produced by the mapper.
      * @return the object to configure the flatten behavior.
      */
+    @NotNull
     @CheckReturnValue
     public <O> MultiFlatten<T, O> transformToUni(Function<? super T, Uni<? extends O>> mapper) {
         Function<? super T, Uni<? extends O>> actual = Infrastructure.decorate(nonNull(mapper, "mapper"));
@@ -369,7 +373,7 @@ public class MultiOnItem<T> {
      * @return the new {@link Multi}
      */
     @CheckReturnValue
-    public <O> Multi<O> castTo(Class<O> target) {
+    public <O> Multi<O> castTo(@NotNull Class<O> target) {
         nonNull(target, "target");
         return transform(target::cast);
     }
@@ -458,6 +462,7 @@ public class MultiOnItem<T> {
      *
      * @return a new {@link MultiOnItemGather} that lets you configure the gathering of items emitted by the upstream
      */
+    @NotNull
     @Experimental("This API is still being designed and may change in the future")
     @CheckReturnValue
     public MultiOnItemGather<T> gather() {
@@ -470,6 +475,7 @@ public class MultiOnItem<T> {
      *
      * @return a new {@link MultiOnItemGather} that lets you configure the gathering of items emitted by the upstream
      */
+    @NotNull
     @Experimental("This API is still being designed and may change in the future")
     @CheckReturnValue
     public <ACC, O> Multi<O> gather(Gatherer<T, ACC, O> gatherer) {

@@ -12,6 +12,8 @@ import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiEmitter;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 abstract class BaseMultiEmitter<T>
         implements MultiEmitter<T>, Flow.Subscription, ContextSupport {
@@ -86,7 +88,7 @@ abstract class BaseMultiEmitter<T>
         failed(failure);
     }
 
-    protected void failed(Throwable e) {
+    protected void failed(@Nullable Throwable e) {
         if (e == null) {
             e = new NullPointerException("onError called with null.");
         }
@@ -138,8 +140,9 @@ abstract class BaseMultiEmitter<T>
         // default is no-op
     }
 
+    @NotNull
     @Override
-    public MultiEmitter<T> onTermination(Runnable onTermination) {
+    public MultiEmitter<T> onTermination(@NotNull Runnable onTermination) {
         ParameterValidation.nonNull(onTermination, "onTermination");
         if (!disposed.get()) {
             this.onTermination = onTermination;
@@ -153,12 +156,14 @@ abstract class BaseMultiEmitter<T>
         return this;
     }
 
+    @NotNull
     public MultiEmitter<T> serialize() {
         return new SerializedMultiEmitter<>(this);
     }
 
+    @NotNull
     @Override
-    public MultiEmitter<T> onRequest(LongConsumer consumer) {
+    public MultiEmitter<T> onRequest(@NotNull LongConsumer consumer) {
         ParameterValidation.nonNull(consumer, "consumer");
         if (!disposed.get()) {
             this.onRequest = consumer;
@@ -166,8 +171,9 @@ abstract class BaseMultiEmitter<T>
         return this;
     }
 
+    @NotNull
     @Override
-    public MultiEmitter<T> onCancellation(Runnable onCancellation) {
+    public MultiEmitter<T> onCancellation(@NotNull Runnable onCancellation) {
         ParameterValidation.nonNull(onCancellation, "onCancellation");
         if (!disposed.get()) {
             this.onCancellation = onCancellation;

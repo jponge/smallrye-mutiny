@@ -17,9 +17,11 @@ import io.smallrye.mutiny.operators.multi.MultiOnCompletionCall;
 import io.smallrye.mutiny.operators.multi.MultiOnCompletionInvoke;
 import io.smallrye.mutiny.operators.multi.MultiSwitchOnCompletion;
 import io.smallrye.mutiny.subscription.MultiEmitter;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiOnCompletion<T> {
 
+    @NotNull
     private final Multi<T> upstream;
 
     public MultiOnCompletion(Multi<T> upstream) {
@@ -167,6 +169,7 @@ public class MultiOnCompletion<T> {
         return switchTo(() -> MultiIfEmpty.createMultiFromIterableSupplier(actual));
     }
 
+    @NotNull
     @CheckReturnValue
     public MultiIfEmpty<T> ifEmpty() {
         return new MultiIfEmpty<>(upstream);

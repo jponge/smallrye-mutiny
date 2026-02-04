@@ -1,5 +1,8 @@
 package io.smallrye.mutiny.helpers.test;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -10,7 +13,7 @@ import java.util.stream.Collectors;
 
 public class AssertionHelper {
 
-    static void shouldHaveCompleted(boolean completed, Throwable failure, List<?> items) {
+    static void shouldHaveCompleted(boolean completed, @Nullable Throwable failure, @Nullable List<?> items) {
         if (completed) {
             return;
         }
@@ -25,8 +28,8 @@ public class AssertionHelper {
         }
     }
 
-    static void shouldHaveFailed(boolean completed, Throwable failure, Class<?> expectedFailureType,
-            String expectedMessage) {
+    static void shouldHaveFailed(boolean completed, @Nullable Throwable failure, @Nullable Class<?> expectedFailureType,
+                                 @Nullable String expectedMessage) {
         if (completed) {
             fail("%nExpected a failure event, but instead got a completion event.");
         } else if (failure == null) {
@@ -52,7 +55,7 @@ public class AssertionHelper {
         }
     }
 
-    static void shouldHaveReceivedNoItems(List<?> items) {
+    static void shouldHaveReceivedNoItems(@NotNull List<?> items) {
         if (!items.isEmpty()) {
             fail("%nExpected no item events but received %d items:%n<%s>", items.size(), getItemList(items));
         }
@@ -73,7 +76,7 @@ public class AssertionHelper {
         }
     }
 
-    static void shouldNotBeTerminated(boolean completed, Throwable failure) {
+    static void shouldNotBeTerminated(boolean completed, @Nullable Throwable failure) {
         if (completed) {
             fail("%nExpected no terminal event, but received a completion event.");
         } else if (failure != null) {
@@ -82,7 +85,7 @@ public class AssertionHelper {
         }
     }
 
-    static void shouldNotBeTerminatedUni(boolean completed, Throwable failure) {
+    static void shouldNotBeTerminatedUni(boolean completed, @Nullable Throwable failure) {
         if (completed) {
             fail("%nExpected no terminal event, but received a completion event.");
         } else if (failure != null && !(failure instanceof CancellationException)) {
@@ -91,13 +94,13 @@ public class AssertionHelper {
         }
     }
 
-    static void shouldBeTerminated(boolean completed, Throwable failure) {
+    static void shouldBeTerminated(boolean completed, @Nullable Throwable failure) {
         if (!completed && failure == null) {
             fail("%nExpected a terminal event (either a completion or failure event), but didn't received any.");
         }
     }
 
-    static void shouldHaveReceived(Object item, Object expected) {
+    static void shouldHaveReceived(@Nullable Object item, @Nullable Object expected) {
         if (item != null && expected == null) {
             fail("%nExpected `null` but received <%s>", item);
         } else if (item == null && expected != null) {
@@ -109,7 +112,7 @@ public class AssertionHelper {
         }
     }
 
-    static void shouldHaveReceivedExactly(List<?> items, Object[] expected) {
+    static void shouldHaveReceivedExactly(@NotNull List<?> items, @NotNull Object[] expected) {
         Map<Object, Object> missed = new LinkedHashMap<>();
         List<Object> extra = new ArrayList<>();
 
@@ -142,21 +145,24 @@ public class AssertionHelper {
                 getItemList(expected), getItemList(items), getItemList(extra));
     }
 
-    private static void fail(String msg, Object... params) {
+    private static void fail(@NotNull String msg, Object... params) {
         throw new AssertionError(String.format(msg, params));
     }
 
-    private static String getItemList(List<?> items) {
+    @NotNull
+    private static String getItemList(@NotNull List<?> items) {
         List<String> strings = items.stream().map(Object::toString).collect(Collectors.toList());
         return String.join(",", strings);
     }
 
-    private static String getItemList(Object[] items) {
+    @NotNull
+    private static String getItemList(@NotNull Object[] items) {
         List<String> strings = Arrays.stream(items).map(Object::toString).collect(Collectors.toList());
         return String.join(",", strings);
     }
 
-    private static String getMismatches(Map<Object, Object> mismatches) {
+    @NotNull
+    private static String getMismatches(@NotNull Map<Object, Object> mismatches) {
         StringBuilder builder = new StringBuilder();
         for (Map.Entry<Object, Object> entry : mismatches.entrySet()) {
             if (!builder.isEmpty()) {
@@ -172,7 +178,8 @@ public class AssertionHelper {
         return builder.toString();
     }
 
-    private static String getStackTrace(Throwable throwable) {
+    @NotNull
+    private static String getStackTrace(@NotNull Throwable throwable) {
         StringWriter sw = null;
         PrintWriter pw = null;
 
@@ -190,7 +197,7 @@ public class AssertionHelper {
         return result;
     }
 
-    private static void closeQuietly(Closeable closeable) {
+    private static void closeQuietly(@Nullable Closeable closeable) {
         if (closeable != null) {
             try {
                 closeable.close();

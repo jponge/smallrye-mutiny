@@ -1,12 +1,17 @@
 package io.smallrye.mutiny.operators.multi;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 abstract class FlatMapManager<T> {
 
+    @NotNull
     protected AtomicReference<T[]> inners = new AtomicReference<>(empty());
 
+    @Nullable
     private int[] free = FREE_EMPTY;
 
     private long producerIndex;

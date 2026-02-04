@@ -11,13 +11,16 @@ import java.util.function.Predicate;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.MultiOperator;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class MultiFlatMapOnFailure<T> extends MultiOperator<T, T> {
+    @NotNull
     private final Predicate<? super Throwable> predicate;
     private final Function<? super Throwable, Multi<? extends T>> mapper;
 
-    public MultiFlatMapOnFailure(Multi<T> upstream, Predicate<? super Throwable> predicate,
-            Function<? super Throwable, Multi<? extends T>> mapper) {
+    public MultiFlatMapOnFailure(Multi<T> upstream, @Nullable Predicate<? super Throwable> predicate,
+                                 Function<? super Throwable, Multi<? extends T>> mapper) {
         super(upstream);
         this.predicate = predicate == null ? x -> true : predicate;
         this.mapper = mapper;

@@ -1,5 +1,7 @@
 package io.smallrye.mutiny.helpers.test;
 
+import org.jetbrains.annotations.Nullable;
+
 /**
  * A signal: onSubscribe, onItem, onFailure or cancel.
  */
@@ -10,5 +12,5 @@ public interface UniSignal {
      *
      * @return the value
      */
-    Object value();
+    @Nullable Object value();
 }

@@ -1,5 +1,7 @@
 package io.smallrye.mutiny.unchecked;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -22,7 +24,8 @@ public interface UncheckedFunction<T, R> {
      * @param <R> the type of the result of the function
      * @return the created {@link UncheckedBiConsumer}
      */
-    static <T, R> UncheckedFunction<T, R> from(Function<T, R> function) {
+    @NotNull
+    static <T, R> UncheckedFunction<T, R> from(@NotNull Function<T, R> function) {
         return function::apply;
     }
 
@@ -39,6 +42,7 @@ public interface UncheckedFunction<T, R> {
      * @return a {@link Function} executing this {@code UncheckedFunction}. If the operation throws an exception,
      *         the exception is rethrown, wrapped in a {@link RuntimeException} if needed.
      */
+    @NotNull
     default Function<T, R> toFunction() {
         return t -> {
             try {
@@ -65,7 +69,8 @@ public interface UncheckedFunction<T, R> {
      * @throws NullPointerException if before is null
      * @see #andThen(UncheckedFunction)
      */
-    default <V> UncheckedFunction<V, R> compose(UncheckedFunction<? super V, ? extends T> before) {
+    @NotNull
+    default <V> UncheckedFunction<V, R> compose(@NotNull UncheckedFunction<? super V, ? extends T> before) {
         Objects.requireNonNull(before);
         return (V v) -> apply(before.apply(v));
     }
@@ -84,7 +89,8 @@ public interface UncheckedFunction<T, R> {
      * @throws NullPointerException if after is null
      * @see #compose(UncheckedFunction)
      */
-    default <V> UncheckedFunction<T, V> andThen(UncheckedFunction<? super R, ? extends V> after) {
+    @NotNull
+    default <V> UncheckedFunction<T, V> andThen(@NotNull UncheckedFunction<? super R, ? extends V> after) {
         Objects.requireNonNull(after);
         return (T t) -> after.apply(apply(t));
     }

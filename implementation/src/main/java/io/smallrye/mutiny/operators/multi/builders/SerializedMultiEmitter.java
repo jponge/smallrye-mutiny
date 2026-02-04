@@ -14,6 +14,8 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiEmitter;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Serializes calls to onItem, onFailure and onCompletion and their Reactive Streams equivalent.
@@ -39,7 +41,7 @@ public class SerializedMultiEmitter<T> implements MultiEmitter<T>, MultiSubscrib
     }
 
     @Override
-    public void onItem(T item) {
+    public void onItem(@Nullable T item) {
         if (downstream.isCancelled() || done) {
             return;
         }
@@ -65,7 +67,7 @@ public class SerializedMultiEmitter<T> implements MultiEmitter<T>, MultiSubscrib
     }
 
     @Override
-    public void onFailure(Throwable failure) {
+    public void onFailure(@Nullable Throwable failure) {
         if (downstream.isCancelled() || done) {
             Infrastructure.handleDroppedException(failure);
             return;
@@ -133,8 +135,9 @@ public class SerializedMultiEmitter<T> implements MultiEmitter<T>, MultiSubscrib
         }
     }
 
+    @NotNull
     @Override
-    public MultiEmitter<T> emit(T item) {
+    public MultiEmitter<T> emit(@Nullable T item) {
         if (item == null) {
             fail(new NullPointerException("`emit` called with `null`."));
         }
@@ -143,7 +146,7 @@ public class SerializedMultiEmitter<T> implements MultiEmitter<T>, MultiSubscrib
     }
 
     @Override
-    public void fail(Throwable failure) {
+    public void fail(@Nullable Throwable failure) {
         if (failure == null) {
             fail(new NullPointerException("`fail` called with `null`."));
         }
@@ -155,8 +158,9 @@ public class SerializedMultiEmitter<T> implements MultiEmitter<T>, MultiSubscrib
         onCompletion();
     }
 
+    @NotNull
     @Override
-    public MultiEmitter<T> onTermination(Runnable onTermination) {
+    public MultiEmitter<T> onTermination(@NotNull Runnable onTermination) {
         downstream.onTermination(onTermination);
         return this;
     }
@@ -171,14 +175,16 @@ public class SerializedMultiEmitter<T> implements MultiEmitter<T>, MultiSubscrib
         return downstream.requested();
     }
 
+    @NotNull
     @Override
-    public MultiEmitter<T> onRequest(LongConsumer consumer) {
+    public MultiEmitter<T> onRequest(@NotNull LongConsumer consumer) {
         downstream.onRequest(consumer);
         return this;
     }
 
+    @NotNull
     @Override
-    public MultiEmitter<T> onCancellation(Runnable onCancellation) {
+    public MultiEmitter<T> onCancellation(@NotNull Runnable onCancellation) {
         downstream.onCancellation(onCancellation);
         return this;
     }

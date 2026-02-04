@@ -10,6 +10,8 @@ import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.smallrye.mutiny.subscription.SwitchableSubscriptionSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class MultiScanWithSeedOp<T, R> extends AbstractMultiOperator<T, R> {
 
@@ -24,7 +26,7 @@ public final class MultiScanWithSeedOp<T, R> extends AbstractMultiOperator<T, R>
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super R> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super R> downstream) {
         ScanSubscriber<T, R> subscriber = new ScanSubscriber<>(upstream, downstream, accumulator, seed);
 
         downstream.onSubscribe(subscriber);
@@ -112,7 +114,7 @@ public final class MultiScanWithSeedOp<T, R> extends AbstractMultiOperator<T, R>
     private static final class ScanSeedProcessor<T, R> extends MultiOperatorProcessor<T, R> {
 
         private final BiFunction<R, ? super T, R> accumulator;
-        R current;
+        @Nullable R current;
 
         ScanSeedProcessor(MultiSubscriber<? super R> downstream,
                 BiFunction<R, ? super T, R> accumulator,

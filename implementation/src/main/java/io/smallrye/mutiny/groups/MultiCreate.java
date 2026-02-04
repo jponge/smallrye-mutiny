@@ -24,6 +24,7 @@ import io.smallrye.mutiny.operators.multi.builders.*;
 import io.smallrye.mutiny.subscription.BackPressureStrategy;
 import io.smallrye.mutiny.subscription.MultiEmitter;
 import io.smallrye.mutiny.subscription.SafeSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Group methods allowing to create {@link Multi} instances from various sources.
@@ -46,7 +47,7 @@ public class MultiCreate {
      * @return the created {@link Multi}
      */
     @CheckReturnValue
-    public <I, T> Multi<T> converter(MultiConverter<I, T> converter, I instance) {
+    public <I, T> Multi<T> converter(@NotNull MultiConverter<I, T> converter, I instance) {
         return Infrastructure.onMultiCreation(converter.from(instance));
     }
 
@@ -564,6 +565,7 @@ public class MultiCreate {
      *
      * @return the object to configure the time period (initial delay, executor, interval)
      */
+    @NotNull
     @CheckReturnValue
     public MultiTimePeriod ticks() {
         return new MultiTimePeriod();
@@ -603,6 +605,7 @@ public class MultiCreate {
      * @param <I> the type of items emitted by the stream produced by the {@code streamSupplier}.
      * @return an object to configure the <em>finalizers</em>.
      */
+    @NotNull
     @CheckReturnValue
     public <R, I> MultiResource<R, I> resource(Supplier<? extends R> resourceSupplier,
             Function<? super R, ? extends Publisher<I>> streamSupplier) {
@@ -638,6 +641,7 @@ public class MultiCreate {
      * @param <I> the type of items emitted by the stream produced by the {@code streamSupplier}.
      * @return an object to configure the <em>finalizers</em>.
      */
+    @NotNull
     @CheckReturnValue
     public <R, I> MultiResourceUni<R, I> resourceFromUni(Supplier<Uni<R>> resourceSupplier,
             Function<? super R, ? extends Publisher<I>> streamSupplier) {
@@ -666,6 +670,7 @@ public class MultiCreate {
      * @param <T> the items type
      * @return a new {@link Multi}
      */
+    @NotNull
     @CheckReturnValue
     public <S, T> Multi<T> generator(Supplier<S> initialStateSupplier,
             BiFunction<S, GeneratorEmitter<? super T>, S> generator) {

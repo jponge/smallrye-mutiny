@@ -12,12 +12,14 @@ import io.smallrye.mutiny.helpers.EmptyUniSubscription;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class UniOrCombination<T> extends UniOperator<Void, T> {
 
+    @NotNull
     private final List<Uni<? super T>> challengers;
 
-    public UniOrCombination(Iterable<? extends Uni<? super T>> iterable) {
+    public UniOrCombination(@NotNull Iterable<? extends Uni<? super T>> iterable) {
         super(null);
         this.challengers = new ArrayList<>();
         nonNull(iterable, "iterable")
@@ -26,7 +28,7 @@ public class UniOrCombination<T> extends UniOperator<Void, T> {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public void subscribe(UniSubscriber<? super T> subscriber) {
+    public void subscribe(@NotNull UniSubscriber<? super T> subscriber) {
         if (challengers.isEmpty()) {
             subscriber.onSubscribe(EmptyUniSubscription.DONE);
             subscriber.onItem(null);

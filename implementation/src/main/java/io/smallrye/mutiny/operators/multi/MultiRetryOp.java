@@ -9,6 +9,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.smallrye.mutiny.subscription.SwitchableSubscriptionSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Multi operator re-subscribing to the upstream if it receives a failure event.
@@ -28,7 +29,7 @@ public final class MultiRetryOp<T> extends AbstractMultiOperator<T, T> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> downstream) {
         RetrySubscriber<T> subscriber = new RetrySubscriber<>(upstream, onFailurePredicate, downstream, times);
 
         downstream.onSubscribe(subscriber);

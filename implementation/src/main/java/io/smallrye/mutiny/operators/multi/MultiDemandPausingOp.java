@@ -13,6 +13,8 @@ import io.smallrye.mutiny.operators.MultiOperator;
 import io.smallrye.mutiny.subscription.BackPressureStrategy;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.smallrye.mutiny.subscription.PausableMulti;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Operator that allows pausing and resuming demand propagation to upstream.
@@ -29,8 +31,10 @@ import io.smallrye.mutiny.subscription.PausableMulti;
  */
 public class MultiDemandPausingOp<T> extends MultiOperator<T, T> implements PausableMulti {
 
+    @Nullable
     private volatile PausableProcessor processor;
 
+    @NotNull
     private final AtomicBoolean paused;
     private final AtomicBoolean subscribed = new AtomicBoolean();
     private final boolean lateSubscription;
@@ -104,6 +108,7 @@ public class MultiDemandPausingOp<T> extends MultiOperator<T, T> implements Paus
     private class PausableProcessor extends MultiOperatorProcessor<T, T> {
 
         private final AtomicLong demand = new AtomicLong();
+        @Nullable
         private final Queue<T> queue;
         private final AtomicInteger wip = new AtomicInteger();
         private final AtomicInteger strictBoundCounter = new AtomicInteger(0);

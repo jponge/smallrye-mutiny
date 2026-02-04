@@ -10,9 +10,11 @@ import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
 
 public abstract class UniOperatorProcessor<I, O> implements UniSubscriber<I>, UniSubscription {
 
+    @NotNull
     protected final UniSubscriber<? super O> downstream;
 
     private static final AtomicReferenceFieldUpdater<UniOperatorProcessor, UniSubscription> updater = AtomicReferenceFieldUpdater
@@ -20,7 +22,7 @@ public abstract class UniOperatorProcessor<I, O> implements UniSubscriber<I>, Un
 
     private volatile UniSubscription upstream;
 
-    public UniOperatorProcessor(final UniSubscriber<? super O> downstream) {
+    public UniOperatorProcessor(@NotNull final UniSubscriber<? super O> downstream) {
         ParameterValidation.nonNull(downstream, "downstream");
         this.downstream = downstream;
     }
@@ -31,7 +33,7 @@ public abstract class UniOperatorProcessor<I, O> implements UniSubscriber<I>, Un
     }
 
     @Override
-    public void onSubscribe(UniSubscription subscription) {
+    public void onSubscribe(@NotNull UniSubscription subscription) {
         if (compareAndSetUpstreamSubscription(null, subscription)) {
             downstream.onSubscribe(this);
         } else {

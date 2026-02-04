@@ -16,6 +16,7 @@ import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.helpers.queues.Queues;
 import io.smallrye.mutiny.subscription.BackPressureFailure;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Emits events from upstream on a thread managed by the given scheduler.
@@ -34,7 +35,7 @@ public class MultiEmitOnOp<T> extends AbstractMultiOperator<T, T> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> downstream) {
         ParameterValidation.nonNullNpe(downstream, "subscriber");
         upstream.subscribe().withSubscriber(new MultiEmitOnProcessor<>(downstream, executor, bufferSize));
     }
@@ -50,6 +51,7 @@ public class MultiEmitOnOp<T> extends AbstractMultiOperator<T, T> {
         /**
          * Store the items
          */
+        @NotNull
         private final Queue<T> queue;
 
         /**
@@ -82,7 +84,7 @@ public class MultiEmitOnOp<T> extends AbstractMultiOperator<T, T> {
         }
 
         @Override
-        public void onSubscribe(Flow.Subscription subscription) {
+        public void onSubscribe(@NotNull Flow.Subscription subscription) {
             if (compareAndSetUpstreamSubscription(null, subscription)) {
                 downstream.onSubscribe(this);
                 subscription.request(bufferSize);

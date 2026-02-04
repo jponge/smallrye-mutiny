@@ -4,6 +4,7 @@ import static io.smallrye.mutiny.helpers.EmptyUniSubscription.DONE;
 
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class UniNever<T> extends AbstractUni<T> {
     public static final UniNever<Object> INSTANCE = new UniNever<>();
@@ -13,7 +14,7 @@ public class UniNever<T> extends AbstractUni<T> {
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super T> subscriber) {
+    public void subscribe(@NotNull UniSubscriber<? super T> subscriber) {
         subscriber.onSubscribe(DONE);
     }
 }

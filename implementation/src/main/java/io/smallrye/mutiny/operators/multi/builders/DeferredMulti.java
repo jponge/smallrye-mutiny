@@ -8,6 +8,7 @@ import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class DeferredMulti<T> extends AbstractMulti<T> {
     private final Supplier<? extends Flow.Publisher<? extends T>> supplier;
@@ -17,7 +18,7 @@ public class DeferredMulti<T> extends AbstractMulti<T> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> downstream) {
         Flow.Publisher<? extends T> publisher;
         try {
             publisher = supplier.get();

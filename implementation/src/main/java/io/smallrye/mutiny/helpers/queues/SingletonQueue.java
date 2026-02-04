@@ -1,5 +1,8 @@
 package io.smallrye.mutiny.helpers.queues;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Iterator;
@@ -18,7 +21,7 @@ final class SingletonQueue<T> implements Queue<T> {
     }
 
     @Override
-    public boolean addAll(Collection<? extends T> c) {
+    public boolean addAll(@NotNull Collection<? extends T> c) {
         if (c.isEmpty()) {
             return true;
         }
@@ -39,7 +42,7 @@ final class SingletonQueue<T> implements Queue<T> {
     }
 
     @Override
-    public boolean containsAll(Collection<?> c) {
+    public boolean containsAll(@NotNull Collection<?> c) {
         if (c.isEmpty()) {
             return true;
         }
@@ -59,6 +62,7 @@ final class SingletonQueue<T> implements Queue<T> {
         return element.get() == null;
     }
 
+    @NotNull
     @Override
     public Iterator<T> iterator() {
         return new SingletonIterator<>(this);
@@ -78,6 +82,7 @@ final class SingletonQueue<T> implements Queue<T> {
         return element.get();
     }
 
+    @Nullable
     @Override
     public T poll() {
         T v = element.get();
@@ -119,6 +124,7 @@ final class SingletonQueue<T> implements Queue<T> {
         return element.get() == null ? 0 : 1;
     }
 
+    @NotNull
     @Override
     public Object[] toArray() {
         T t = element.get();
@@ -128,9 +134,10 @@ final class SingletonQueue<T> implements Queue<T> {
         return new Object[] { t };
     }
 
+    @NotNull
     @Override
     @SuppressWarnings("unchecked")
-    public <T1> T1[] toArray(T1[] a) {
+    public <T1> T1[] toArray(@NotNull T1[] a) {
         int size = size();
         if (a.length < size) {
             a = (T1[]) Array.newInstance(a.getClass().getComponentType(), size);
@@ -161,6 +168,7 @@ final class SingletonQueue<T> implements Queue<T> {
             return !consumed.get();
         }
 
+        @Nullable
         @Override
         public T next() {
             if (consumed.compareAndSet(false, true)) {

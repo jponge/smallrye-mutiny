@@ -6,6 +6,8 @@ import java.util.function.BiFunction;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Scan operator accumulating items of the same type as the upstream.
@@ -14,9 +16,10 @@ import io.smallrye.mutiny.subscription.MultiSubscriber;
  */
 public final class MultiScanOp<T> extends AbstractMultiOperator<T, T> {
 
+    @NotNull
     private final BiFunction<T, ? super T, T> accumulator;
 
-    public MultiScanOp(Multi<? extends T> upstream, BiFunction<T, ? super T, T> accumulator) {
+    public MultiScanOp(Multi<? extends T> upstream, @NotNull BiFunction<T, ? super T, T> accumulator) {
         super(upstream);
         this.accumulator = ParameterValidation.nonNull(accumulator, "accumulator");
     }
@@ -29,6 +32,7 @@ public final class MultiScanOp<T> extends AbstractMultiOperator<T, T> {
     static final class ScanProcessor<T> extends MultiOperatorProcessor<T, T> {
 
         private final BiFunction<T, ? super T, T> accumulator;
+        @Nullable
         private T current;
 
         ScanProcessor(MultiSubscriber<? super T> downstream, BiFunction<T, ? super T, T> accumulator) {

@@ -1,5 +1,8 @@
 package io.smallrye.mutiny.operators.multi.processors;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Flow.Processor;
@@ -27,6 +30,7 @@ public class SerializedProcessor<I, O> implements Processor<I, O> {
     /**
      * If not null, it holds the missed notifications events.
      */
+    @Nullable
     private List<Object> queue;
 
     /**
@@ -49,7 +53,7 @@ public class SerializedProcessor<I, O> implements Processor<I, O> {
     }
 
     @Override
-    public void onSubscribe(Subscription s) {
+    public void onSubscribe(@NotNull Subscription s) {
         boolean cancel;
         if (!done) {
             synchronized (this) {
@@ -76,6 +80,7 @@ public class SerializedProcessor<I, O> implements Processor<I, O> {
         }
     }
 
+    @NotNull
     private List<Object> getOrCreateQueue() {
         List<Object> q = queue;
         if (q == null) {
@@ -172,7 +177,7 @@ public class SerializedProcessor<I, O> implements Processor<I, O> {
      * @param subscriber the subscriber to emit the events to
      */
     @SuppressWarnings("unchecked")
-    public void dispatch(List<Object> queue, Subscriber<I> subscriber) {
+    public void dispatch(@NotNull List<Object> queue, @NotNull Subscriber<I> subscriber) {
         for (Object event : queue) {
             if (event != null) {
                 if (event instanceof SerializedProcessor.SubscriptionEvent) {

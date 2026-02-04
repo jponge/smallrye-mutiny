@@ -10,6 +10,7 @@ import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
 
 public class UniOnItemTransformToUni<I, O> extends UniOperator<I, O> {
 
@@ -21,7 +22,7 @@ public class UniOnItemTransformToUni<I, O> extends UniOperator<I, O> {
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super O> subscriber) {
+    public void subscribe(@NotNull UniSubscriber<? super O> subscriber) {
         AbstractUni.subscribe(upstream(), new UniOnItemTransformToUniProcessor(subscriber));
     }
 
@@ -31,12 +32,12 @@ public class UniOnItemTransformToUni<I, O> extends UniOperator<I, O> {
 
         private volatile UniSubscription innerSubscription;
 
-        public UniOnItemTransformToUniProcessor(UniSubscriber<? super O> downstream) {
+        public UniOnItemTransformToUniProcessor(@NotNull UniSubscriber<? super O> downstream) {
             super(downstream);
         }
 
         @Override
-        public void onSubscribe(UniSubscription subscription) {
+        public void onSubscribe(@NotNull UniSubscription subscription) {
             if (getCurrentUpstreamSubscription() == null) {
                 super.onSubscribe(subscription);
             } else if (innerSubscription == null) {

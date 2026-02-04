@@ -9,6 +9,7 @@ import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.MultiBroadcaster;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Makes the upstream {@link Multi} be able to broadcast its events ({@code items}, {@code failure}, and
@@ -62,6 +63,7 @@ public class MultiBroadcast<T> {
      *
      * @return this {@link MultiBroadcast}.
      */
+    @NotNull
     @CheckReturnValue
     public MultiBroadcast<T> withCancellationAfterLastSubscriberDeparture() {
         cancelWhenNoOneIsListening = true;
@@ -76,6 +78,7 @@ public class MultiBroadcast<T> {
      * @param delay the delay, must not be {@code null}, must be positive
      * @return this {@link MultiBroadcast}.
      */
+    @NotNull
     @CheckReturnValue
     public MultiBroadcast<T> withCancellationAfterLastSubscriberDeparture(Duration delay) {
         this.delayAfterLastDeparture = validate(delay, "delay");

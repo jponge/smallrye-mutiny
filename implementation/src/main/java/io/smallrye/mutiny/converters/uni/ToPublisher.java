@@ -6,6 +6,7 @@ import java.util.concurrent.Flow;
 import java.util.function.Function;
 
 import io.smallrye.mutiny.Uni;
+import org.jetbrains.annotations.NotNull;
 
 // Several important points to note here
 // 1. The subscription on this Uni must be done when we receive a request, not on the subscription
@@ -24,8 +25,9 @@ public class ToPublisher<T> implements Function<Uni<T>, Flow.Publisher<T>> {
         // Avoid direct instantiation
     }
 
+    @NotNull
     @Override
-    public Flow.Publisher<T> apply(Uni<T> uni) {
+    public Flow.Publisher<T> apply(@NotNull Uni<T> uni) {
         //return new UniPublisher<>(nonNull(uni, "uni"));
         return new UniToMultiPublisher<>(nonNull(uni, "uni"));
     }

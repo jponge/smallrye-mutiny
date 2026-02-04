@@ -15,9 +15,11 @@ import io.smallrye.mutiny.operators.uni.UniOnItemOrFailureFlatMap;
 import io.smallrye.mutiny.operators.uni.UniOnItemOrFailureMap;
 import io.smallrye.mutiny.subscription.UniEmitter;
 import io.smallrye.mutiny.tuples.Functions;
+import org.jetbrains.annotations.NotNull;
 
 public class UniOnItemOrFailure<T> {
 
+    @NotNull
     private final Uni<T> upstream;
 
     public UniOnItemOrFailure(Uni<T> upstream) {

@@ -10,9 +10,11 @@ import io.smallrye.mutiny.GroupedMulti;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.MultiGroupByOp;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiGroup<T> {
 
+    @NotNull
     private final Multi<T> upstream;
 
     public MultiGroup(Multi<T> upstream) {
@@ -25,6 +27,7 @@ public class MultiGroup<T> {
      *
      * @return the split configuration
      */
+    @NotNull
     @CheckReturnValue
     public MultiGroupIntoLists<T> intoLists() {
         return new MultiGroupIntoLists<>(upstream);
@@ -38,6 +41,7 @@ public class MultiGroup<T> {
      *
      * @return the split configuration
      */
+    @NotNull
     @CheckReturnValue
     public MultiGroupIntoMultis<T> intoMultis() {
         return new MultiGroupIntoMultis<>(upstream);

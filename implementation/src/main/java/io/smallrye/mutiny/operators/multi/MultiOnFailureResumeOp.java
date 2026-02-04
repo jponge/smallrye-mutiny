@@ -11,13 +11,15 @@ import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.smallrye.mutiny.subscription.SwitchableSubscriptionSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiOnFailureResumeOp<T> extends AbstractMultiOperator<T, T> {
 
+    @NotNull
     private final Function<? super Throwable, ? extends Publisher<? extends T>> next;
 
-    public MultiOnFailureResumeOp(Multi<? extends T> upstream,
-            Function<? super Throwable, ? extends Publisher<? extends T>> next) {
+    public MultiOnFailureResumeOp(@NotNull Multi<? extends T> upstream,
+                                  @NotNull Function<? super Throwable, ? extends Publisher<? extends T>> next) {
         super(upstream);
         this.next = ParameterValidation.nonNull(next, "next");
     }

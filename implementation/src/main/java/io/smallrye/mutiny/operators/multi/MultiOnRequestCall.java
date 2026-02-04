@@ -9,18 +9,20 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.subscription.Cancellable;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiOnRequestCall<T> extends AbstractMultiOperator<T, T> {
 
+    @NotNull
     private final LongFunction<Uni<?>> mapper;
 
-    public MultiOnRequestCall(Multi<? extends T> upstream, LongFunction<Uni<?>> mapper) {
+    public MultiOnRequestCall(@NotNull Multi<? extends T> upstream, @NotNull LongFunction<Uni<?>> mapper) {
         super(nonNull(upstream, "upstream"));
         this.mapper = nonNull(mapper, "consumer");
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> downstream) {
         upstream.subscribe().withSubscriber(new MultiOnRequestCallOperator(nonNull(downstream, "downstream")));
     }
 

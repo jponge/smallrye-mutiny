@@ -3,6 +3,7 @@ package io.smallrye.mutiny.operators.multi;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.operators.AbstractMulti;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Abstract base class for operators that take an upstream source {@link Multi}.
@@ -15,6 +16,7 @@ public abstract class AbstractMultiOperator<I, O> extends AbstractMulti<O> imple
     /**
      * The upstream {@link Multi}.
      */
+    @NotNull
     protected final Multi<? extends I> upstream;
 
     /**
@@ -22,7 +24,7 @@ public abstract class AbstractMultiOperator<I, O> extends AbstractMulti<O> imple
      *
      * @param upstream the upstream, must not be {@code null}
      */
-    public AbstractMultiOperator(Multi<? extends I> upstream) {
+    public AbstractMultiOperator(@NotNull Multi<? extends I> upstream) {
         this.upstream = ParameterValidation.nonNull(upstream, "upstream");
     }
 

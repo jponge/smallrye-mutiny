@@ -6,6 +6,7 @@ import java.util.function.Function;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Eliminates the duplicated items from the upstream.
@@ -23,7 +24,7 @@ public final class MultiDistinctByKeyOp<T, K> extends AbstractMultiOperator<T, T
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> subscriber) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> subscriber) {
         upstream.subscribe(
                 new DistinctByKeyProcessor<>(ParameterValidation.nonNullNpe(subscriber, "subscriber"), keyExtractor));
     }

@@ -9,6 +9,7 @@ import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.subscription.UniEmitter;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Implementation of the Uni Emitter.
@@ -23,11 +24,12 @@ import io.smallrye.mutiny.subscription.UniSubscription;
  */
 public class DefaultUniEmitter<T> implements UniEmitter<T>, UniSubscription {
 
+    @NotNull
     private final UniSubscriber<T> downstream;
     private final AtomicBoolean disposed = new AtomicBoolean();
     private final AtomicReference<Runnable> onTermination = new AtomicReference<>();
 
-    DefaultUniEmitter(UniSubscriber<T> subscriber) {
+    DefaultUniEmitter(@NotNull UniSubscriber<T> subscriber) {
         this.downstream = nonNull(subscriber, "subscriber");
     }
 
@@ -47,7 +49,7 @@ public class DefaultUniEmitter<T> implements UniEmitter<T>, UniSubscription {
     }
 
     @Override
-    public void fail(Throwable failure) {
+    public void fail(@NotNull Throwable failure) {
         nonNull(failure, "failure");
         if (disposed.compareAndSet(false, true)) {
             downstream.onFailure(failure);
@@ -55,8 +57,9 @@ public class DefaultUniEmitter<T> implements UniEmitter<T>, UniSubscription {
         }
     }
 
+    @NotNull
     @Override
-    public UniEmitter<T> onTermination(Runnable onTermination) {
+    public UniEmitter<T> onTermination(@NotNull Runnable onTermination) {
         Runnable actual = nonNull(onTermination, "onTermination");
         if (!disposed.get()) {
             this.onTermination.set(actual);

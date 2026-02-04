@@ -7,9 +7,11 @@ import java.time.Duration;
 
 import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.mutiny.Multi;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiIfNoItem<T> {
 
+    @NotNull
     private final Multi<T> upstream;
 
     public MultiIfNoItem(Multi<T> upstream) {
@@ -22,6 +24,7 @@ public class MultiIfNoItem<T> {
      * @param timeout the timeout, must not be {@code null}, must be strictly positive.
      * @return a new {@link MultiOnItemTimeout}
      */
+    @NotNull
     @CheckReturnValue
     public MultiOnItemTimeout<T> after(Duration timeout) {
         return new MultiOnItemTimeout<>(upstream, validate(timeout, "timeout"), null);

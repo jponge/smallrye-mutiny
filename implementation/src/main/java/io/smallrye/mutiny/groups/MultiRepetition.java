@@ -12,6 +12,7 @@ import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.UniEmitter;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiRepetition {
 
@@ -25,6 +26,7 @@ public class MultiRepetition {
      * @param <T> the type of emitted item
      * @return the object to configure the repetition
      */
+    @NotNull
     @CheckReturnValue
     public <S, T> UniRepeat<T> uni(Supplier<S> stateSupplier, Function<S, Uni<? extends T>> producer) {
         // Decoration happens in "deferred"
@@ -39,6 +41,7 @@ public class MultiRepetition {
      * @param <T> the type of emitted item
      * @return the object to configure the repetition
      */
+    @NotNull
     @CheckReturnValue
     public <T> UniRepeat<T> uni(Supplier<Uni<? extends T>> uniSupplier) {
         // Decoration happens in "deferred"
@@ -119,6 +122,7 @@ public class MultiRepetition {
      * @param <T> the type of emitted item
      * @return the object to configure the repetition
      */
+    @NotNull
     @CheckReturnValue
     public <T> UniRepeat<T> supplier(Supplier<? extends T> supplier) {
         // Decoration happens in `item`
@@ -136,7 +140,7 @@ public class MultiRepetition {
      * @return the object to configure the repetition
      */
     @CheckReturnValue
-    public <S, T> UniRepeat<T> supplier(Supplier<S> stateSupplier, Function<S, ? extends T> producer) {
+    public <S, T> UniRepeat<T> supplier(Supplier<S> stateSupplier, @NotNull Function<S, ? extends T> producer) {
         // Decoration happens in "uni"
         return uni(stateSupplier, s -> Uni.createFrom().item(() -> producer.apply(s)));
     }

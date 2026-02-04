@@ -15,6 +15,8 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class UniBlockingAwait {
 
@@ -22,7 +24,7 @@ public class UniBlockingAwait {
         // Avoid direct instantiation.
     }
 
-    public static <T> T await(Uni<T> upstream, Duration duration, Context context) {
+    public static <T> T await(@NotNull Uni<T> upstream, @Nullable Duration duration, @Nullable Context context) {
         nonNull(upstream, "upstream");
         validate(duration);
 
@@ -36,6 +38,7 @@ public class UniBlockingAwait {
         AtomicReference<Throwable> referenceToFailure = new AtomicReference<>();
         UniSubscriber<T> subscriber = new UniSubscriber<T>() {
 
+            @NotNull
             @Override
             public Context context() {
                 return (context != null) ? context : Context.empty();
@@ -87,11 +90,12 @@ public class UniBlockingAwait {
         }
     }
 
+    @NotNull
     public static IllegalStateException currentThreadCannotBeBlocked() {
         return new IllegalStateException("The current thread cannot be blocked: " + Thread.currentThread().getName());
     }
 
-    private static void validate(Duration duration) {
+    private static void validate(@Nullable Duration duration) {
         if (duration == null) {
             return;
         }

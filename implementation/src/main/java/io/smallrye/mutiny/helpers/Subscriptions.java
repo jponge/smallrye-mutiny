@@ -11,6 +11,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import io.smallrye.mutiny.CompositeException;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class Subscriptions {
 
@@ -20,10 +22,12 @@ public class Subscriptions {
         // avoid direct instantiation
     }
 
+    @NotNull
     public static IllegalArgumentException getInvalidRequestException() {
         return new IllegalArgumentException("Invalid request number, must be greater than 0");
     }
 
+    @NotNull
     public static Subscription empty() {
         return new EmptySubscription();
     }
@@ -40,7 +44,7 @@ public class Subscriptions {
      *
      * @param subscriber the subscriber, must not be {@code null}
      */
-    public static void complete(Subscriber<?> subscriber) {
+    public static void complete(@NotNull Subscriber<?> subscriber) {
         ParameterValidation.nonNull(subscriber, "subscriber");
         subscriber.onSubscribe(empty());
         subscriber.onComplete();
@@ -53,11 +57,11 @@ public class Subscriptions {
      * @param subscriber the subscriber, must not be {@code null}
      * @param failure the failure, must not be {@code null}
      */
-    public static void fail(Subscriber<?> subscriber, Throwable failure) {
+    public static void fail(@NotNull Subscriber<?> subscriber, Throwable failure) {
         fail(subscriber, failure, null);
     }
 
-    public static void fail(Subscriber<?> subscriber, Throwable failure, Publisher<?> upstream) {
+    public static void fail(@NotNull Subscriber<?> subscriber, Throwable failure, @Nullable Publisher<?> upstream) {
         ParameterValidation.nonNull(subscriber, "subscriber");
         ParameterValidation.nonNull(failure, "failure");
         if (upstream != null) {
@@ -91,7 +95,7 @@ public class Subscriptions {
      * @param requests the value to add, must be positive (not verified)
      * @return the original value before the add
      */
-    public static long add(AtomicLong requested, long requests) {
+    public static long add(@NotNull AtomicLong requested, long requests) {
         for (;;) {
             long r = requested.get();
             if (r == Long.MAX_VALUE) {
@@ -104,7 +108,7 @@ public class Subscriptions {
         }
     }
 
-    public static <T> long add(AtomicLongFieldUpdater<T> updater, T receiver, long requests) {
+    public static <T> long add(@NotNull AtomicLongFieldUpdater<T> updater, T receiver, long requests) {
         for (;;) {
             long r = updater.get(receiver);
             if (r == Long.MAX_VALUE) {
@@ -124,7 +128,7 @@ public class Subscriptions {
      * @param emitted the produced element count, positive (not validated)
      * @return the new amount
      */
-    public static long subtract(AtomicLong requested, long emitted) {
+    public static long subtract(@NotNull AtomicLong requested, long emitted) {
         for (;;) {
             long current = requested.get();
             if (current == Long.MAX_VALUE) {
@@ -148,7 +152,7 @@ public class Subscriptions {
         return concurrency == Integer.MAX_VALUE ? Long.MAX_VALUE : concurrency;
     }
 
-    public static boolean addFailure(AtomicReference<Throwable> failures, Throwable failure) {
+    public static boolean addFailure(@NotNull AtomicReference<Throwable> failures, Throwable failure) {
         Throwable current = failures.get();
 
         if (current == Subscriptions.TERMINATED) {
@@ -169,18 +173,18 @@ public class Subscriptions {
         return true;
     }
 
-    public static void cancel(AtomicReference<Subscription> reference) {
+    public static void cancel(@NotNull AtomicReference<Subscription> reference) {
         Subscription actual = reference.getAndSet(CANCELLED);
         if (actual != null && actual != CANCELLED) {
             actual.cancel();
         }
     }
 
-    public static Throwable markFailureAsTerminated(AtomicReference<Throwable> failures) {
+    public static Throwable markFailureAsTerminated(@NotNull AtomicReference<Throwable> failures) {
         return failures.getAndSet(TERMINATED);
     }
 
-    public static void terminateAndPropagate(AtomicReference<Throwable> failures, Subscriber<?> subscriber) {
+    public static void terminateAndPropagate(@NotNull AtomicReference<Throwable> failures, @NotNull Subscriber<?> subscriber) {
         Throwable ex = markFailureAsTerminated(failures);
         if (ex == null) {
             subscriber.onComplete();
@@ -214,7 +218,7 @@ public class Subscriptions {
      * @param requested the current requested amount
      * @param requests the request amount, positive (verified)
      */
-    public static void requestIfNotNullOrAccumulate(AtomicReference<Subscription> field, AtomicLong requested, long requests) {
+    public static void requestIfNotNullOrAccumulate(@NotNull AtomicReference<Subscription> field, @NotNull AtomicLong requested, long requests) {
         Subscription subscription = field.get();
         if (subscription != null) {
             subscription.request(requests);
@@ -241,8 +245,8 @@ public class Subscriptions {
      * @param subscription the new Subscription, must not be {@code null}
      * @return true if the Subscription was set the first time
      */
-    public static boolean setIfEmptyAndRequest(AtomicReference<Subscription> container, AtomicLong requested,
-            Subscription subscription) {
+    public static boolean setIfEmptyAndRequest(@NotNull AtomicReference<Subscription> container, @NotNull AtomicLong requested,
+                                               @NotNull Subscription subscription) {
         if (Subscriptions.setIfEmpty(container, subscription)) {
             long r = requested.getAndSet(0L);
             if (r > 0L) {
@@ -263,7 +267,7 @@ public class Subscriptions {
      * @param subscription the new subscription to set
      * @return {@code true} if the operation succeeded, {@code false} if the target container was already set.
      */
-    public static boolean setIfEmpty(AtomicReference<Subscription> container, Subscription subscription) {
+    public static boolean setIfEmpty(@NotNull AtomicReference<Subscription> container, @NotNull Subscription subscription) {
         Objects.requireNonNull(subscription, "subscription is null");
         if (!container.compareAndSet(null, subscription)) {
             subscription.cancel();
@@ -272,7 +276,7 @@ public class Subscriptions {
         return true;
     }
 
-    public static Throwable terminate(AtomicReference<Throwable> failure) {
+    public static Throwable terminate(@NotNull AtomicReference<Throwable> failure) {
         return failure.getAndSet(TERMINATED);
     }
 
@@ -298,7 +302,7 @@ public class Subscriptions {
      * @param amount delta to subtract
      * @return value after subtraction or zero
      */
-    public static long produced(AtomicLong requested, long amount) {
+    public static long produced(@NotNull AtomicLong requested, long amount) {
         long r;
         long u;
         do {
@@ -327,14 +331,17 @@ public class Subscriptions {
         return res;
     }
 
+    @NotNull
     public static <T> Subscription single(Subscriber<T> downstream, T item) {
         return new SingleItemSubscription<>(downstream, item);
     }
 
     public static final class SingleItemSubscription<T> implements Subscription {
 
+        @NotNull
         private final Subscriber<? super T> downstream;
 
+        @NotNull
         private final T item;
 
         private final AtomicBoolean requested = new AtomicBoolean();
@@ -427,7 +434,7 @@ public class Subscriptions {
          * @param newSubscription the subscription to set
          * @return false if this arbiter is cancelled or there was a subscription already set
          */
-        public boolean set(Subscription newSubscription) {
+        public boolean set(@NotNull Subscription newSubscription) {
             ParameterValidation.nonNull(newSubscription, "newSubscription");
             Subscription actual = subscription.get();
 
@@ -470,7 +477,7 @@ public class Subscriptions {
      * @param n the produced item count, must be positive
      * @return the new amount
      */
-    public static long producedAndHandleAlreadyCancelled(AtomicLong requested, long n) {
+    public static long producedAndHandleAlreadyCancelled(@NotNull AtomicLong requested, long n) {
         for (;;) {
             long current = requested.get();
             if (current == Long.MIN_VALUE) {
@@ -498,7 +505,7 @@ public class Subscriptions {
      * @param n the value to add, must be positive (not verified)
      * @return the original value before the add
      */
-    public static long addAndHandledAlreadyCancelled(AtomicLong requested, long n) {
+    public static long addAndHandledAlreadyCancelled(@NotNull AtomicLong requested, long n) {
         for (;;) {
             long r = requested.get();
             if (r == Long.MIN_VALUE) {

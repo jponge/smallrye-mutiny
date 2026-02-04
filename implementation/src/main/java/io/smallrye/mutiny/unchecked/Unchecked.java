@@ -1,5 +1,7 @@
 package io.smallrye.mutiny.unchecked;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.function.*;
 
 /**
@@ -20,7 +22,8 @@ public class Unchecked {
      * @param <R> the type of the result of the function
      * @return the new {@link UncheckedBiFunction}
      */
-    public static <T, U, R> UncheckedBiFunction<T, U, R> unchecked(BiFunction<T, U, R> function) {
+    @NotNull
+    public static <T, U, R> UncheckedBiFunction<T, U, R> unchecked(@NotNull BiFunction<T, U, R> function) {
         return UncheckedBiFunction.from(function);
     }
 
@@ -32,7 +35,8 @@ public class Unchecked {
      * @param <R> the type of the result of the function
      * @return the new {@link UncheckedFunction}
      */
-    public static <T, R> UncheckedFunction<T, R> unchecked(Function<T, R> function) {
+    @NotNull
+    public static <T, R> UncheckedFunction<T, R> unchecked(@NotNull Function<T, R> function) {
         return UncheckedFunction.from(function);
     }
 
@@ -43,7 +47,8 @@ public class Unchecked {
      * @param <T> the type of the input to the operation
      * @return the new {@link UncheckedConsumer}
      */
-    public static <T> UncheckedConsumer<T> unchecked(Consumer<T> consumer) {
+    @NotNull
+    public static <T> UncheckedConsumer<T> unchecked(@NotNull Consumer<T> consumer) {
         return UncheckedConsumer.from(consumer);
     }
 
@@ -55,7 +60,8 @@ public class Unchecked {
      * @param <U> the type of the second argument to the operation
      * @return the new {@link UncheckedBiConsumer}
      */
-    public static <T, U> UncheckedBiConsumer<T, U> unchecked(BiConsumer<T, U> consumer) {
+    @NotNull
+    public static <T, U> UncheckedBiConsumer<T, U> unchecked(@NotNull BiConsumer<T, U> consumer) {
         return UncheckedBiConsumer.from(consumer);
     }
 
@@ -66,7 +72,8 @@ public class Unchecked {
      * @param <T> the type of items supplied by this supplier
      * @return the new {@link UncheckedSupplier}
      */
-    public static <T> UncheckedSupplier<T> unchecked(Supplier<T> supplier) {
+    @NotNull
+    public static <T> UncheckedSupplier<T> unchecked(@NotNull Supplier<T> supplier) {
         return UncheckedSupplier.from(supplier);
     }
 
@@ -81,7 +88,7 @@ public class Unchecked {
      * @return a {@link Function} executing the {@link UncheckedFunction}. If the operation throws an exception,
      *         the exception is rethrown, wrapped in a {@link RuntimeException} if needed.
      */
-    public static <T, R> Function<T, R> function(UncheckedFunction<T, R> function) {
+    public static <T, R> Function<T, R> function(@NotNull UncheckedFunction<T, R> function) {
         return function.toFunction();
     }
 
@@ -97,7 +104,7 @@ public class Unchecked {
      * @return a {@link BiFunction} executing this {@link UncheckedBiFunction}. If the operation throws an exception,
      *         the exception is rethrown, wrapped in a {@link RuntimeException} if needed.
      */
-    public static <T, U, R> BiFunction<T, U, R> function(UncheckedBiFunction<T, U, R> function) {
+    public static <T, U, R> BiFunction<T, U, R> function(@NotNull UncheckedBiFunction<T, U, R> function) {
         return function.toBiFunction();
     }
 
@@ -112,7 +119,7 @@ public class Unchecked {
      * @return a {@link BiConsumer} executing this {@link UncheckedBiConsumer}. If the operation throws an exception,
      *         the exception is rethrown, wrapped in a {@link RuntimeException} if needed.
      */
-    public static <T, U> BiConsumer<T, U> consumer(UncheckedBiConsumer<T, U> consumer) {
+    public static <T, U> BiConsumer<T, U> consumer(@NotNull UncheckedBiConsumer<T, U> consumer) {
         return consumer.toBiConsumer();
     }
 
@@ -126,7 +133,7 @@ public class Unchecked {
      * @return a {@link Consumer} executing this {@link UncheckedConsumer}. If the operation throws an exception,
      *         the exception is rethrown, wrapped in a {@link RuntimeException} if needed.
      */
-    public static <T> Consumer<T> consumer(UncheckedConsumer<T> consumer) {
+    public static <T> Consumer<T> consumer(@NotNull UncheckedConsumer<T> consumer) {
         return consumer.toConsumer();
     }
 
@@ -140,7 +147,7 @@ public class Unchecked {
      * @return a {@link Supplier} executing this {@link UncheckedSupplier}. If the operation throws an exception,
      *         the exception is rethrown, wrapped in a {@link RuntimeException} if needed.
      */
-    public static <T> Supplier<T> supplier(UncheckedSupplier<T> supplier) {
+    public static <T> Supplier<T> supplier(@NotNull UncheckedSupplier<T> supplier) {
         return supplier.toSupplier();
     }
 

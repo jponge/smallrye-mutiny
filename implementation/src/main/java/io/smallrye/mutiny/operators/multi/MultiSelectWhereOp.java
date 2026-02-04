@@ -8,6 +8,7 @@ import java.util.function.Predicate;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Filters out items from the upstream that do <strong>NOT</strong> pass the given filter.
@@ -16,15 +17,16 @@ import io.smallrye.mutiny.subscription.MultiSubscriber;
  */
 public class MultiSelectWhereOp<T> extends AbstractMultiOperator<T, T> {
 
+    @NotNull
     private final Predicate<? super T> predicate;
 
-    public MultiSelectWhereOp(Multi<? extends T> upstream, Predicate<? super T> predicate) {
+    public MultiSelectWhereOp(Multi<? extends T> upstream, @NotNull Predicate<? super T> predicate) {
         super(upstream);
         this.predicate = ParameterValidation.nonNull(predicate, "predicate");
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> subscriber) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> subscriber) {
         ParameterValidation.nonNullNpe(subscriber, "subscriber");
         upstream.subscribe().withSubscriber(new MultiSelectWhereProcessor<>(subscriber, predicate));
     }

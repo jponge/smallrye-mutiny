@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.MultiOperator;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiSwitchOnCompletion<T> extends MultiOperator<T, T> {
     private final Supplier<Publisher<? extends T>> supplier;
@@ -19,7 +20,7 @@ public class MultiSwitchOnCompletion<T> extends MultiOperator<T, T> {
     }
 
     @Override
-    public void subscribe(Flow.Subscriber<? super T> subscriber) {
+    public void subscribe(@NotNull Flow.Subscriber<? super T> subscriber) {
         if (subscriber == null) {
             throw new NullPointerException("The subscriber must not be `null`");
         }

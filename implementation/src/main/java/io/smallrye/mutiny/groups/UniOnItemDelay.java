@@ -11,6 +11,8 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.uni.UniDelayOnItem;
 import io.smallrye.mutiny.operators.uni.UniDelayUntil;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Configures the delay applied to the item emission.
@@ -29,7 +31,7 @@ public class UniOnItemDelay<T> {
      * @param upstream the upstream uni
      * @param executor the executor, can be {@code null}, if {@code null} used the default worker executor.
      */
-    public UniOnItemDelay(Uni<T> upstream, ScheduledExecutorService executor) {
+    public UniOnItemDelay(Uni<T> upstream, @Nullable ScheduledExecutorService executor) {
         this.upstream = upstream;
         this.executor = executor == null ? Infrastructure.getDefaultWorkerPool() : executor;
     }
@@ -40,6 +42,7 @@ public class UniOnItemDelay<T> {
      * @param executor the executor, must not be {@code null}
      * @return this {@code UniOnItemDelay}.
      */
+    @NotNull
     @CheckReturnValue
     public UniOnItemDelay<T> onExecutor(ScheduledExecutorService executor) {
         this.executor = nonNull(executor, "executor");

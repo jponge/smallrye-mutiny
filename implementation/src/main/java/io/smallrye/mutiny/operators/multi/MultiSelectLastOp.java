@@ -9,6 +9,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Implementation of multi, caching and emitting the last n items from upstream (emitted before the upstream completion).
@@ -40,7 +41,7 @@ public class MultiSelectLastOp<T> extends AbstractMultiOperator<T, T> {
         }
 
         @Override
-        public void onSubscribe(Flow.Subscription subscription) {
+        public void onSubscribe(@NotNull Flow.Subscription subscription) {
             if (compareAndSetUpstreamSubscription(null, subscription)) {
                 // Propagate subscription to downstream.
                 downstream.onSubscribe(this);
@@ -60,6 +61,7 @@ public class MultiSelectLastOp<T> extends AbstractMultiOperator<T, T> {
     static final class MultiSelectLastProcessor<T> extends MultiOperatorProcessor<T, T> {
 
         private final int numberOfItems;
+        @NotNull
         private final ArrayDeque<T> queue;
         private final AtomicLong requested = new AtomicLong();
         private final AtomicInteger wip = new AtomicInteger();
@@ -82,7 +84,7 @@ public class MultiSelectLastOp<T> extends AbstractMultiOperator<T, T> {
         }
 
         @Override
-        public void onSubscribe(Flow.Subscription subscription) {
+        public void onSubscribe(@NotNull Flow.Subscription subscription) {
             if (compareAndSetUpstreamSubscription(null, subscription)) {
                 // Propagate subscription to downstream.
                 downstream.onSubscribe(this);
@@ -94,7 +96,7 @@ public class MultiSelectLastOp<T> extends AbstractMultiOperator<T, T> {
         }
 
         @Override
-        public void onItem(T t) {
+        public void onItem(@NotNull T t) {
             if (queue.size() == numberOfItems) {
                 queue.poll();
             }

@@ -33,6 +33,8 @@ import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.helpers.queues.DrainUtils;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Buffers a given number of items and emits the <em>groups</em> as a single item downstream.
@@ -46,6 +48,7 @@ public class MultiBufferOp<T> extends AbstractMultiOperator<T, List<T>> {
 
     private final int skip;
 
+    @NotNull
     private final Supplier<List<T>> supplier;
 
     public MultiBufferOp(Multi<? extends T> upstream, int size, int skip) {
@@ -73,6 +76,7 @@ public class MultiBufferOp<T> extends AbstractMultiOperator<T, List<T>> {
 
         private final Supplier<List<T>> supplier;
         private final int size;
+        @Nullable
         private List<T> current;
 
         BufferExactProcessor(MultiSubscriber<? super List<T>> downstream, int size, Supplier<List<T>> supplier) {
@@ -129,6 +133,7 @@ public class MultiBufferOp<T> extends AbstractMultiOperator<T, List<T>> {
         private final Supplier<List<T>> supplier;
         private final int size;
         private final int skip;
+        @Nullable
         private List<T> current;
 
         private long index;

@@ -10,6 +10,8 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.subscription.Cancellable;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * A {@link Multi} stays connected to the source as long as there is at least one subscription.
@@ -23,6 +25,7 @@ public class MultiReferenceCount<T> extends AbstractMulti<T> implements Multi<T>
     private final Duration duration;
     private final ScheduledExecutorService executor;
 
+    @Nullable
     private ConnectableMultiConnection connection;
 
     public MultiReferenceCount(ConnectableMulti<T> upstream) {
@@ -58,7 +61,7 @@ public class MultiReferenceCount<T> extends AbstractMulti<T> implements Multi<T>
         }
     }
 
-    void cancel(ConnectableMultiConnection connection) {
+    void cancel(@NotNull ConnectableMultiConnection connection) {
         synchronized (this) {
             if (this.connection == null || this.connection != connection) {
                 return;
@@ -78,7 +81,7 @@ public class MultiReferenceCount<T> extends AbstractMulti<T> implements Multi<T>
         connection.setTimer(() -> future.cancel(false));
     }
 
-    void terminated(ConnectableMultiConnection connection) {
+    void terminated(@NotNull ConnectableMultiConnection connection) {
         synchronized (this) {
             if (this.connection != null && this.connection == connection) {
                 this.connection = null;
@@ -92,7 +95,7 @@ public class MultiReferenceCount<T> extends AbstractMulti<T> implements Multi<T>
         }
     }
 
-    void timeout(ConnectableMultiConnection connection) {
+    void timeout(@NotNull ConnectableMultiConnection connection) {
         synchronized (this) {
             if (connection.getSubscriberCount() == 0 && connection == this.connection) {
                 this.connection = null;

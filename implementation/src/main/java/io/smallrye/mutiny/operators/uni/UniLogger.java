@@ -10,13 +10,15 @@ import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
 
 public class UniLogger<T> extends UniOperator<T, T> {
 
+    @NotNull
     private final String identifier;
     private final AtomicLong increment = new AtomicLong(0L);
 
-    public UniLogger(Uni<? extends T> upstream, String identifier) {
+    public UniLogger(@NotNull Uni<? extends T> upstream, @NotNull String identifier) {
         super(nonNull(upstream, "upstream"));
         String id = nonNull(identifier, "identifier");
         if (id.isEmpty()) {
@@ -32,6 +34,7 @@ public class UniLogger<T> extends UniOperator<T, T> {
 
     private class UniLoggerProcessor extends UniOperatorProcessor<T, T> {
 
+        @NotNull
         private final String processorIdentifier;
 
         public UniLoggerProcessor(UniSubscriber<? super T> downstream, long increment) {

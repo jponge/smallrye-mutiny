@@ -8,6 +8,7 @@ import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.mutiny.CompositeException;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.*;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Combines several {@link Uni unis} into a new {@link Uni} that will be fulfilled when <strong>all</strong>
@@ -20,6 +21,7 @@ import io.smallrye.mutiny.tuples.*;
  */
 public class UniAndGroup<T1> {
 
+    @NotNull
     private final Uni<T1> upstream;
 
     public UniAndGroup(Uni<T1> upstream) {
@@ -41,6 +43,7 @@ public class UniAndGroup<T1> {
      * @param <T2> the type of the item for the second uni
      * @return an {@link UniAndGroup2} to configure the combination
      */
+    @NotNull
     @CheckReturnValue
     public <T2> UniAndGroup2<T1, T2> uni(Uni<? extends T2> other) {
         return new UniAndGroup2<>(upstream, other);
@@ -63,6 +66,7 @@ public class UniAndGroup<T1> {
      * @param <T3> the type of the item for the third uni
      * @return an {@link UniAndGroup3} to configure the combination
      */
+    @NotNull
     @CheckReturnValue
     public <T2, T3> UniAndGroup3<T1, T2, T3> unis(Uni<? extends T2> u2, Uni<? extends T3> u3) {
         return new UniAndGroup3<>(upstream, u2, u3);
@@ -87,6 +91,7 @@ public class UniAndGroup<T1> {
      * @param <T4> the type of the item for the fourth uni
      * @return an {@link UniAndGroup4} to configure the combination
      */
+    @NotNull
     @CheckReturnValue
     public <T2, T3, T4> UniAndGroup4<T1, T2, T3, T4> unis(Uni<? extends T2> u2, Uni<? extends T3> u3,
             Uni<? extends T4> u4) {
@@ -114,6 +119,7 @@ public class UniAndGroup<T1> {
      * @param <T5> the type of the item for the fifth uni
      * @return an {@link UniAndGroup5} to configure the combination
      */
+    @NotNull
     @CheckReturnValue
     public <T2, T3, T4, T5> UniAndGroup5<T1, T2, T3, T4, T5> unis(Uni<? extends T2> u2, Uni<? extends T3> u3,
             Uni<? extends T4> u4, Uni<? extends T5> u5) {
@@ -143,6 +149,7 @@ public class UniAndGroup<T1> {
      * @param <T6> the type of the item for the sixth uni
      * @return an {@link UniAndGroup6} to configure the combination
      */
+    @NotNull
     @CheckReturnValue
     public <T2, T3, T4, T5, T6> UniAndGroup6<T1, T2, T3, T4, T5, T6> unis(Uni<? extends T2> u2, Uni<? extends T3> u3,
             Uni<? extends T4> u4, Uni<? extends T5> u5, Uni<? extends T6> u6) {
@@ -174,6 +181,7 @@ public class UniAndGroup<T1> {
      * @param <T7> the type of the item for the seventh uni
      * @return an {@link UniAndGroup7} to configure the combination
      */
+    @NotNull
     @CheckReturnValue
     public <T2, T3, T4, T5, T6, T7> UniAndGroup7<T1, T2, T3, T4, T5, T6, T7> unis( // NOSONAR
             Uni<? extends T2> u2, Uni<? extends T3> u3, Uni<? extends T4> u4, Uni<? extends T5> u5,
@@ -208,6 +216,7 @@ public class UniAndGroup<T1> {
      * @param <T8> the type of the item for the eighth uni
      * @return an {@link UniAndGroup8} to configure the combination
      */
+    @NotNull
     @CheckReturnValue
     public <T2, T3, T4, T5, T6, T7, T8> UniAndGroup8<T1, T2, T3, T4, T5, T6, T7, T8> unis( // NOSONAR
             Uni<? extends T2> u2, Uni<? extends T3> u3, Uni<? extends T4> u4, Uni<? extends T5> u5,
@@ -244,6 +253,7 @@ public class UniAndGroup<T1> {
      * @param <T9> the type of the item for the ninth uni
      * @return an {@link UniAndGroup9} to configure the combination
      */
+    @NotNull
     @CheckReturnValue
     public <T2, T3, T4, T5, T6, T7, T8, T9> UniAndGroup9<T1, T2, T3, T4, T5, T6, T7, T8, T9> unis( // NOSONAR
             Uni<? extends T2> u2, Uni<? extends T3> u3, Uni<? extends T4> u4, Uni<? extends T5> u5,
@@ -282,6 +292,7 @@ public class UniAndGroup<T1> {
      * @param unis the list of unis, must not be {@code null}, must not contain {@code null}, must not be empty
      * @return an {@link UniAndGroupIterable} to configure the combination
      */
+    @NotNull
     @CheckReturnValue
     public UniAndGroupIterable<T1> unis(Iterable<? extends Uni<?>> unis) {
         return new UniAndGroupIterable<>(upstream, unis);

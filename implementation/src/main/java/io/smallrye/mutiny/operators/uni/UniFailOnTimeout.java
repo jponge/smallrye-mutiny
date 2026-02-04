@@ -17,6 +17,8 @@ import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class UniFailOnTimeout<I> extends UniOperator<I, I> {
     private final Duration timeout;
@@ -24,7 +26,7 @@ public class UniFailOnTimeout<I> extends UniOperator<I, I> {
     private final ScheduledExecutorService executor;
 
     public UniFailOnTimeout(Uni<I> upstream, Duration timeout, Supplier<? extends Throwable> supplier,
-            ScheduledExecutorService executor) {
+                            @Nullable ScheduledExecutorService executor) {
         super(upstream);
         this.timeout = timeout;
         this.supplier = supplier;
@@ -45,7 +47,7 @@ public class UniFailOnTimeout<I> extends UniOperator<I, I> {
         }
 
         @Override
-        public void onSubscribe(UniSubscription subscription) {
+        public void onSubscribe(@NotNull UniSubscription subscription) {
             try {
                 timeoutFuture = executor.schedule(this::doTimeout, timeout.toMillis(), TimeUnit.MILLISECONDS);
             } catch (RejectedExecutionException e) {

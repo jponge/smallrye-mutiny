@@ -3,6 +3,7 @@ package io.smallrye.mutiny.helpers;
 import java.util.function.Predicate;
 
 import io.smallrye.mutiny.Uni;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A utility class that creates a predicate on a throwable.
@@ -19,7 +20,8 @@ public class Caused {
      * @param cause the throwable type want to check
      * @return a predicate which can be used in {@link Uni#onFailure()}
      */
-    public static Predicate<Throwable> by(Class<? extends Throwable> cause) {
+    @NotNull
+    public static Predicate<Throwable> by(@NotNull Class<? extends Throwable> cause) {
         if (cause == null) {
             throw new IllegalArgumentException("You must provide a cause class");
         }

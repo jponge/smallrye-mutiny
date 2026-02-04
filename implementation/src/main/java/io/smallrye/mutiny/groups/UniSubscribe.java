@@ -14,6 +14,7 @@ import io.smallrye.mutiny.subscription.Cancellable;
 import io.smallrye.mutiny.subscription.UniSerializedSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Allow subscribing to a {@link Uni} to be notified of the different events coming from {@code upstream}.
@@ -27,6 +28,7 @@ import io.smallrye.mutiny.subscription.UniSubscription;
  */
 public class UniSubscribe<T> {
 
+    @NotNull
     private final AbstractUni<T> upstream;
 
     public UniSubscribe(AbstractUni<T> upstream) {
@@ -47,7 +49,8 @@ public class UniSubscribe<T> {
      * @param <S> the type of subscriber returned
      * @return the passed subscriber
      */
-    public <S extends UniSubscriber<? super T>> S withSubscriber(S subscriber) {
+    @NotNull
+    public <S extends UniSubscriber<? super T>> S withSubscriber(@NotNull S subscriber) {
         AbstractUni.subscribe(upstream, ParameterValidation.nonNull(subscriber, "subscriber"));
         return subscriber;
     }
@@ -67,7 +70,8 @@ public class UniSubscribe<T> {
      * @param <S> the type of subscriber returned
      * @return the passed subscriber
      */
-    public <S extends UniSubscriber<? super T>> S withSerializedSubscriber(S subscriber) {
+    @NotNull
+    public <S extends UniSubscriber<? super T>> S withSerializedSubscriber(@NotNull S subscriber) {
         UniSerializedSubscriber.subscribe(upstream, ParameterValidation.nonNull(subscriber, "subscriber"));
         return subscriber;
     }
@@ -101,8 +105,9 @@ public class UniSubscribe<T> {
      * @param onFailureCallback callback invoked when a failure event is received, must not be {@code null}
      * @return an object to cancel the computation
      */
+    @NotNull
     public Cancellable with(Context context, Consumer<? super T> onItemCallback,
-            Consumer<? super Throwable> onFailureCallback) {
+                            Consumer<? super Throwable> onFailureCallback) {
         UniCallbackSubscriber<T> subscriber = new UniCallbackSubscriber<>(
                 Infrastructure.decorate(ParameterValidation.nonNull(onItemCallback, "onItemCallback")),
                 Infrastructure.decorate(ParameterValidation.nonNull(onFailureCallback, "onFailureCallback")),
@@ -125,6 +130,7 @@ public class UniSubscribe<T> {
      *        is received. The callback must not be {@code null}
      * @return an object to cancel the computation
      */
+    @NotNull
     public Cancellable with(Context context, Consumer<? super T> onItemCallback) {
         UniCallbackSubscriber<T> subscriber = new UniCallbackSubscriber<>(
                 Infrastructure.decorate(ParameterValidation.nonNull(onItemCallback, "onItemCallback")),
@@ -170,6 +176,7 @@ public class UniSubscribe<T> {
      * @return a {@link CompletableFuture} to retrieve the item and chain operations on the resolved item or
      *         failure. The returned {@link CompletableFuture} can also be used to cancel the computation.
      */
+    @NotNull
     public CompletableFuture<T> asCompletionStage(Context context) {
         return UniSubscribeToCompletionStage.subscribe(upstream, context);
     }

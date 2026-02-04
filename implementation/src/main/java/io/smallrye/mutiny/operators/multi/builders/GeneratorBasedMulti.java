@@ -12,6 +12,8 @@ import io.smallrye.mutiny.groups.GeneratorEmitter;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class GeneratorBasedMulti<T, S> extends AbstractMulti<T> {
 
@@ -24,7 +26,7 @@ public class GeneratorBasedMulti<T, S> extends AbstractMulti<T> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> subscriber) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> subscriber) {
         MultiSubscriber<? super T> downstream = nonNull(subscriber, "subscriber");
         S initialState;
         try {
@@ -112,14 +114,14 @@ public class GeneratorBasedMulti<T, S> extends AbstractMulti<T> {
         }
 
         @Override
-        public void emit(T item) {
+        public void emit(@NotNull T item) {
             if (!cancelled) {
                 downstream.onItem(nonNullNpe(item, "item"));
             }
         }
 
         @Override
-        public void fail(Throwable failure) {
+        public void fail(@Nullable Throwable failure) {
             if (!cancelled) {
                 cancelled = true;
                 if (failure != null) {

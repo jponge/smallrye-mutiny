@@ -19,12 +19,17 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.BackPressureFailure;
 import io.smallrye.mutiny.subscription.ContextSupport;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class BlockingIterable<T> implements Iterable<T> {
 
+    @NotNull
     private final Multi<? extends T> upstream;
+    @NotNull
     private final Supplier<Queue<T>> supplier;
     private final int batchSize;
+    @NotNull
     private final Supplier<Context> contextSupplier;
 
     public BlockingIterable(Multi<? extends T> upstream, int batchSize, Supplier<Queue<T>> queueSupplier,
@@ -35,6 +40,7 @@ public class BlockingIterable<T> implements Iterable<T> {
         this.contextSupplier = nonNull(contextSupplier, "contextSupplier");
     }
 
+    @NotNull
     @Override
     public Iterator<T> iterator() {
         SubscriberIterator<T> iterator = create();
@@ -43,11 +49,13 @@ public class BlockingIterable<T> implements Iterable<T> {
         return iterator;
     }
 
+    @NotNull
     @Override
     public Spliterator<T> spliterator() {
         return stream().spliterator();
     }
 
+    @NotNull
     public Stream<T> stream() {
         SubscriberIterator<T> iterator = create();
 
@@ -60,6 +68,7 @@ public class BlockingIterable<T> implements Iterable<T> {
         return stream;
     }
 
+    @NotNull
     private SubscriberIterator<T> create() {
         Queue<T> queue = null;
         // Create the instance of queue, check for failure and `null` values.
@@ -103,17 +112,19 @@ public class BlockingIterable<T> implements Iterable<T> {
 
         private final int limit;
 
+        @NotNull
         private final Lock lock;
 
+        @NotNull
         private final Condition condition;
 
         private final Context context;
 
         long produced;
 
-        AtomicReference<Subscription> subscription = new AtomicReference<>();
+        @NotNull AtomicReference<Subscription> subscription = new AtomicReference<>();
 
-        AtomicBoolean done = new AtomicBoolean();
+        @NotNull AtomicBoolean done = new AtomicBoolean();
 
         Throwable failure;
 
@@ -170,6 +181,7 @@ public class BlockingIterable<T> implements Iterable<T> {
             }
         }
 
+        @Nullable
         @Override
         public T next() {
             if (hasNext()) {
@@ -220,7 +232,7 @@ public class BlockingIterable<T> implements Iterable<T> {
         }
 
         @Override
-        public void onSubscribe(Subscription s) {
+        public void onSubscribe(@NotNull Subscription s) {
             if (subscription.compareAndSet(null, s)) {
                 s.request(batchSize);
             }

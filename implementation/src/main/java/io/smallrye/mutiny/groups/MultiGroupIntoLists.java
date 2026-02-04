@@ -10,9 +10,11 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.MultiBufferOp;
 import io.smallrye.mutiny.operators.multi.MultiBufferWithTimeoutOp;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiGroupIntoLists<T> {
 
+    @NotNull
     private final Multi<T> upstream;
 
     public MultiGroupIntoLists(Multi<T> upstream) {

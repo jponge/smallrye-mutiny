@@ -10,6 +10,7 @@ import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.MultiRepeatUntilOp;
 import io.smallrye.mutiny.operators.multi.MultiRepeatWhilstOp;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Repeatedly subscribes to a given {@link Uni} to generate a {@link Multi}.
@@ -37,6 +38,7 @@ public class UniRepeat<T> {
      * @param delay the delay, must be not {@code null}, must be positive
      * @return the {@link UniRepeat} configured with the delay.
      */
+    @NotNull
     @CheckReturnValue
     public UniRepeat<T> withDelay(Duration delay) {
         ParameterValidation.validate(delay, "delay");
@@ -84,6 +86,7 @@ public class UniRepeat<T> {
      * @return the {@link Multi} containing the items from the upstream {@link Uni}, resubscribed at most {@code times}
      *         times.
      */
+    @NotNull
     @CheckReturnValue
     public Multi<T> atMost(long times) {
         long actual = ParameterValidation.positive(times, "times");
@@ -107,6 +110,7 @@ public class UniRepeat<T> {
      * @return the {@link Multi} containing the items from the upstream {@link Uni}, resubscribed until the predicate
      *         returns {@code true}.
      */
+    @NotNull
     @CheckReturnValue
     public Multi<T> until(Predicate<T> predicate) {
         Predicate<T> actual = Infrastructure.decorate(ParameterValidation.nonNull(predicate, "predicate"));
@@ -132,6 +136,7 @@ public class UniRepeat<T> {
      * @return the {@link Multi} containing the items from the upstream {@link Uni}, resubscribed whilst the predicate
      *         returns {@code true}.
      */
+    @NotNull
     @CheckReturnValue
     public Multi<T> whilst(Predicate<T> predicate) {
         Predicate<T> actual = Infrastructure.decorate(ParameterValidation.nonNull(predicate, "predicate"));

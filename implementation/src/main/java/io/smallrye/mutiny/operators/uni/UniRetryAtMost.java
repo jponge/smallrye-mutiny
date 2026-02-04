@@ -13,12 +13,14 @@ import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
 
 public class UniRetryAtMost<T> extends UniOperator<T, T> {
+    @NotNull
     private final Predicate<? super Throwable> predicate;
     private final long maxAttempts;
 
-    public UniRetryAtMost(Uni<T> upstream, Predicate<? super Throwable> predicate, long maxAttempts) {
+    public UniRetryAtMost(@NotNull Uni<T> upstream, @NotNull Predicate<? super Throwable> predicate, long maxAttempts) {
         super(nonNull(upstream, "upstream"));
         this.predicate = nonNull(predicate, "predicate");
         this.maxAttempts = positive(maxAttempts, "maxAttempts");
@@ -43,7 +45,7 @@ public class UniRetryAtMost<T> extends UniOperator<T, T> {
         }
 
         @Override
-        public void onSubscribe(UniSubscription subscription) {
+        public void onSubscribe(@NotNull UniSubscription subscription) {
             int count = counterUpdater.incrementAndGet(this);
             if (compareAndSetUpstreamSubscription(null, subscription)) {
                 if (count == 1) {

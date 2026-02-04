@@ -11,6 +11,8 @@ import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class UniToMultiPublisher<T> implements Flow.Publisher<T> {
 
@@ -21,7 +23,7 @@ public final class UniToMultiPublisher<T> implements Flow.Publisher<T> {
     }
 
     @Override
-    public void subscribe(Subscriber<? super T> downstream) {
+    public void subscribe(@NotNull Subscriber<? super T> downstream) {
         downstream.onSubscribe(new UniToMultiSubscription<>(uni, downstream));
     }
 
@@ -37,6 +39,7 @@ public final class UniToMultiPublisher<T> implements Flow.Publisher<T> {
         }
 
         private volatile UniSubscription upstream;
+        @NotNull
         private volatile State state = State.INIT;
 
         private static final AtomicReferenceFieldUpdater<UniToMultiSubscription, State> STATE_UPDATER = AtomicReferenceFieldUpdater
@@ -77,7 +80,7 @@ public final class UniToMultiPublisher<T> implements Flow.Publisher<T> {
         }
 
         @Override
-        public void onSubscribe(UniSubscription subscription) {
+        public void onSubscribe(@NotNull UniSubscription subscription) {
             if (upstream == null) {
                 upstream = subscription;
             } else {
@@ -88,7 +91,7 @@ public final class UniToMultiPublisher<T> implements Flow.Publisher<T> {
         }
 
         @Override
-        public void onItem(T item) {
+        public void onItem(@Nullable T item) {
             if (STATE_UPDATER.compareAndSet(this, State.UNI_REQUESTED, State.DONE)) {
                 if (item != null) {
                     downstream.onNext(item);

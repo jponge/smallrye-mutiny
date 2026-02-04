@@ -12,6 +12,8 @@ import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public abstract class MultiOperatorProcessor<I, O> implements MultiSubscriber<I>, Subscription, ContextSupport {
 
@@ -22,6 +24,7 @@ public abstract class MultiOperatorProcessor<I, O> implements MultiSubscriber<I>
      */
     protected volatile MultiSubscriber<? super O> downstream;
 
+    @Nullable
     protected volatile Subscription upstream = null;
     private volatile int cancellationRequested = 0;
 
@@ -31,7 +34,7 @@ public abstract class MultiOperatorProcessor<I, O> implements MultiSubscriber<I>
     private static final AtomicIntegerFieldUpdater<MultiOperatorProcessor> CANCELLATION_REQUESTED_UPDATER = AtomicIntegerFieldUpdater
             .newUpdater(MultiOperatorProcessor.class, "cancellationRequested");
 
-    public MultiOperatorProcessor(MultiSubscriber<? super O> downstream) {
+    public MultiOperatorProcessor(@NotNull MultiSubscriber<? super O> downstream) {
         this.downstream = ParameterValidation.nonNull(downstream, "downstream");
     }
 
@@ -73,7 +76,7 @@ public abstract class MultiOperatorProcessor<I, O> implements MultiSubscriber<I>
     }
 
     @Override
-    public void onSubscribe(Subscription subscription) {
+    public void onSubscribe(@NotNull Subscription subscription) {
         if (compareAndSetUpstreamSubscription(null, subscription)) {
             // Propagate subscription to downstream.
             downstream.onSubscribe(this);

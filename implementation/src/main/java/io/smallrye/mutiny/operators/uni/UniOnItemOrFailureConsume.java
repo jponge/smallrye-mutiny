@@ -8,6 +8,8 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class UniOnItemOrFailureConsume<T> extends UniOperator<T, T> {
 
@@ -20,13 +22,13 @@ public class UniOnItemOrFailureConsume<T> extends UniOperator<T, T> {
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super T> subscriber) {
+    public void subscribe(@NotNull UniSubscriber<? super T> subscriber) {
         AbstractUni.subscribe(upstream(), new UniOnItemOrFailureConsumeProcessor(subscriber));
     }
 
     private class UniOnItemOrFailureConsumeProcessor extends UniOperatorProcessor<T, T> {
 
-        public UniOnItemOrFailureConsumeProcessor(UniSubscriber<? super T> downstream) {
+        public UniOnItemOrFailureConsumeProcessor(@NotNull UniSubscriber<? super T> downstream) {
             super(downstream);
         }
 
@@ -50,7 +52,7 @@ public class UniOnItemOrFailureConsume<T> extends UniOperator<T, T> {
             }
         }
 
-        private boolean invokeCallback(T item, Throwable failure, UniSubscriber<? super T> subscriber) {
+        private boolean invokeCallback(T item, @Nullable Throwable failure, @NotNull UniSubscriber<? super T> subscriber) {
             try {
                 callback.accept(item, failure);
                 return true;

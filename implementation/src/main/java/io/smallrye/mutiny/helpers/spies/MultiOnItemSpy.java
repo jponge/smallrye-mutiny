@@ -6,11 +6,15 @@ import java.util.List;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class MultiOnItemSpy<T> extends MultiSpyBase<T> {
 
+    @Nullable
     private final List<T> items;
 
+    @NotNull
     public List<T> items() {
         if (items != null) {
             List<T> view;
@@ -52,6 +56,7 @@ public class MultiOnItemSpy<T> extends MultiSpyBase<T> {
         }).subscribe().withSubscriber(downstream);
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "MultiOnItemSpy{" +

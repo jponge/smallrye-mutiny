@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.common.annotation.Experimental;
 import io.smallrye.mutiny.Multi;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A Gatherer operator transforms a stream of items by accumulating them into an accumulator and extracting
@@ -77,6 +78,7 @@ public interface Gatherer<I, ACC, O> {
          * @param <ACC> the type of the accumulator
          * @param <O> the type of the item to emit
          */
+        @NotNull
         public static <ACC, O> Extraction<ACC, O> of(ACC nextAccumulator, O nextItem) {
             return new Extraction<>(nextAccumulator, nextItem);
         }
@@ -98,6 +100,7 @@ public interface Gatherer<I, ACC, O> {
          * @param <ACC> the type of the accumulator
          * @return the next step in the builder
          */
+        @NotNull
         @CheckReturnValue
         public <ACC> InitialAccumulatorStep<I, ACC> into(Supplier<ACC> initialAccumulatorSupplier) {
             nonNull(initialAccumulatorSupplier, "initialAccumulatorSupplier");
@@ -127,6 +130,7 @@ public interface Gatherer<I, ACC, O> {
          *        upstream, and returns the new accumulator
          * @return the next step in the builder
          */
+        @NotNull
         @CheckReturnValue
         public ExtractStep<I, ACC> accumulate(BiFunction<ACC, I, ACC> accumulator) {
             nonNull(accumulator, "accumulator");
@@ -163,6 +167,7 @@ public interface Gatherer<I, ACC, O> {
          * @param <O> the type of the value to emit
          * @return the next step in the builder
          */
+        @NotNull
         @CheckReturnValue
         public <O> FinalizerStep<I, ACC, O> extract(BiFunction<ACC, Boolean, Optional<Extraction<ACC, O>>> extractor) {
             nonNull(extractor, "extractor");
@@ -202,6 +207,7 @@ public interface Gatherer<I, ACC, O> {
          *        containing the value to emit before the completion signal, if any
          * @return the gathering {@link Multi}
          */
+        @NotNull
         @CheckReturnValue
         public Gatherer<I, ACC, O> finalize(Function<ACC, Optional<O>> finalizer) {
             nonNull(finalizer, "finalizer");

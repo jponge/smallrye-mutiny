@@ -2,6 +2,7 @@ open module io.smallrye.mutiny {
 
     requires transitive io.smallrye.common.annotation;
     requires org.jctools.core;
+    requires annotations;
 
     exports io.smallrye.mutiny;
     exports io.smallrye.mutiny.converters.multi;

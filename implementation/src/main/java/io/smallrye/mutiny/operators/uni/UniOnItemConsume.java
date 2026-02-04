@@ -9,6 +9,8 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class UniOnItemConsume<T, E> extends UniOperator<T, T> {
 
@@ -74,8 +76,8 @@ public class UniOnItemConsume<T, E> extends UniOperator<T, T> {
             }
         }
 
-        private <E> boolean invokeEventHandler(Consumer<? super E> handler, E event, boolean wasCalledByOnFailure,
-                UniSubscriber<? super T> subscriber) {
+        private <E> boolean invokeEventHandler(@Nullable Consumer<? super E> handler, E event, boolean wasCalledByOnFailure,
+                                               @NotNull UniSubscriber<? super T> subscriber) {
             if (handler != null) {
                 try {
                     handler.accept(event);

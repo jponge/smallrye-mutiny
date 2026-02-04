@@ -13,9 +13,11 @@ import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.MultiOnTerminationCall;
 import io.smallrye.mutiny.operators.multi.MultiOnTerminationInvoke;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiOnTerminate<T> {
 
+    @NotNull
     private final Multi<T> upstream;
 
     public MultiOnTerminate(Multi<T> upstream) {

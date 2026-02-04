@@ -12,6 +12,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
 
 public class UniJoinFirst<T> extends AbstractUni<T> {
 
@@ -32,7 +33,7 @@ public class UniJoinFirst<T> extends AbstractUni<T> {
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super T> subscriber) {
+    public void subscribe(@NotNull UniSubscriber<? super T> subscriber) {
         UniJoinFirstSubscription joinAllSubscription = new UniJoinFirstSubscription(subscriber);
         subscriber.onSubscribe(joinAllSubscription);
         joinAllSubscription.triggerSubscriptions();
@@ -77,7 +78,7 @@ public class UniJoinFirst<T> extends AbstractUni<T> {
             return proceed;
         }
 
-        private void onSubscribe(int index, UniSubscription subscription) {
+        private void onSubscribe(int index, @NotNull UniSubscription subscription) {
             if (!cancelled.get()) {
                 subscriptions.set(index, subscription);
             } else {

@@ -1,5 +1,7 @@
 package io.smallrye.mutiny.infrastructure;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.concurrent.*;
 
 /**
@@ -18,11 +20,13 @@ public class MutinyScheduler extends ScheduledThreadPoolExecutor {
         this.executor = executor;
     }
 
+    @NotNull
     @Override
     protected <V> RunnableScheduledFuture<V> decorateTask(Runnable runnable, RunnableScheduledFuture<V> task) {
         return new DecoratedRunnableTask<>(task, executor);
     }
 
+    @NotNull
     @Override
     protected <V> RunnableScheduledFuture<V> decorateTask(Callable<V> callable, RunnableScheduledFuture<V> task) {
         return new DecoratedRunnableTask<>(task, executor);
@@ -44,12 +48,12 @@ public class MutinyScheduler extends ScheduledThreadPoolExecutor {
         }
 
         @Override
-        public long getDelay(TimeUnit unit) {
+        public long getDelay(@NotNull TimeUnit unit) {
             return origin.getDelay(unit);
         }
 
         @Override
-        public int compareTo(Delayed o) {
+        public int compareTo(@NotNull Delayed o) {
             return origin.compareTo(o);
         }
 
@@ -79,7 +83,7 @@ public class MutinyScheduler extends ScheduledThreadPoolExecutor {
         }
 
         @Override
-        public V get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+        public V get(long timeout, @NotNull TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
             return origin.get(timeout, unit);
         }
     }

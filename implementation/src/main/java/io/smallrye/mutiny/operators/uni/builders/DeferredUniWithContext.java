@@ -9,6 +9,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class DeferredUniWithContext<T> extends AbstractUni<T> {
 
@@ -19,7 +20,7 @@ public class DeferredUniWithContext<T> extends AbstractUni<T> {
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super T> subscriber) {
+    public void subscribe(@NotNull UniSubscriber<? super T> subscriber) {
         Uni<? extends T> uni;
         try {
             uni = mapper.apply(subscriber.context());

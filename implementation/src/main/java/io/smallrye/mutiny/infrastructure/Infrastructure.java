@@ -32,6 +32,8 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.MultiOverflowStrategy;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.tuples.Functions;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class Infrastructure {
 
@@ -60,8 +62,10 @@ public class Infrastructure {
     private static MultiInterceptor[] MULTI_INTERCEPTORS;
     private static CallbackDecorator[] CALLBACK_DECORATORS;
     private static UnaryOperator<CompletableFuture<?>> completableFutureWrapper;
+    @NotNull
     private static Consumer<Throwable> droppedExceptionHandler = PrintAndDumpThrowableConsumer.INSTANCE;
     private static BooleanSupplier canCallerThreadBeBlockedSupplier;
+    @NotNull
     private static OperatorLogger operatorLogger = PrintOperatorEventOperatorLogger.INSTANCE;
 
     private static int multiOverflowDefaultBufferSize = 128;
@@ -323,7 +327,7 @@ public class Infrastructure {
      *
      * @param supplier the supplier, must not be {@code null} and must not throw an exception or it will also be lost.
      */
-    public static void setCanCallerThreadBeBlockedSupplier(BooleanSupplier supplier) {
+    public static void setCanCallerThreadBeBlockedSupplier(@NotNull BooleanSupplier supplier) {
         nonNull(supplier, "supplier");
         canCallerThreadBeBlockedSupplier = supplier;
     }
@@ -337,7 +341,7 @@ public class Infrastructure {
      *
      * @param handler the handler, must not be {@code null} and must not throw an exception or it will also be lost.
      */
-    public static void setDroppedExceptionHandler(Consumer<Throwable> handler) {
+    public static void setDroppedExceptionHandler(@NotNull Consumer<Throwable> handler) {
         nonNull(handler, "handler");
         droppedExceptionHandler = handler;
     }
@@ -362,7 +366,8 @@ public class Infrastructure {
         }
     }
 
-    private static <T extends MutinyInterceptor> List<T> toInterceptorList(ServiceLoader<T> loader) {
+    @NotNull
+    private static <T extends MutinyInterceptor> List<T> toInterceptorList(@NotNull ServiceLoader<T> loader) {
         List<T> interceptors = new ArrayList<>();
         for (T item : loader) {
             interceptors.add(item);
@@ -426,7 +431,7 @@ public class Infrastructure {
      *
      * @param operatorLogger the new operator logger
      */
-    public static void setOperatorLogger(OperatorLogger operatorLogger) {
+    public static void setOperatorLogger(@NotNull OperatorLogger operatorLogger) {
         Infrastructure.operatorLogger = nonNull(operatorLogger, "operatorLogger");
     }
 
@@ -521,7 +526,7 @@ public class Infrastructure {
         private static final MutinyInterceptorComparator INSTANCE = new MutinyInterceptorComparator();
 
         @Override
-        public int compare(MutinyInterceptor o1, MutinyInterceptor o2) {
+        public int compare(@NotNull MutinyInterceptor o1, @NotNull MutinyInterceptor o2) {
             return Integer.compare(o1.ordinal(), o2.ordinal());
         }
     }
@@ -541,7 +546,7 @@ public class Infrastructure {
         private static final PrintAndDumpThrowableConsumer INSTANCE = new PrintAndDumpThrowableConsumer();
 
         @Override
-        public void accept(Throwable throwable) {
+        public void accept(@NotNull Throwable throwable) {
             System.err.println("[-- Mutiny had to drop the following exception --]");
             StackTraceElement element = Thread.currentThread().getStackTrace()[3];
             System.err.println("Exception received by: " + element.toString());
@@ -555,7 +560,7 @@ public class Infrastructure {
         private static final PrintOperatorEventOperatorLogger INSTANCE = new PrintOperatorEventOperatorLogger();
 
         @Override
-        public void log(String identifier, String event, Object value, Throwable failure) {
+        public void log(String identifier, String event, @Nullable Object value, @Nullable Throwable failure) {
             String message = "[--> " + identifier + " | " + event;
             if (failure == null) {
                 if (value != null) {

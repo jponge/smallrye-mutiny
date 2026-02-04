@@ -17,6 +17,7 @@ import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.smallrye.mutiny.subscription.SerializedSubscriber;
 import io.smallrye.mutiny.subscription.SwitchableSubscriptionSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Retries a source when a companion stream signals an item in response to the main's failure event.
@@ -39,8 +40,8 @@ public final class MultiRetryWhenOp<T> extends AbstractMultiOperator<T, T> {
     }
 
     private static <T> void subscribe(MultiSubscriber<? super T> downstream, Predicate<? super Throwable> onFailurePredicate,
-            Function<? super Multi<Throwable>, ? extends Publisher<?>> triggerStreamFactory,
-            Multi<? extends T> upstream) {
+                                      @NotNull Function<? super Multi<Throwable>, ? extends Publisher<?>> triggerStreamFactory,
+                                      @NotNull Multi<? extends T> upstream) {
         Context context;
         if (downstream instanceof ContextSupport provider) {
             context = provider.context();
@@ -109,7 +110,7 @@ public final class MultiRetryWhenOp<T> extends AbstractMultiOperator<T, T> {
 
         }
 
-        public void setWhen(Flow.Subscription w) {
+        public void setWhen(@NotNull Flow.Subscription w) {
             arbiter.set(w);
         }
 
@@ -190,7 +191,7 @@ public final class MultiRetryWhenOp<T> extends AbstractMultiOperator<T, T> {
         }
 
         @Override
-        public void onSubscribe(Flow.Subscription s) {
+        public void onSubscribe(@NotNull Flow.Subscription s) {
             operator.setWhen(s);
         }
 

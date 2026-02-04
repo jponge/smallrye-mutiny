@@ -9,6 +9,7 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class UniWithContext<I, O> extends UniOperator<I, O> {
 
@@ -22,7 +23,7 @@ public class UniWithContext<I, O> extends UniOperator<I, O> {
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super O> downstream) {
+    public void subscribe(@NotNull UniSubscriber<? super O> downstream) {
         Context context = downstream.context();
         Uni<O> uni;
         try {

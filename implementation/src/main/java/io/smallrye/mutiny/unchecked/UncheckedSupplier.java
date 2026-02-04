@@ -1,5 +1,7 @@
 package io.smallrye.mutiny.unchecked;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.function.Supplier;
 
 /**
@@ -19,7 +21,8 @@ public interface UncheckedSupplier<T> {
      * @param <T> the type of items supplied by this supplier
      * @return the new {@link UncheckedSupplier}
      */
-    static <T> UncheckedSupplier<T> from(Supplier<T> supplier) {
+    @NotNull
+    static <T> UncheckedSupplier<T> from(@NotNull Supplier<T> supplier) {
         return supplier::get;
     }
 
@@ -35,6 +38,7 @@ public interface UncheckedSupplier<T> {
      * @return the {@link Supplier} getting the item produced by this {@link UncheckedSupplier}. If an exception is
      *         thrown during the production, this exception is rethrown, wrapped into a {@link RuntimeException} if needed.
      */
+    @NotNull
     default Supplier<T> toSupplier() {
         return () -> {
             try {

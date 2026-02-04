@@ -14,6 +14,8 @@ import java.util.function.Consumer;
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * A {@link io.smallrye.mutiny.Uni} {@link UniSubscriber} for testing purposes that comes with useful assertion helpers.
@@ -22,6 +24,7 @@ import io.smallrye.mutiny.subscription.UniSubscription;
  */
 public class UniAssertSubscriber<T> implements UniSubscriber<T> {
     private volatile boolean cancelImmediatelyOnSubscription;
+    @NotNull
     private final Context context;
 
     // Writable from the subscribers
@@ -29,7 +32,9 @@ public class UniAssertSubscriber<T> implements UniSubscriber<T> {
     private final CompletableFuture<UniSubscription> subscribed = new CompletableFuture<>();
 
     // Readable from the assertions
+    @NotNull
     private final CompletableFuture<T> hasCompleted;
+    @NotNull
     private final CompletableFuture<UniSubscription> hasSubscription;
 
     private volatile UniSubscription subscription;
@@ -89,6 +94,7 @@ public class UniAssertSubscriber<T> implements UniSubscriber<T> {
      * @param <T> the type of the item
      * @return a new subscriber
      */
+    @NotNull
     public static <T> UniAssertSubscriber<T> create() {
         return new UniAssertSubscriber<>();
     }
@@ -100,6 +106,7 @@ public class UniAssertSubscriber<T> implements UniSubscriber<T> {
      * @param context the context, cannot be {@code null}
      * @return a new subscriber
      */
+    @NotNull
     public static <T> UniAssertSubscriber<T> create(Context context) {
         return new UniAssertSubscriber<>(context, false);
     }
@@ -110,7 +117,7 @@ public class UniAssertSubscriber<T> implements UniSubscriber<T> {
     }
 
     @Override
-    public synchronized void onSubscribe(UniSubscription subscription) {
+    public synchronized void onSubscribe(@NotNull UniSubscription subscription) {
         signals.add(new OnSubscribeUniSignal(subscription));
         subscribed.complete(subscription);
         if (this.cancelImmediatelyOnSubscription) {
@@ -151,7 +158,8 @@ public class UniAssertSubscriber<T> implements UniSubscriber<T> {
      * @param duration the duration, must not be {@code null}
      * @return this {@link UniAssertSubscriber}
      */
-    public UniAssertSubscriber<T> awaitItem(Duration duration) {
+    @NotNull
+    public UniAssertSubscriber<T> awaitItem(@NotNull Duration duration) {
         try {
             awaitEvent(hasCompleted, duration);
         } catch (TimeoutException e) {
@@ -191,7 +199,7 @@ public class UniAssertSubscriber<T> implements UniSubscriber<T> {
      * @param assertion a check validating the received failure (if any). Must not be {@code null}
      * @return this {@link UniAssertSubscriber}
      */
-    public UniAssertSubscriber<T> awaitFailure(Consumer<Throwable> assertion) {
+    public UniAssertSubscriber<T> awaitFailure(@NotNull Consumer<Throwable> assertion) {
         return awaitFailure(assertion, DEFAULT_TIMEOUT);
     }
 
@@ -204,7 +212,7 @@ public class UniAssertSubscriber<T> implements UniSubscriber<T> {
      * @param duration the max duration to wait, must not be {@code null}
      * @return this {@link UniAssertSubscriber}
      */
-    public UniAssertSubscriber<T> awaitFailure(Duration duration) {
+    public UniAssertSubscriber<T> awaitFailure(@NotNull Duration duration) {
         return awaitFailure(t -> {
         }, duration);
     }
@@ -222,7 +230,8 @@ public class UniAssertSubscriber<T> implements UniSubscriber<T> {
      * @param duration the max duration to wait, must not be {@code null}
      * @return this {@link UniAssertSubscriber}
      */
-    public UniAssertSubscriber<T> awaitFailure(Consumer<Throwable> assertion, Duration duration) {
+    @NotNull
+    public UniAssertSubscriber<T> awaitFailure(@NotNull Consumer<Throwable> assertion, @NotNull Duration duration) {
         try {
             awaitEvent(hasCompleted, duration);
         } catch (TimeoutException e) {
@@ -264,7 +273,8 @@ public class UniAssertSubscriber<T> implements UniSubscriber<T> {
      * @param duration the UniAssertSubscriber, must not be {@code null}
      * @return this {@link AssertSubscriber}
      */
-    public UniAssertSubscriber<T> awaitSubscription(Duration duration) {
+    @NotNull
+    public UniAssertSubscriber<T> awaitSubscription(@NotNull Duration duration) {
         try {
             awaitEvent(hasSubscription, duration);
         } catch (TimeoutException e) {
@@ -274,7 +284,7 @@ public class UniAssertSubscriber<T> implements UniSubscriber<T> {
         return this;
     }
 
-    private void awaitEvent(CompletableFuture<?> future, Duration duration) throws TimeoutException {
+    private void awaitEvent(@NotNull CompletableFuture<?> future, @NotNull Duration duration) throws TimeoutException {
         // Are we already done?
         if (future.isDone()) {
             return;
@@ -293,6 +303,7 @@ public class UniAssertSubscriber<T> implements UniSubscriber<T> {
      *
      * @return this {@link UniAssertSubscriber}
      */
+    @NotNull
     public synchronized UniAssertSubscriber<T> assertCompleted() {
         shouldHaveCompleted(hasCompletedSuccessfully, failure, null);
         return this;
@@ -303,6 +314,7 @@ public class UniAssertSubscriber<T> implements UniSubscriber<T> {
      *
      * @return this {@link UniAssertSubscriber}
      */
+    @NotNull
     public synchronized UniAssertSubscriber<T> assertFailed() {
         shouldHaveFailed(hasCompletedSuccessfully, failure, null, null);
         return this;
@@ -322,6 +334,7 @@ public class UniAssertSubscriber<T> implements UniSubscriber<T> {
      *
      * @return the failure or {@code null}
      */
+    @Nullable
     public synchronized Throwable getFailure() {
         if (failure instanceof CancellationException) {
             return null;
@@ -335,6 +348,7 @@ public class UniAssertSubscriber<T> implements UniSubscriber<T> {
      * @param expected the expected item
      * @return this {@link UniAssertSubscriber}
      */
+    @NotNull
     public UniAssertSubscriber<T> assertItem(T expected) {
         shouldHaveCompleted(hasCompletedSuccessfully, failure, null);
         shouldHaveReceived(getItem(), expected);
@@ -348,8 +362,9 @@ public class UniAssertSubscriber<T> implements UniSubscriber<T> {
      * @param expectedMessage a message that is expected to be contained in the failure message
      * @return this {@link UniAssertSubscriber}
      */
+    @NotNull
     public UniAssertSubscriber<T> assertFailedWith(Class<? extends Throwable> expectedTypeOfFailure,
-            String expectedMessage) {
+                                                   String expectedMessage) {
         shouldHaveFailed(hasCompletedSuccessfully, failure, expectedTypeOfFailure, expectedMessage);
         return this;
     }
@@ -360,6 +375,7 @@ public class UniAssertSubscriber<T> implements UniSubscriber<T> {
      * @param expectedTypeOfFailure the expected failure type
      * @return this {@link UniAssertSubscriber}
      */
+    @NotNull
     public UniAssertSubscriber<T> assertFailedWith(Class<? extends Throwable> expectedTypeOfFailure) {
         shouldHaveFailed(hasCompletedSuccessfully, failure, expectedTypeOfFailure, null);
         return this;
@@ -409,6 +425,7 @@ public class UniAssertSubscriber<T> implements UniSubscriber<T> {
      *
      * @return this {@link UniAssertSubscriber}
      */
+    @NotNull
     public UniAssertSubscriber<T> assertTerminated() {
         shouldBeTerminated(hasCompletedSuccessfully, failure);
         return this;
@@ -419,6 +436,7 @@ public class UniAssertSubscriber<T> implements UniSubscriber<T> {
      *
      * @return this {@link UniAssertSubscriber}
      */
+    @NotNull
     public UniAssertSubscriber<T> assertNotTerminated() {
         shouldNotBeTerminatedUni(hasCompletedSuccessfully, failure);
         return this;
@@ -429,6 +447,7 @@ public class UniAssertSubscriber<T> implements UniSubscriber<T> {
      *
      * @return this {@link UniAssertSubscriber}
      */
+    @NotNull
     public UniAssertSubscriber<T> assertSubscribed() {
         shouldBeSubscribed(subscription == null ? 0 : 1);
         return this;
@@ -439,6 +458,7 @@ public class UniAssertSubscriber<T> implements UniSubscriber<T> {
      *
      * @return this {@link UniAssertSubscriber}
      */
+    @NotNull
     public UniAssertSubscriber<T> assertNotSubscribed() {
         shouldNotBeSubscribed(subscription == null ? 0 : 1);
         return this;
@@ -449,6 +469,7 @@ public class UniAssertSubscriber<T> implements UniSubscriber<T> {
      *
      * @return the signals in receive order
      */
+    @NotNull
     public List<UniSignal> getSignals() {
         return Collections.unmodifiableList(signals);
     }
@@ -461,6 +482,7 @@ public class UniAssertSubscriber<T> implements UniSubscriber<T> {
      *
      * @return this {@link UniAssertSubscriber}
      */
+    @NotNull
     public UniAssertSubscriber<T> assertSignalsReceivedInOrder() {
         if (signals.isEmpty()) {
             return this;

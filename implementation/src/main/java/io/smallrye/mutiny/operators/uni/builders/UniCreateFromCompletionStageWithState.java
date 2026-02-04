@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 import io.smallrye.mutiny.helpers.EmptyUniSubscription;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Specialized {@link io.smallrye.mutiny.Uni} implementation for the case where the item is produced from a supplier.
@@ -20,6 +21,7 @@ import io.smallrye.mutiny.subscription.UniSubscriber;
 public class UniCreateFromCompletionStageWithState<T, S> extends AbstractUni<T> {
 
     private final Function<S, ? extends CompletionStage<? extends T>> mapper;
+    @NotNull
     private final StateHolder<S> holder;
 
     public UniCreateFromCompletionStageWithState(Supplier<S> stateSupplier,
@@ -29,7 +31,7 @@ public class UniCreateFromCompletionStageWithState<T, S> extends AbstractUni<T> 
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super T> subscriber) {
+    public void subscribe(@NotNull UniSubscriber<? super T> subscriber) {
         S state;
         try {
             state = holder.get();

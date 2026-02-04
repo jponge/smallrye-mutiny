@@ -9,6 +9,8 @@ import java.util.function.Supplier;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class UniCreateFromCompletionStage<T> extends AbstractUni<T> {
     private final Supplier<? extends CompletionStage<? extends T>> supplier;
@@ -18,7 +20,7 @@ public class UniCreateFromCompletionStage<T> extends AbstractUni<T> {
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super T> subscriber) {
+    public void subscribe(@NotNull UniSubscriber<? super T> subscriber) {
         CompletionStage<? extends T> stage;
         try {
             stage = supplier.get();
@@ -51,7 +53,7 @@ public class UniCreateFromCompletionStage<T> extends AbstractUni<T> {
             stage.whenComplete(this::forwardResult);
         }
 
-        private void forwardResult(T res, Throwable fail) {
+        private void forwardResult(T res, @Nullable Throwable fail) {
             if (!cancelled) {
                 if (fail != null) {
                     if (fail instanceof CompletionException) {

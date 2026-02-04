@@ -12,12 +12,15 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class UniDelayOnItem<T> extends UniOperator<T, T> {
+    @NotNull
     private final Duration duration;
+    @NotNull
     private final ScheduledExecutorService executor;
 
-    public UniDelayOnItem(Uni<T> upstream, Duration duration, ScheduledExecutorService executor) {
+    public UniDelayOnItem(@NotNull Uni<T> upstream, @NotNull Duration duration, @NotNull ScheduledExecutorService executor) {
         super(nonNull(upstream, "upstream"));
         this.duration = validate(duration, "duration");
         this.executor = nonNull(executor, "executor");

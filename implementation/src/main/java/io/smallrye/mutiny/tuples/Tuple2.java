@@ -1,5 +1,7 @@
 package io.smallrye.mutiny.tuples;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -21,6 +23,7 @@ public class Tuple2<L, R> implements Tuple {
         this.item2 = right;
     }
 
+    @NotNull
     public static <L, R> Tuple2<L, R> of(L l, R r) {
         return new Tuple2<>(l, r);
     }
@@ -51,7 +54,7 @@ public class Tuple2<L, R> implements Tuple {
      * @param <T> the new type for the left item
      * @return the new {@link Tuple2}
      */
-    public <T> Tuple2<T, R> mapItem1(Function<L, T> mapper) {
+    public <T> Tuple2<T, R> mapItem1(@NotNull Function<L, T> mapper) {
         return Tuple2.of(mapper.apply(item1), item2);
     }
 
@@ -63,7 +66,7 @@ public class Tuple2<L, R> implements Tuple {
      * @param <T> the new type for the right item
      * @return the new {@link Tuple2}
      */
-    public <T> Tuple2<L, T> mapItem2(Function<R, T> mapper) {
+    public <T> Tuple2<L, T> mapItem2(@NotNull Function<R, T> mapper) {
         return Tuple2.of(item1, mapper.apply(item2));
     }
 

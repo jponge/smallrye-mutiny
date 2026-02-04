@@ -4,6 +4,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 
 import io.smallrye.mutiny.Uni;
+import org.jetbrains.annotations.NotNull;
 
 public class ToCompletionStage<T> implements Function<Uni<T>, CompletionStage<T>> {
 
@@ -14,7 +15,7 @@ public class ToCompletionStage<T> implements Function<Uni<T>, CompletionStage<T>
     }
 
     @Override
-    public CompletionStage<T> apply(Uni<T> uni) {
+    public CompletionStage<T> apply(@NotNull Uni<T> uni) {
         return uni.subscribeAsCompletionStage();
     }
 }

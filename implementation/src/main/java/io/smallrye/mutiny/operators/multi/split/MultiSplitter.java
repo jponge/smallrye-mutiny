@@ -16,6 +16,7 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Splits a {@link Multi} into several co-operating {@link Multi}.
@@ -47,13 +48,17 @@ import io.smallrye.mutiny.subscription.MultiSubscriber;
  */
 public class MultiSplitter<T, K extends Enum<K>> {
 
+    @NotNull
     private final Multi<? extends T> upstream;
+    @NotNull
     private final Function<T, K> splitter;
+    @NotNull
     private final ConcurrentHashMap<K, SplitMulti.Split> splits;
     private final int requiredNumberOfSubscribers;
+    @NotNull
     private final Class<K> keyType;
 
-    public MultiSplitter(Multi<? extends T> upstream, Class<K> keyType, Function<T, K> splitter) {
+    public MultiSplitter(@NotNull Multi<? extends T> upstream, @NotNull Class<K> keyType, @NotNull Function<T, K> splitter) {
         this.upstream = nonNull(upstream, "upstream");
         if (!nonNull(keyType, "keyType").isEnum()) {
             // Note: the Java compiler enforces a type check on keyType being some enum, so this branch is only here for added peace of mind
@@ -184,7 +189,7 @@ public class MultiSplitter<T, K extends Enum<K>> {
         }
 
         @Override
-        public void onSubscribe(Flow.Subscription subscription) {
+        public void onSubscribe(@NotNull Flow.Subscription subscription) {
             if (state.get() != State.AWAITING_SUBSCRIPTION) {
                 subscription.cancel();
             } else {
@@ -210,7 +215,7 @@ public class MultiSplitter<T, K extends Enum<K>> {
         }
 
         @Override
-        public void subscribe(MultiSubscriber<? super T> subscriber) {
+        public void subscribe(@NotNull MultiSubscriber<? super T> subscriber) {
             nonNull(subscriber, "subscriber");
 
             // First subscription triggers upstream subscription
@@ -246,7 +251,7 @@ public class MultiSplitter<T, K extends Enum<K>> {
         private class Split implements Flow.Subscription {
 
             MultiSubscriber<? super T> downstream;
-            AtomicLong demand = new AtomicLong();
+            @NotNull AtomicLong demand = new AtomicLong();
 
             private Split(MultiSubscriber<? super T> subscriber) {
                 this.downstream = subscriber;

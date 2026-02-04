@@ -9,6 +9,7 @@ import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiWithContext<I, O> extends AbstractMultiOperator<I, O> {
 
@@ -21,7 +22,7 @@ public class MultiWithContext<I, O> extends AbstractMultiOperator<I, O> {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void subscribe(MultiSubscriber<? super O> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super O> downstream) {
         ParameterValidation.nonNull(downstream, "downstream");
 
         Context context;

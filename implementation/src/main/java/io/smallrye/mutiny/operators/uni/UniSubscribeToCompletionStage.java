@@ -8,10 +8,12 @@ import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.Cancellable;
+import org.jetbrains.annotations.NotNull;
 
 public class UniSubscribeToCompletionStage {
 
-    public static <T> CompletableFuture<T> subscribe(Uni<T> uni, Context context) {
+    @NotNull
+    public static <T> CompletableFuture<T> subscribe(@NotNull Uni<T> uni, Context context) {
         final AtomicReference<Cancellable> cancellable = new AtomicReference<>();
 
         CompletableFuture<T> future = Infrastructure.wrapCompletableFuture(new CompletableFuture<T>());

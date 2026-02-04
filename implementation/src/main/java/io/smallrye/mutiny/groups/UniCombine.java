@@ -8,6 +8,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.smallrye.mutiny.tuples.Tuple5;
+import org.jetbrains.annotations.NotNull;
 
 public class UniCombine {
 
@@ -33,6 +34,7 @@ public class UniCombine {
      *
      * @return the object to enlist the candidates
      */
+    @NotNull
     @CheckReturnValue
     public UniAny any() {
         return UniAny.INSTANCE;
@@ -54,6 +56,7 @@ public class UniCombine {
      *
      * @return the object to configure the join
      */
+    @NotNull
     @CheckReturnValue
     public UniZip all() {
         return UniZip.INSTANCE;

@@ -12,6 +12,8 @@ import java.util.function.Supplier;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class UniCreateFromFuture<T> extends AbstractUni<T> {
 
@@ -28,7 +30,7 @@ public class UniCreateFromFuture<T> extends AbstractUni<T> {
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull UniSubscriber<? super T> downstream) {
         Future<? extends T> future = obtainFuture(downstream);
         if (future == null) {
             return;
@@ -40,7 +42,8 @@ public class UniCreateFromFuture<T> extends AbstractUni<T> {
         }
     }
 
-    private Future<? extends T> obtainFuture(UniSubscriber<? super T> downstream) {
+    @Nullable
+    private Future<? extends T> obtainFuture(@NotNull UniSubscriber<? super T> downstream) {
         Future<? extends T> future;
         try {
             future = supplier.get();
@@ -57,7 +60,7 @@ public class UniCreateFromFuture<T> extends AbstractUni<T> {
         return future;
     }
 
-    private void dispatchImmediateResult(Future<? extends T> future, UniSubscriber<? super T> downstream) {
+    private void dispatchImmediateResult(@NotNull Future<? extends T> future, @NotNull UniSubscriber<? super T> downstream) {
         T item;
         try {
             item = future.get();
@@ -77,7 +80,7 @@ public class UniCreateFromFuture<T> extends AbstractUni<T> {
         downstream.onItem(item);
     }
 
-    private void dispatchDeferredResult(Future<? extends T> future, UniSubscriber<? super T> downstream) {
+    private void dispatchDeferredResult(@NotNull Future<? extends T> future, @NotNull UniSubscriber<? super T> downstream) {
         AtomicBoolean cancelled = new AtomicBoolean(false);
         downstream.onSubscribe(() -> {
             cancelled.set(true);

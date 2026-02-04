@@ -17,8 +17,11 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.BackPressureFailure;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
+    @NotNull
     private final Function<? super I, ? extends Flow.Publisher<? extends O>> mapper;
 
     private final boolean postponeFailurePropagation;
@@ -26,10 +29,10 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
     private final int requests;
 
     public MultiFlatMapOp(Multi<? extends I> upstream,
-            Function<? super I, ? extends Flow.Publisher<? extends O>> mapper,
-            boolean postponeFailurePropagation,
-            int maxConcurrency,
-            int requests) {
+                          @NotNull Function<? super I, ? extends Flow.Publisher<? extends O>> mapper,
+                          boolean postponeFailurePropagation,
+                          int maxConcurrency,
+                          int requests) {
         super(upstream);
         this.mapper = ParameterValidation.nonNull(mapper, "mapper");
         this.postponeFailurePropagation = postponeFailurePropagation;
@@ -38,7 +41,7 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super O> subscriber) {
+    public void subscribe(@NotNull MultiSubscriber<? super O> subscriber) {
         if (subscriber == null) {
             throw new NullPointerException("The subscriber must not be `null`");
         }
@@ -59,6 +62,7 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         final int requests;
         final int limit;
         final Function<? super I, ? extends Flow.Publisher<? extends O>> mapper;
+        @NotNull
         final Supplier<? extends Queue<O>> innerQueueSupplier;
         final MultiSubscriber<? super O> downstream;
 
@@ -67,13 +71,14 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         volatile boolean done;
         volatile boolean cancelled;
 
+        @Nullable
         volatile Subscription upstream = null;
         private static final AtomicReferenceFieldUpdater<FlatMapMainSubscriber, Subscription> UPSTREAM_UPDATER = AtomicReferenceFieldUpdater
                 .newUpdater(FlatMapMainSubscriber.class, Subscription.class, "upstream");
 
-        AtomicLong requested = new AtomicLong();
+        @NotNull AtomicLong requested = new AtomicLong();
 
-        AtomicInteger wip = new AtomicInteger();
+        @NotNull AtomicInteger wip = new AtomicInteger();
 
         @SuppressWarnings("rawtypes")
         static final FlatMapInner[] EMPTY_INNER_ARRAY = new FlatMapInner[0];
@@ -97,18 +102,21 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
             this.limit = Subscriptions.unboundedOrLimit(concurrency);
         }
 
+        @NotNull
         @SuppressWarnings("unchecked")
         @Override
         FlatMapInner<O>[] empty() {
             return EMPTY_INNER_ARRAY;
         }
 
+        @NotNull
         @SuppressWarnings("unchecked")
         @Override
         FlatMapInner<O>[] terminated() {
             return TERMINATED_INNER_ARRAY;
         }
 
+        @NotNull
         @SuppressWarnings("unchecked")
         @Override
         FlatMapInner<O>[] newArray(int size) {
@@ -116,12 +124,12 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         }
 
         @Override
-        void setIndex(FlatMapInner<O> entry, int index) {
+        void setIndex(@NotNull FlatMapInner<O> entry, int index) {
             entry.index = index;
         }
 
         @Override
-        void unsubscribeEntry(FlatMapInner<O> entry, boolean fromOnError) {
+        void unsubscribeEntry(@NotNull FlatMapInner<O> entry, boolean fromOnError) {
             entry.cancel(fromOnError);
         }
 
@@ -148,7 +156,7 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         }
 
         @Override
-        public void onSubscribe(Subscription s) {
+        public void onSubscribe(@NotNull Subscription s) {
             if (UPSTREAM_UPDATER.compareAndSet(this, null, s)) {
                 downstream.onSubscribe(this);
                 s.request(Subscriptions.unboundedOrRequests(maxConcurrency));
@@ -211,7 +219,7 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
             drain();
         }
 
-        void tryEmit(FlatMapInner<O> inner, O item) {
+        void tryEmit(@NotNull FlatMapInner<O> inner, O item) {
             if (wip.compareAndSet(0, 1)) {
                 long req = requested.get();
                 Queue<O> q = inner.queue;
@@ -474,7 +482,7 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
             return false;
         }
 
-        void innerError(FlatMapInner<O> inner, Throwable fail) {
+        void innerError(@NotNull FlatMapInner<O> inner, @Nullable Throwable fail) {
             if (fail != null) {
                 if (Subscriptions.addFailure(failures, fail)) {
                     inner.done = true;
@@ -502,7 +510,7 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
             drainLoop();
         }
 
-        Queue<O> getOrCreateInnerQueue(FlatMapInner<O> inner) {
+        Queue<O> getOrCreateInnerQueue(@NotNull FlatMapInner<O> inner) {
             Queue<O> q = inner.queue;
             if (q == null) {
                 q = innerQueueSupplier.get();
@@ -529,12 +537,14 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
         final int limit;
 
+        @Nullable
         volatile Subscription subscription = null;
         private static final AtomicReferenceFieldUpdater<FlatMapInner, Subscription> SUBSCRIPTION_UPDATER = AtomicReferenceFieldUpdater
                 .newUpdater(FlatMapInner.class, Subscription.class, "subscription");
 
         long produced;
 
+        @Nullable
         volatile Queue<O> queue;
 
         volatile boolean done;
@@ -548,7 +558,7 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         }
 
         @Override
-        public void onSubscribe(Subscription s) {
+        public void onSubscribe(@NotNull Subscription s) {
             Objects.requireNonNull(s);
             if (SUBSCRIPTION_UPDATER.compareAndSet(this, null, s)) {
                 s.request(Subscriptions.unboundedOrRequests(requests));

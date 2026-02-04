@@ -10,6 +10,7 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.operators.multi.MultiDemandPacer;
 import io.smallrye.mutiny.subscription.DemandPacer;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiDemandPacing<T> {
 
@@ -27,6 +28,7 @@ public class MultiDemandPacing<T> {
      * @param executor the executor, must not be {@code null}
      * @return this group
      */
+    @NotNull
     @CheckReturnValue
     public MultiDemandPacing<T> on(ScheduledExecutorService executor) {
         this.executor = nonNull(executor, "executor");

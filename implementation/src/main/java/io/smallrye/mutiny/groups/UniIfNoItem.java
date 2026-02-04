@@ -7,9 +7,11 @@ import java.time.Duration;
 
 import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.mutiny.Uni;
+import org.jetbrains.annotations.NotNull;
 
 public class UniIfNoItem<T> {
 
+    @NotNull
     private final Uni<T> upstream;
 
     public UniIfNoItem(Uni<T> upstream) {
@@ -22,6 +24,7 @@ public class UniIfNoItem<T> {
      * @param timeout the timeout, must not be {@code null}, must be strictly positive.
      * @return a new {@link UniOnTimeout}
      */
+    @NotNull
     @CheckReturnValue
     public UniOnTimeout<T> after(Duration timeout) {
         return new UniOnTimeout<>(upstream, validate(timeout, "timeout"), null);

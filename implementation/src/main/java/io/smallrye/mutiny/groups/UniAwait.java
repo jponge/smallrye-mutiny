@@ -14,6 +14,8 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.uni.UniBlockingAwait;
 import io.smallrye.mutiny.operators.uni.builders.UniCreateFromKnownFailure;
 import io.smallrye.mutiny.operators.uni.builders.UniCreateFromKnownItem;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Waits and returns the item emitted by the {@link Uni}. If the {@link Uni} receives a failure, the failure is thrown.
@@ -25,6 +27,7 @@ import io.smallrye.mutiny.operators.uni.builders.UniCreateFromKnownItem;
  */
 public class UniAwait<T> {
 
+    @NotNull
     private final Uni<T> upstream;
     private final Context context;
 
@@ -82,12 +85,13 @@ public class UniAwait<T> {
      *
      * @return the {@link UniAwaitOptional} configured to produce an {@link Optional}.
      */
+    @NotNull
     @CheckReturnValue
     public UniAwaitOptional<T> asOptional() {
         return new UniAwaitOptional<>(upstream, context);
     }
 
-    private T awaitKnownItem(UniCreateFromKnownItem<T> known, Duration duration) {
+    private T awaitKnownItem(@NotNull UniCreateFromKnownItem<T> known, Duration duration) {
         validateDuration(duration);
         // Blocking should not matter in this case but we retain the check for backward compatibility
         if (!Infrastructure.canCallerThreadBeBlocked()) {
@@ -96,7 +100,7 @@ public class UniAwait<T> {
         return known.getItem();
     }
 
-    private void awaitKnownFailure(UniCreateFromKnownFailure<T> known, Duration duration) {
+    private void awaitKnownFailure(@NotNull UniCreateFromKnownFailure<T> known, Duration duration) {
         validateDuration(duration);
         // Blocking should not matter in this case but we retain the check for backward compatibility
         if (!Infrastructure.canCallerThreadBeBlocked()) {
@@ -109,7 +113,7 @@ public class UniAwait<T> {
         throw new CompletionException(throwable);
     }
 
-    private void validateDuration(Duration duration) {
+    private void validateDuration(@Nullable Duration duration) {
         if (duration != null && (duration.isZero() || duration.isNegative())) {
             throw new IllegalArgumentException("`duration` must be greater than zero");
         }

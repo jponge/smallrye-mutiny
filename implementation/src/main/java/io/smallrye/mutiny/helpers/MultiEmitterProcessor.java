@@ -12,9 +12,11 @@ import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.operators.multi.processors.UnicastProcessor;
 import io.smallrye.mutiny.subscription.MultiEmitter;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiEmitterProcessor<T> implements Processor<T, T>, MultiEmitter<T> {
 
+    @NotNull
     private final UnicastProcessor<T> processor;
 
     private final AtomicBoolean terminated = new AtomicBoolean();
@@ -33,10 +35,12 @@ public class MultiEmitterProcessor<T> implements Processor<T, T>, MultiEmitter<T
         this.processor = UnicastProcessor.create();
     }
 
+    @NotNull
     public static <T> MultiEmitterProcessor<T> create() {
         return new MultiEmitterProcessor<>();
     }
 
+    @NotNull
     @Override
     public MultiEmitter<T> emit(T item) {
         onNext(item);
@@ -53,8 +57,9 @@ public class MultiEmitterProcessor<T> implements Processor<T, T>, MultiEmitter<T
         onComplete();
     }
 
+    @NotNull
     @Override
-    public MultiEmitter<T> onTermination(Runnable onTermination) {
+    public MultiEmitter<T> onTermination(@NotNull Runnable onTermination) {
         ParameterValidation.nonNull(onTermination, "onTermination");
         this.onTermination = onTermination;
         return this;
@@ -70,15 +75,17 @@ public class MultiEmitterProcessor<T> implements Processor<T, T>, MultiEmitter<T
         return requested.get();
     }
 
+    @NotNull
     @Override
-    public MultiEmitter<T> onRequest(LongConsumer consumer) {
+    public MultiEmitter<T> onRequest(@NotNull LongConsumer consumer) {
         ParameterValidation.nonNull(consumer, "consumer");
         this.onRequest = consumer;
         return this;
     }
 
+    @NotNull
     @Override
-    public MultiEmitter<T> onCancellation(Runnable onCancellation) {
+    public MultiEmitter<T> onCancellation(@NotNull Runnable onCancellation) {
         ParameterValidation.nonNull(onCancellation, "onCancellation");
         this.onCancellation = onCancellation;
         return this;
@@ -86,10 +93,10 @@ public class MultiEmitterProcessor<T> implements Processor<T, T>, MultiEmitter<T
 
     @SuppressWarnings("SubscriberImplementation")
     @Override
-    public void subscribe(Subscriber<? super T> subscriber) {
+    public void subscribe(@NotNull Subscriber<? super T> subscriber) {
         processor.subscribe(new Subscriber<T>() {
             @Override
-            public void onSubscribe(Subscription subscription) {
+            public void onSubscribe(@NotNull Subscription subscription) {
                 subscriber.onSubscribe(new Subscription() {
                     @Override
                     public void request(long n) {

@@ -10,6 +10,7 @@ import org.jctools.queues.atomic.unpadded.SpscChunkedAtomicUnpaddedArrayQueue;
 import org.jctools.queues.atomic.unpadded.SpscUnboundedAtomicUnpaddedArrayQueue;
 
 import io.smallrye.mutiny.infrastructure.Infrastructure;
+import org.jetbrains.annotations.NotNull;
 
 public class Queues {
 
@@ -17,18 +18,22 @@ public class Queues {
         // avoid direct instantiation
     }
 
+    @NotNull
     public static <T> Queue<T> createSpscArrayQueue(int capacity) {
         return new SpscAtomicUnpaddedArrayQueue<>(capacity);
     }
 
+    @NotNull
     public static <T> Queue<T> createSpscUnboundedArrayQueue(int chunkSize) {
         return new SpscUnboundedAtomicUnpaddedArrayQueue<>(chunkSize);
     }
 
+    @NotNull
     public static <T> Queue<T> createSpscChunkedArrayQueue(int capacity) {
         return new SpscChunkedAtomicUnpaddedArrayQueue<>(capacity);
     }
 
+    @NotNull
     public static <T> Supplier<Queue<T>> getXsQueueSupplier() {
         return () -> createSpscArrayQueue(Infrastructure.getBufferSizeXs());
     }
@@ -42,6 +47,7 @@ public class Queues {
      * @param <T> the type of element
      * @return the supplier.
      */
+    @NotNull
     public static <T> Supplier<Queue<T>> get(int capacity) {
         if (capacity == Infrastructure.getBufferSizeXs()) {
             return () -> createSpscArrayQueue(Infrastructure.getBufferSizeXs());
@@ -70,6 +76,7 @@ public class Queues {
      * @param <T> the type of item
      * @return the unbound queue supplier
      */
+    @NotNull
     public static <T> Supplier<Queue<T>> unbounded(int chunkSize) {
         if (chunkSize == Infrastructure.getBufferSizeXs()) {
             return () -> createSpscUnboundedArrayQueue(Infrastructure.getBufferSizeXs());
@@ -86,6 +93,7 @@ public class Queues {
      * @param <T> the type of item
      * @return the queue
      */
+    @NotNull
     public static <T> Queue<T> createMpscQueue() {
         return new MpscUnboundedAtomicUnpaddedArrayQueue<>(Infrastructure.getBufferSizeS());
     }
@@ -97,6 +105,7 @@ public class Queues {
      * @param <T> the item type
      * @return the queue
      */
+    @NotNull
     public static <T> Queue<T> createSpscUnboundedQueue(int chunkSize) {
         return new SpscUnboundedAtomicUnpaddedArrayQueue<>(chunkSize);
     }
@@ -108,6 +117,7 @@ public class Queues {
      * @param <T> the elements type
      * @return a new queue
      */
+    @NotNull
     public static <T> Queue<T> createMpscArrayQueue(int capacity) {
         return new MpscAtomicUnpaddedArrayQueue<>(capacity);
     }

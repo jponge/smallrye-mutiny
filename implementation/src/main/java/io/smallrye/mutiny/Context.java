@@ -1,5 +1,8 @@
 package io.smallrye.mutiny;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 import static java.util.Objects.requireNonNull;
 
@@ -40,6 +43,7 @@ public final class Context {
      *
      * @return the context
      */
+    @NotNull
     public static Context empty() {
         return new Context();
     }
@@ -52,7 +56,8 @@ public final class Context {
      * @throws IllegalArgumentException when {@code entries} is not balanced
      * @throws NullPointerException when {@code entries} is {@code null}
      */
-    public static Context of(Object... entries) {
+    @NotNull
+    public static Context of(@NotNull Object... entries) {
         requireNonNull(entries, "The entries array cannot be null");
         if (entries.length % 2 != 0) {
             throw new IllegalArgumentException("Arguments must be balanced to form (key, value) pairs");
@@ -73,10 +78,12 @@ public final class Context {
      * @return the new context
      * @throws NullPointerException when {@code entries} is null
      */
+    @NotNull
     public static Context from(Map<String, ?> entries) {
         return new Context(requireNonNull(entries, "The entries map cannot be null"));
     }
 
+    @Nullable
     private volatile ConcurrentHashMap<String, Object> entries;
 
     private Context() {
@@ -109,6 +116,7 @@ public final class Context {
      * @return the value
      * @throws NoSuchElementException when there is no entry for {@code key}
      */
+    @NotNull
     @SuppressWarnings("unchecked")
     public <T> T get(String key) throws NoSuchElementException {
         if (entries == null) {
@@ -130,7 +138,7 @@ public final class Context {
      * @return the value
      */
     @SuppressWarnings("unchecked")
-    public <T> T getOrElse(String key, Supplier<? extends T> alternativeSupplier) {
+    public <T> T getOrElse(String key, @NotNull Supplier<? extends T> alternativeSupplier) {
         if (entries != null) {
             T value = (T) entries.get(key);
             if (value != null) {
@@ -147,7 +155,8 @@ public final class Context {
      * @param value the value, cannot be {@code null}
      * @return this context
      */
-    public Context put(String key, Object value) {
+    @NotNull
+    public Context put(@NotNull String key, @NotNull Object value) {
         if (entries == null) {
             synchronized (this) {
                 if (entries == null) {
@@ -165,7 +174,8 @@ public final class Context {
      * @param key the key
      * @return this context
      */
-    public Context delete(String key) {
+    @NotNull
+    public Context delete(@NotNull String key) {
         if (entries != null) {
             entries.remove(key);
         }
@@ -188,6 +198,7 @@ public final class Context {
      *
      * @return the set of keys
      */
+    @NotNull
     public Set<String> keys() {
         if (this.entries == null) {
             return Collections.emptySet();
@@ -201,7 +212,7 @@ public final class Context {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (this == other) {
             return true;
         }
@@ -217,6 +228,7 @@ public final class Context {
         return Objects.hash(entries);
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "Context{" +

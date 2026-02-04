@@ -9,6 +9,7 @@ import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
 
 public class UniOnCancellation<T> extends UniOperator<T, T> {
 
@@ -34,6 +35,7 @@ public class UniOnCancellation<T> extends UniOperator<T, T> {
 
         private final Runnable callback;
 
+        @NotNull
         private volatile State state = State.INIT;
         private static final AtomicReferenceFieldUpdater<UniOnCancellationProcessor, State> stateUpdater = AtomicReferenceFieldUpdater
                 .newUpdater(UniOnCancellationProcessor.class, State.class, "state");

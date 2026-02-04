@@ -10,9 +10,11 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.uni.UniOnTermination;
 import io.smallrye.mutiny.operators.uni.UniOnTerminationCall;
 import io.smallrye.mutiny.tuples.Functions;
+import org.jetbrains.annotations.NotNull;
 
 public class UniOnTerminate<T> {
 
+    @NotNull
     private final Uni<T> upstream;
 
     public UniOnTerminate(Uni<T> upstream) {

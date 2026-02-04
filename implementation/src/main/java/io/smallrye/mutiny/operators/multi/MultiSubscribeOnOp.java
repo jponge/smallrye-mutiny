@@ -24,6 +24,7 @@ import java.util.concurrent.RejectedExecutionException;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Subscribes to the upstream asynchronously using the given executor, and ensure all
@@ -33,11 +34,12 @@ import io.smallrye.mutiny.subscription.MultiSubscriber;
  */
 public class MultiSubscribeOnOp<T> extends AbstractMultiOperator<T, T> {
 
+    @NotNull
     private final Executor executor;
 
     public MultiSubscribeOnOp(
             Multi<? extends T> upstream,
-            Executor executor) {
+            @NotNull Executor executor) {
         super(upstream);
         this.executor = ParameterValidation.nonNull(executor, "executor");
     }
@@ -57,7 +59,7 @@ public class MultiSubscribeOnOp<T> extends AbstractMultiOperator<T, T> {
             this.executor = executor;
         }
 
-        public void scheduleSubscription(Multi<? extends T> upstream, MultiSubscriber<? super T> downstream) {
+        public void scheduleSubscription(@NotNull Multi<? extends T> upstream, MultiSubscriber<? super T> downstream) {
             try {
                 executor.execute(() -> upstream.subscribe().withSubscriber(this));
             } catch (RejectedExecutionException rejection) {

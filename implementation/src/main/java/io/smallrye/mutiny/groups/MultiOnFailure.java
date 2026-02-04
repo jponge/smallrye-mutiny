@@ -17,6 +17,8 @@ import io.smallrye.mutiny.operators.multi.MultiFlatMapOnFailure;
 import io.smallrye.mutiny.operators.multi.MultiOnFailureInvoke;
 import io.smallrye.mutiny.operators.multi.MultiOnFailureTransform;
 import io.smallrye.mutiny.subscription.Cancellable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Configures the failure handler.
@@ -42,9 +44,10 @@ import io.smallrye.mutiny.subscription.Cancellable;
 public class MultiOnFailure<T> {
 
     private final Multi<T> upstream;
+    @NotNull
     private final Predicate<? super Throwable> predicate;
 
-    public MultiOnFailure(Multi<T> upstream, Predicate<? super Throwable> predicate) {
+    public MultiOnFailure(Multi<T> upstream, @Nullable Predicate<? super Throwable> predicate) {
         this.upstream = upstream;
         this.predicate = predicate == null ? x -> true : predicate;
     }
@@ -278,6 +281,7 @@ public class MultiOnFailure<T> {
      *
      * @return the object to configure the retry.
      */
+    @NotNull
     @CheckReturnValue
     public MultiRetry<T> retry() {
         return new MultiRetry<>(upstream, predicate);

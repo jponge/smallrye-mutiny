@@ -1,5 +1,8 @@
 package io.smallrye.mutiny.helpers.queues;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.*;
 
 final class EmptyQueue<T> implements Queue<T> {
@@ -39,6 +42,7 @@ final class EmptyQueue<T> implements Queue<T> {
         return true;
     }
 
+    @NotNull
     @Override
     public Iterator<T> iterator() {
         return Collections.emptyIterator();
@@ -49,11 +53,13 @@ final class EmptyQueue<T> implements Queue<T> {
         return false;
     }
 
+    @Nullable
     @Override
     public T peek() {
         return null;
     }
 
+    @Nullable
     @Override
     public T poll() {
         return null;
@@ -84,13 +90,15 @@ final class EmptyQueue<T> implements Queue<T> {
         return 0;
     }
 
+    @NotNull
     @Override
     public Object[] toArray() {
         return new Object[0];
     }
 
+    @NotNull
     @Override
-    public <T1> T1[] toArray(T1[] a) {
+    public <T1> T1[] toArray(@NotNull T1[] a) {
         if (a.length > 0) {
             a[0] = null;
         }

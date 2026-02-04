@@ -7,12 +7,13 @@ import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class UniOnItemTransform<I, O> extends UniOperator<I, O> {
 
     private final Function<? super I, ? extends O> mapper;
 
-    public UniOnItemTransform(Uni<I> source, Function<? super I, ? extends O> mapper) {
+    public UniOnItemTransform(@NotNull Uni<I> source, Function<? super I, ? extends O> mapper) {
         super(ParameterValidation.nonNull(source, "source"));
         this.mapper = mapper;
     }

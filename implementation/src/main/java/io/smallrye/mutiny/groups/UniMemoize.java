@@ -12,9 +12,11 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.operators.uni.UniMemoizeOp;
+import org.jetbrains.annotations.NotNull;
 
 public class UniMemoize<T> {
 
+    @NotNull
     private final Uni<T> upstream;
 
     public UniMemoize(AbstractUni<T> upstream) {

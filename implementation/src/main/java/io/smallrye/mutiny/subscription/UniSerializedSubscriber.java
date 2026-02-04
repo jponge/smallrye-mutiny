@@ -9,6 +9,7 @@ import io.smallrye.mutiny.helpers.EmptyUniSubscription;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractUni;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * An implementation of {@link UniSubscriber} and {@link UniSubscription} making sure event handlers are only called once.
@@ -32,18 +33,20 @@ public class UniSerializedSubscriber<T> implements UniSubscriber<T>, UniSubscrip
     private static final int DONE = 3;
 
     private final AtomicInteger state = new AtomicInteger(INIT);
+    @NotNull
     private final AbstractUni<T> upstream;
+    @NotNull
     private final UniSubscriber<? super T> downstream;
 
     private volatile UniSubscription subscription;
     private final AtomicReference<Throwable> failure = new AtomicReference<>();
 
-    public UniSerializedSubscriber(AbstractUni<T> upstream, UniSubscriber<? super T> subscriber) {
+    public UniSerializedSubscriber(@NotNull AbstractUni<T> upstream, @NotNull UniSubscriber<? super T> subscriber) {
         this.upstream = ParameterValidation.nonNull(upstream, "source");
         this.downstream = ParameterValidation.nonNull(subscriber, "subscriber` must not be `null`");
     }
 
-    public static <T> void subscribe(AbstractUni<T> source, UniSubscriber<? super T> subscriber) {
+    public static <T> void subscribe(@NotNull AbstractUni<T> source, UniSubscriber<? super T> subscriber) {
         UniSubscriber<? super T> actual = Infrastructure.onUniSubscription(source, subscriber);
         UniSerializedSubscriber<T> wrapped = new UniSerializedSubscriber<>(source, actual);
         wrapped.subscribe();
@@ -61,7 +64,7 @@ public class UniSerializedSubscriber<T> implements UniSubscriber<T>, UniSubscrip
     }
 
     @Override
-    public void onSubscribe(UniSubscription subscription) {
+    public void onSubscribe(@NotNull UniSubscription subscription) {
         ParameterValidation.nonNull(subscription, "subscription");
         if (state.compareAndSet(SUBSCRIBED, HAS_SUBSCRIPTION)) {
             this.subscription = subscription;

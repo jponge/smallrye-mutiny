@@ -4,6 +4,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 import io.smallrye.mutiny.Uni;
+import org.jetbrains.annotations.NotNull;
 
 public class ToCompletableFuture<T> implements Function<Uni<T>, CompletableFuture<T>> {
 
@@ -14,7 +15,7 @@ public class ToCompletableFuture<T> implements Function<Uni<T>, CompletableFutur
     }
 
     @Override
-    public CompletableFuture<T> apply(Uni<T> uni) {
+    public CompletableFuture<T> apply(@NotNull Uni<T> uni) {
         return uni.subscribeAsCompletionStage();
     }
 }

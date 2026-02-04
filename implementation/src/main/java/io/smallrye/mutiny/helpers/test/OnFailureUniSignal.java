@@ -1,5 +1,7 @@
 package io.smallrye.mutiny.helpers.test;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * A onFailure signal.
  */
@@ -15,6 +17,7 @@ public final class OnFailureUniSignal implements UniSignal {
         return failure;
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "OnFailureSignal{" +

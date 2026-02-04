@@ -10,9 +10,11 @@ import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.uni.UniOrCombination;
+import org.jetbrains.annotations.NotNull;
 
 public class UniOr<T> {
 
+    @NotNull
     private final Uni<T> upstream;
 
     public UniOr(Uni<T> upstream) {

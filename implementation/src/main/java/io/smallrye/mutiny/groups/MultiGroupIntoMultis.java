@@ -11,9 +11,11 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.MultiWindowOnDurationOp;
 import io.smallrye.mutiny.operators.multi.MultiWindowOp;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiGroupIntoMultis<T> {
 
+    @NotNull
     private final Multi<T> upstream;
 
     public MultiGroupIntoMultis(Multi<T> upstream) {

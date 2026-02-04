@@ -2,6 +2,7 @@ package io.smallrye.mutiny.helpers.spies;
 
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class UniGlobalSpy<T> extends UniSpyBase<T> {
 
@@ -12,7 +13,7 @@ public class UniGlobalSpy<T> extends UniSpyBase<T> {
     private final UniOnSubscribeSpy<T> onSubscribeSpy;
     private final UniOnTerminationSpy<T> onTerminationSpy;
 
-    UniGlobalSpy(Uni<T> upstream) {
+    UniGlobalSpy(@NotNull Uni<T> upstream) {
         super(upstream);
         onCancellationSpy = Spy.onCancellation(upstream);
         onFailureSpy = Spy.onFailure(onCancellationSpy);
@@ -68,10 +69,11 @@ public class UniGlobalSpy<T> extends UniSpyBase<T> {
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull UniSubscriber<? super T> downstream) {
         onTerminationSpy.subscribe().withSubscriber(downstream);
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "UniGlobalSpy{" +

@@ -14,6 +14,7 @@ import io.smallrye.mutiny.groups.*;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.uni.*;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public abstract class AbstractUni<T> implements Uni<T> {
 
@@ -29,7 +30,7 @@ public abstract class AbstractUni<T> implements Uni<T> {
      * @param <T> the type of item
      */
     @SuppressWarnings("unchecked")
-    public static <T> void subscribe(Uni<? extends T> upstream, UniSubscriber<? super T> subscriber) {
+    public static <T> void subscribe(Uni<? extends T> upstream, @NotNull UniSubscriber<? super T> subscriber) {
         if (upstream instanceof AbstractUni abstractUni) {
             UniSubscriber actualSubscriber = Infrastructure.onUniSubscription(upstream, subscriber);
             abstractUni.subscribe(actualSubscriber);
@@ -38,41 +39,49 @@ public abstract class AbstractUni<T> implements Uni<T> {
         }
     }
 
+    @NotNull
     @Override
     public UniSubscribe<T> subscribe() {
         return new UniSubscribe<>(this);
     }
 
+    @NotNull
     @Override
     public UniOnItem<T> onItem() {
         return new UniOnItem<>(this);
     }
 
+    @NotNull
     @Override
     public UniIfNoItem<T> ifNoItem() {
         return new UniIfNoItem<>(this);
     }
 
+    @NotNull
     @Override
     public UniOnFailure<T, Throwable> onFailure() {
         return new UniOnFailure<>(this, Throwable.class, null);
     }
 
+    @NotNull
     @Override
     public UniOnFailure<T, Throwable> onFailure(Predicate<? super Throwable> predicate) {
         return new UniOnFailure<>(this, Throwable.class, predicate);
     }
 
+    @NotNull
     @Override
-    public <E extends Throwable> UniOnFailure<T, E> onFailure(Class<E> typeOfFailure) {
+    public <E extends Throwable> UniOnFailure<T, E> onFailure(@NotNull Class<E> typeOfFailure) {
         return new UniOnFailure<>(this, typeOfFailure, typeOfFailure::isInstance);
     }
 
+    @NotNull
     @Override
     public UniOnSubscribe<T> onSubscription() {
         return new UniOnSubscribe<>(this);
     }
 
+    @NotNull
     @Override
     public UniOnItemOrFailure<T> onItemOrFailure() {
         return new UniOnItemOrFailure<>(this);
@@ -83,23 +92,25 @@ public abstract class AbstractUni<T> implements Uni<T> {
         return awaitUsing(Context.empty());
     }
 
+    @NotNull
     @Override
     public UniAwait<T> awaitUsing(Context context) {
         return new UniAwait<>(this, context);
     }
 
     @Override
-    public Uni<T> emitOn(Executor executor) {
+    public Uni<T> emitOn(@NotNull Executor executor) {
         return Infrastructure.onUniCreation(
                 new UniEmitOn<>(this, nonNull(executor, "executor")));
     }
 
     @Override
-    public Uni<T> runSubscriptionOn(Executor executor) {
+    public Uni<T> runSubscriptionOn(@NotNull Executor executor) {
         return Infrastructure.onUniCreation(
                 new UniRunSubscribeOn<>(this, executor));
     }
 
+    @NotNull
     @Override
     public UniMemoize<T> memoize() {
         return new UniMemoize<>(this);
@@ -109,6 +120,7 @@ public abstract class AbstractUni<T> implements Uni<T> {
         return Infrastructure.onUniCreation(new UniMemoizeOp<>(this));
     }
 
+    @NotNull
     @Override
     public UniConvert<T> convert() {
         return new UniConvert<>(this);
@@ -119,23 +131,26 @@ public abstract class AbstractUni<T> implements Uni<T> {
         return Multi.createFrom().safePublisher(new UniToMultiPublisher<>(this));
     }
 
+    @NotNull
     @Override
     public UniRepeat<T> repeat() {
         return new UniRepeat<>(this);
     }
 
+    @NotNull
     @Override
     public UniOnTerminate<T> onTermination() {
         return new UniOnTerminate<>(this);
     }
 
+    @NotNull
     @Override
     public UniOnCancel<T> onCancellation() {
         return new UniOnCancel<>(this);
     }
 
     @Override
-    public Uni<T> log(String identifier) {
+    public Uni<T> log(@NotNull String identifier) {
         return Infrastructure.onUniCreation(new UniLogger<>(this, identifier));
     }
 
@@ -145,7 +160,7 @@ public abstract class AbstractUni<T> implements Uni<T> {
     }
 
     @Override
-    public <R> Uni<R> withContext(BiFunction<Uni<T>, Context, Uni<R>> builder) {
+    public <R> Uni<R> withContext(@NotNull BiFunction<Uni<T>, Context, Uni<R>> builder) {
         return Infrastructure.onUniCreation(new UniWithContext<>(this, nonNull(builder, "builder")));
     }
 }

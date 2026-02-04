@@ -1,5 +1,8 @@
 package io.smallrye.mutiny;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Objects;
 
 /**
@@ -46,6 +49,7 @@ public final class ItemWithContext<T> {
         return item;
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "ItemWithContext{" +
@@ -55,7 +59,7 @@ public final class ItemWithContext<T> {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }

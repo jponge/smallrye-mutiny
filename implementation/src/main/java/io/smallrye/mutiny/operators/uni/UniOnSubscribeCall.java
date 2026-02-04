@@ -11,13 +11,14 @@ import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
 
 public class UniOnSubscribeCall<T> extends UniOperator<T, T> {
 
     private final Function<? super UniSubscription, Uni<?>> callback;
 
-    public UniOnSubscribeCall(Uni<? extends T> upstream,
-            Function<? super UniSubscription, Uni<?>> callback) {
+    public UniOnSubscribeCall(@NotNull Uni<? extends T> upstream,
+                              Function<? super UniSubscription, Uni<?>> callback) {
         super(ParameterValidation.nonNull(upstream, "upstream"));
         this.callback = callback;
     }
@@ -43,7 +44,7 @@ public class UniOnSubscribeCall<T> extends UniOperator<T, T> {
         private final AtomicBoolean done = new AtomicBoolean();
 
         @Override
-        public void onSubscribe(UniSubscription subscription) {
+        public void onSubscribe(@NotNull UniSubscription subscription) {
             // Invoke producer
             Uni<?> uni;
             try {

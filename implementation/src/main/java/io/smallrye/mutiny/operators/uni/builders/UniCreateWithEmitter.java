@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.subscription.UniEmitter;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class UniCreateWithEmitter<T> extends AbstractUni<T> {
     private final Consumer<UniEmitter<? super T>> consumer;
@@ -14,7 +15,7 @@ public class UniCreateWithEmitter<T> extends AbstractUni<T> {
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super T> subscriber) {
+    public void subscribe(@NotNull UniSubscriber<? super T> subscriber) {
         DefaultUniEmitter<? super T> emitter = new DefaultUniEmitter<>(subscriber);
         subscriber.onSubscribe(emitter);
 

@@ -16,6 +16,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.MultiSwitchOnEmpty;
 import io.smallrye.mutiny.subscription.MultiEmitter;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiIfEmpty<T> {
 
@@ -50,7 +51,8 @@ public class MultiIfEmpty<T> {
         return switchToEmitter(createMultiFromFailureSupplier(actual));
     }
 
-    static <T> Consumer<MultiEmitter<? super T>> createMultiFromFailureSupplier(Supplier<? extends Throwable> supplier) {
+    @NotNull
+    static <T> Consumer<MultiEmitter<? super T>> createMultiFromFailureSupplier(@NotNull Supplier<? extends Throwable> supplier) {
         // supplier already decorated.
         return emitter -> {
             Throwable throwable;
@@ -162,7 +164,7 @@ public class MultiIfEmpty<T> {
         return switchTo(() -> createMultiFromIterableSupplier(actual));
     }
 
-    static <T> Flow.Publisher<? extends T> createMultiFromIterableSupplier(Supplier<? extends Iterable<? extends T>> supplier) {
+    static <T> Flow.Publisher<? extends T> createMultiFromIterableSupplier(@NotNull Supplier<? extends Iterable<? extends T>> supplier) {
         Iterable<? extends T> iterable;
         try {
             iterable = supplier.get();

@@ -5,6 +5,7 @@ import java.util.function.Predicate;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Skips the items from upstream until the passed predicates returns {@code true}.
@@ -13,15 +14,16 @@ import io.smallrye.mutiny.subscription.MultiSubscriber;
  */
 public final class MultiSkipFirstUntilOp<T> extends AbstractMultiOperator<T, T> {
 
+    @NotNull
     private final Predicate<? super T> predicate;
 
-    public MultiSkipFirstUntilOp(Multi<? extends T> upstream, Predicate<? super T> predicate) {
+    public MultiSkipFirstUntilOp(@NotNull Multi<? extends T> upstream, @NotNull Predicate<? super T> predicate) {
         super(upstream);
         this.predicate = ParameterValidation.nonNull(predicate, "predicate");
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> subscriber) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> subscriber) {
         ParameterValidation.nonNullNpe(subscriber, "subscriber");
         upstream.subscribe(new MultiSkipFirstUntilProcessor<>(subscriber, predicate));
     }

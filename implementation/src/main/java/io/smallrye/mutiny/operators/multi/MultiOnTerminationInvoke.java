@@ -9,18 +9,19 @@ import io.smallrye.mutiny.CompositeException;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiOnTerminationInvoke<T> extends AbstractMultiOperator<T, T> {
 
     private final BiConsumer<Throwable, Boolean> callback;
 
-    public MultiOnTerminationInvoke(Multi<? extends T> upstream, BiConsumer<Throwable, Boolean> callback) {
+    public MultiOnTerminationInvoke(@NotNull Multi<? extends T> upstream, BiConsumer<Throwable, Boolean> callback) {
         super(upstream);
         this.callback = callback;
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> downstream) {
         upstream.subscribe().withSubscriber(new MultiOnTerminationInvokeProcessor(nonNull(downstream, "downstream")));
     }
 
@@ -28,7 +29,7 @@ public class MultiOnTerminationInvoke<T> extends AbstractMultiOperator<T, T> {
 
         private final AtomicBoolean actionInvoke = new AtomicBoolean();
 
-        public MultiOnTerminationInvokeProcessor(MultiSubscriber<? super T> downstream) {
+        public MultiOnTerminationInvokeProcessor(@NotNull MultiSubscriber<? super T> downstream) {
             super(downstream);
         }
 

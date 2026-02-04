@@ -1,5 +1,7 @@
 package io.smallrye.mutiny.helpers.test;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.concurrent.Flow.Subscriber;
 import java.util.concurrent.Flow.Subscription;
 import java.util.concurrent.atomic.AtomicReference;
@@ -39,7 +41,7 @@ public class AbstractSubscriber<T> implements Subscriber<T>, Subscription {
     private final AtomicReference<Subscription> upstream = new AtomicReference<>();
 
     @Override
-    public void onSubscribe(Subscription s) {
+    public void onSubscribe(@NotNull Subscription s) {
         if (upstream.compareAndSet(null, s)) {
             if (upfrontRequest > 0) {
                 s.request(upfrontRequest);

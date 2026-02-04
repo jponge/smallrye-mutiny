@@ -2,6 +2,7 @@ package io.smallrye.mutiny.helpers;
 
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * An implementation of {@link UniSubscription} ignoring all call to {@link #cancel()}.
@@ -35,7 +36,7 @@ public class EmptyUniSubscription implements UniSubscription {
      * @param failure the failure, must not be {@code null}
      * @param <T> the expected item type
      */
-    public static <T> void propagateFailureEvent(UniSubscriber<T> subscriber, Throwable failure) {
+    public static <T> void propagateFailureEvent(@NotNull UniSubscriber<T> subscriber, Throwable failure) {
         subscriber.onSubscribe(DONE);
         subscriber.onFailure(failure);
     }

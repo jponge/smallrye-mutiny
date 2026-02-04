@@ -12,9 +12,11 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.MultiOnRequestCall;
 import io.smallrye.mutiny.operators.multi.MultiOnRequestInvoke;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiOnRequest<T> {
 
+    @NotNull
     private final Multi<T> upstream;
 
     public MultiOnRequest(Multi<T> upstream) {

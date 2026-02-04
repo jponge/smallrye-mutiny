@@ -12,18 +12,19 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.Cancellable;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiOnTerminationCall<T> extends AbstractMultiOperator<T, T> {
 
     private final BiFunction<Throwable, Boolean, Uni<?>> mapper;
 
-    public MultiOnTerminationCall(Multi<? extends T> upstream, BiFunction<Throwable, Boolean, Uni<?>> mapper) {
+    public MultiOnTerminationCall(@NotNull Multi<? extends T> upstream, BiFunction<Throwable, Boolean, Uni<?>> mapper) {
         super(upstream);
         this.mapper = mapper;
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> downstream) {
         upstream.subscribe().withSubscriber(new MultiOnTerminationCallProcessor(nonNull(downstream, "downstream")));
     }
 

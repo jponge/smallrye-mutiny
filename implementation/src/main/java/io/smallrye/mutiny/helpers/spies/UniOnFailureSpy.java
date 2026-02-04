@@ -5,12 +5,15 @@ import java.util.function.Predicate;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.UniOnFailure;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class UniOnFailureSpy<T> extends UniSpyBase<T> {
 
     private Predicate<? super Throwable> predicate;
     private Class<? extends Throwable> typeOfFailure;
 
+    @Nullable
     private volatile Throwable lastFailure;
 
     public Throwable lastFailure() {
@@ -38,7 +41,7 @@ public class UniOnFailureSpy<T> extends UniSpyBase<T> {
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull UniSubscriber<? super T> downstream) {
         UniOnFailure<? extends T, ?> group;
         if (predicate != null) {
             group = upstream().onFailure(predicate);
@@ -53,6 +56,7 @@ public class UniOnFailureSpy<T> extends UniSpyBase<T> {
         }).subscribe().withSubscriber(downstream);
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "UniOnFailureSpy{" +

@@ -11,6 +11,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.MultiCombineLatestOp;
 import io.smallrye.mutiny.operators.multi.MultiZipOp;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiItemCombineIterable {
 
@@ -29,6 +30,7 @@ public class MultiItemCombineIterable {
      *
      * @return the current {@link MultiItemCombineIterable}
      */
+    @NotNull
     @CheckReturnValue
     public MultiItemCombineIterable collectFailures() {
         this.collectFailures = true;
@@ -51,6 +53,7 @@ public class MultiItemCombineIterable {
      *
      * @return the current {@link MultiItemCombineIterable}
      */
+    @NotNull
     @CheckReturnValue
     public MultiItemCombineIterable latestItems() {
         this.latest = true;

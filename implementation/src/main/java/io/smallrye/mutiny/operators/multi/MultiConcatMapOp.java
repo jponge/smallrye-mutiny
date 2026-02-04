@@ -16,6 +16,7 @@ import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * ConcatMap operator without prefetching items from the upstream.
@@ -46,7 +47,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super O> subscriber) {
+    public void subscribe(@NotNull MultiSubscriber<? super O> subscriber) {
         if (subscriber == null) {
             throw new NullPointerException("The subscriber must not be `null`");
         }
@@ -69,6 +70,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         private final boolean postponeFailurePropagation;
         private final MultiSubscriber<? super O> downstream;
 
+        @NotNull
         private volatile State state = State.INIT;
         private static final AtomicReferenceFieldUpdater<MainSubscriber, State> STATE_UPDATER = AtomicReferenceFieldUpdater
                 .newUpdater(MainSubscriber.class, State.class, "state");
@@ -91,7 +93,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         }
 
         @Override
-        public void onSubscribe(Flow.Subscription subscription) {
+        public void onSubscribe(@NotNull Flow.Subscription subscription) {
             if (STATE_UPDATER.compareAndSet(this, State.INIT, State.READY)) {
                 mainUpstream = subscription;
                 downstream.onSubscribe(this);
@@ -100,7 +102,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
             }
         }
 
-        private void innerOnSubscribe(Flow.Subscription subscription) {
+        private void innerOnSubscribe(@NotNull Flow.Subscription subscription) {
             stateLock.lock();
             innerUpstream = subscription;
             long n = demand;
@@ -293,7 +295,7 @@ public class MultiConcatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         private class InnerSubscriber implements MultiSubscriber<O>, ContextSupport {
 
             @Override
-            public void onSubscribe(Flow.Subscription subscription) {
+            public void onSubscribe(@NotNull Flow.Subscription subscription) {
                 innerOnSubscribe(subscription);
             }
 

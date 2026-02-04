@@ -9,9 +9,11 @@ import java.util.function.Supplier;
 import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
+import org.jetbrains.annotations.NotNull;
 
 public class UniOnNull<T> {
 
+    @NotNull
     private final Uni<T> upstream;
 
     public UniOnNull(Uni<T> upstream) {

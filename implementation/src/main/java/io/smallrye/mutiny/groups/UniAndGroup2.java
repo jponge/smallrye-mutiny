@@ -13,6 +13,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.smallrye.mutiny.tuples.Tuples;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Configures the combination of 2 {@link Uni unis}.
@@ -33,6 +34,7 @@ public class UniAndGroup2<T1, T2> extends UniAndGroupIterable<T1> {
      *
      * @return the current {@link UniAndGroup2}
      */
+    @NotNull
     @CheckReturnValue
     public UniAndGroup2<T1, T2> collectFailures() {
         super.collectFailures();
@@ -58,6 +60,7 @@ public class UniAndGroup2<T1, T2> extends UniAndGroupIterable<T1> {
      * @param level the concurrency level, must be strictly positive
      * @return an object to configure the combination logic
      */
+    @NotNull
     @CheckReturnValue
     public UniAndGroup2<T1, T2> usingConcurrencyOf(int level) {
         super.usingConcurrencyOf(level);
@@ -92,7 +95,7 @@ public class UniAndGroup2<T1, T2> extends UniAndGroupIterable<T1> {
     }
 
     @SuppressWarnings("unchecked")
-    private <O> Uni<O> combine(BiFunction<T1, T2, O> combinator) {
+    private <O> Uni<O> combine(@NotNull BiFunction<T1, T2, O> combinator) {
         Function<List<?>, O> function = list -> {
             Tuples.ensureArity(list, 2);
             T1 item1 = (T1) list.get(0);
@@ -117,7 +120,7 @@ public class UniAndGroup2<T1, T2> extends UniAndGroupIterable<T1> {
     }
 
     @SuppressWarnings("unchecked")
-    private <O> Uni<O> combineUni(BiFunction<T1, T2, Uni<O>> combinator) {
+    private <O> Uni<O> combineUni(@NotNull BiFunction<T1, T2, Uni<O>> combinator) {
         Function<List<?>, Uni<O>> function = list -> {
             Tuples.ensureArity(list, 2);
             T1 item1 = (T1) list.get(0);

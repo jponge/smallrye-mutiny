@@ -8,6 +8,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Takes the n first items emitted by the upstream, cancelling the subscription after that.
@@ -27,7 +28,7 @@ public final class MultiSelectFirstOp<T> extends AbstractMultiOperator<T, T> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> downstream) {
         ParameterValidation.nonNullNpe(downstream, "subscriber");
         upstream.subscribe(new MultiSelectFirstProcessor<>(downstream, numberOfItems));
     }
@@ -44,7 +45,7 @@ public final class MultiSelectFirstOp<T> extends AbstractMultiOperator<T, T> {
         }
 
         @Override
-        public void onSubscribe(Subscription s) {
+        public void onSubscribe(@NotNull Subscription s) {
             if (compareAndSetUpstreamSubscription(null, s)) {
                 if (numberOfItems == 0) {
                     getAndSetUpstreamSubscription(CANCELLED).cancel();

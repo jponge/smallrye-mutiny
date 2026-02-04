@@ -20,6 +20,8 @@ import io.smallrye.mutiny.helpers.queues.Queues;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.processors.UnicastProcessor;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Splits the source sequence by time of reception into potentially overlapping {@code Multi}.
@@ -40,11 +42,13 @@ public class MultiWindowOp<T> extends AbstractMultiOperator<T, Multi<T>> {
     /**
      * Queue supplier
      */
+    @NotNull
     private final Supplier<? extends Queue<T>> processorQueueSupplier;
 
     /**
      * Overflow queue supplier.
      */
+    @NotNull
     private final Supplier<? extends Queue<UnicastProcessor<T>>> overflowQueueSupplier;
 
     public MultiWindowOp(Multi<? extends T> upstream,
@@ -80,6 +84,7 @@ public class MultiWindowOp<T> extends AbstractMultiOperator<T, Multi<T>> {
         private final AtomicInteger count = new AtomicInteger();
 
         int index;
+        @Nullable
         private UnicastProcessor<T> processor;
 
         MultiWindowExactProcessor(MultiSubscriber<? super Multi<T>> downstream,
@@ -184,7 +189,7 @@ public class MultiWindowOp<T> extends AbstractMultiOperator<T, Multi<T>> {
 
         int index;
 
-        UnicastProcessor<T> processor;
+        @Nullable UnicastProcessor<T> processor;
 
         MultiWindowWithSkipProcessor(MultiSubscriber<? super Multi<T>> downstream, int size, int skip,
                 Supplier<? extends Queue<T>> supplier) {
@@ -435,7 +440,7 @@ public class MultiWindowOp<T> extends AbstractMultiOperator<T, Multi<T>> {
             }
         }
 
-        boolean isCancelledOrDone(boolean isDone, boolean isEmpty, Subscriber<?> subscriber, Queue<?> q) {
+        boolean isCancelledOrDone(boolean isDone, boolean isEmpty, @NotNull Subscriber<?> subscriber, @NotNull Queue<?> q) {
             if (isCancelled()) {
                 q.clear();
                 return true;

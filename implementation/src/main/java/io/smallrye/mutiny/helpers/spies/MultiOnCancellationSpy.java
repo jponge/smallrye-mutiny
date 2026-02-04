@@ -2,6 +2,7 @@ package io.smallrye.mutiny.helpers.spies;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiOnCancellationSpy<T> extends MultiSpyBase<T> {
 
@@ -19,6 +20,7 @@ public class MultiOnCancellationSpy<T> extends MultiSpyBase<T> {
         return invoked();
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "MultiOnCancellationSpy{} " + super.toString();

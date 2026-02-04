@@ -13,17 +13,21 @@ import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
 
 public class UniOnFailureFlatMap<I, E> extends UniOperator<I, I> {
 
+    @NotNull
     private final Function<E, Uni<? extends I>> mapper;
+    @NotNull
     private final Predicate<? super Throwable> predicate;
+    @NotNull
     private final Class<E> typeOfFailure;
 
-    public UniOnFailureFlatMap(Uni<I> upstream,
-            Predicate<? super Throwable> predicate,
-            Function<E, Uni<? extends I>> mapper,
-            Class<E> typeOfFailure) {
+    public UniOnFailureFlatMap(@NotNull Uni<I> upstream,
+                               @NotNull Predicate<? super Throwable> predicate,
+                               @NotNull Function<E, Uni<? extends I>> mapper,
+                               @NotNull Class<E> typeOfFailure) {
         super(nonNull(upstream, "upstream"));
         this.mapper = nonNull(mapper, "mapper");
         this.predicate = nonNull(predicate, "predicate");
@@ -43,7 +47,7 @@ public class UniOnFailureFlatMap<I, E> extends UniOperator<I, I> {
         }
 
         @Override
-        public void onSubscribe(UniSubscription subscription) {
+        public void onSubscribe(@NotNull UniSubscription subscription) {
             if (getCurrentUpstreamSubscription() == null) {
                 super.onSubscribe(subscription);
             } else if (innerSubscription == null) {

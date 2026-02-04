@@ -21,9 +21,11 @@ import io.smallrye.mutiny.subscription.Cancellable;
 import io.smallrye.mutiny.subscription.CancellableSubscriber;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.smallrye.mutiny.subscription.Subscribers;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiSubscribe<T> {
 
+    @NotNull
     private final AbstractMulti<T> upstream;
 
     public MultiSubscribe(AbstractMulti<T> upstream) {
@@ -455,6 +457,7 @@ public class MultiSubscribe<T> {
      * @param queueSupplier the supplier of queue used internally, must not be {@code null}, must not return {@code null}
      * @return a blocking iterable used to consume the items emitted by the upstream {@link Multi}.
      */
+    @NotNull
     @CheckReturnValue
     public BlockingIterable<T> asIterable(Supplier<Context> contextSupplier, int batchSize, Supplier<Queue<T>> queueSupplier) {
         // No interception of the queue supplier.

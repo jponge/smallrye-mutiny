@@ -13,9 +13,11 @@ import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.mutiny.groups.*;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.split.MultiSplitter;
+import org.jetbrains.annotations.NotNull;
 
 public interface Multi<T> extends Publisher<T> {
 
+    @NotNull
     @CheckReturnValue
     static MultiCreate createFrom() {
         return MultiCreate.INSTANCE;
@@ -27,6 +29,7 @@ public interface Multi<T> extends Publisher<T> {
      *
      * @return the object to configure the creation process.
      */
+    @NotNull
     @CheckReturnValue
     static MultiCreateBy createBy() {
         return MultiCreateBy.INSTANCE;
@@ -68,7 +71,7 @@ public interface Multi<T> extends Publisher<T> {
      * @return the outcome of the function.
      */
     @CheckReturnValue
-    default <O> O stage(Function<Multi<T>, O> stage) {
+    default <O> O stage(@NotNull Function<Multi<T>, O> stage) {
         return nonNull(stage, "stage").apply(this);
     }
 
@@ -440,7 +443,7 @@ public interface Multi<T> extends Publisher<T> {
      * @return the new {@link Multi}
      */
     @CheckReturnValue
-    default Multi<T> invoke(Consumer<? super T> callback) {
+    default Multi<T> invoke(@NotNull Consumer<? super T> callback) {
         return onItem().invoke(nonNull(callback, "callback"));
     }
 
@@ -516,7 +519,7 @@ public interface Multi<T> extends Publisher<T> {
      * @return the new {@link Multi}
      */
     @CheckReturnValue
-    default <R> Multi<R> plug(Function<Multi<T>, Multi<R>> operatorProvider) {
+    default <R> Multi<R> plug(@NotNull Function<Multi<T>, Multi<R>> operatorProvider) {
         Function<Multi<T>, Multi<R>> provider = nonNull(operatorProvider, "operatorProvider");
         return Infrastructure.onMultiCreation(nonNull(provider.apply(this), "multi"));
     }
@@ -735,8 +738,9 @@ public interface Multi<T> extends Publisher<T> {
      * @return a splitter
      * @param <K> the key type
      */
+    @NotNull
     @CheckReturnValue
-    default <K extends Enum<K>> MultiSplitter<T, K> split(Class<K> keyType, Function<T, K> splitter) {
+    default <K extends Enum<K>> MultiSplitter<T, K> split(@NotNull Class<K> keyType, @NotNull Function<T, K> splitter) {
         return new MultiSplitter<>(this, keyType, splitter);
     }
 }

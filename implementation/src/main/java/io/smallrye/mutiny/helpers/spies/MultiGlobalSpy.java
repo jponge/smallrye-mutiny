@@ -2,6 +2,7 @@ package io.smallrye.mutiny.helpers.spies;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiGlobalSpy<T> extends MultiSpyBase<T> {
 
@@ -13,7 +14,7 @@ public class MultiGlobalSpy<T> extends MultiSpyBase<T> {
     private final MultiOnSubscribeSpy<T> onSubscribeSpy;
     private final MultiOnTerminationSpy<T> onTerminationSpy;
 
-    MultiGlobalSpy(Multi<T> upstream) {
+    MultiGlobalSpy(@NotNull Multi<T> upstream) {
         super(upstream);
         onCancellationSpy = Spy.onCancellation(upstream);
         onCompletionSpy = Spy.onCompletion(onCancellationSpy);
@@ -80,6 +81,7 @@ public class MultiGlobalSpy<T> extends MultiSpyBase<T> {
         onTerminationSpy.reset();
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "MultiGlobalSpy{" +

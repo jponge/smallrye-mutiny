@@ -12,13 +12,15 @@ import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.Cancellable;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.tuples.Functions;
+import org.jetbrains.annotations.NotNull;
 
 public class UniOnTerminationCall<I> extends UniOperator<I, I> {
 
+    @NotNull
     private final Functions.Function3<? super I, Throwable, Boolean, Uni<?>> mapper;
 
-    public UniOnTerminationCall(Uni<I> upstream,
-            Functions.Function3<? super I, Throwable, Boolean, Uni<?>> mapper) {
+    public UniOnTerminationCall(@NotNull Uni<I> upstream,
+                                @NotNull Functions.Function3<? super I, Throwable, Boolean, Uni<?>> mapper) {
         super(nonNull(upstream, "upstream"));
         this.mapper = nonNull(mapper, "mapper");
     }

@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiOnRequestSpy<T> extends MultiSpyBase<T> {
 
@@ -32,6 +33,7 @@ public class MultiOnRequestSpy<T> extends MultiSpyBase<T> {
         }).subscribe().withSubscriber(downstream);
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "MultiOnRequestSpy{" +

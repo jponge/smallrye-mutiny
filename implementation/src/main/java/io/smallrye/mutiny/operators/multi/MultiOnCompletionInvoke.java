@@ -6,18 +6,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiOnCompletionInvoke<T> extends AbstractMultiOperator<T, T> {
 
     private final Runnable action;
 
-    public MultiOnCompletionInvoke(Multi<? extends T> upstream, Runnable action) {
+    public MultiOnCompletionInvoke(@NotNull Multi<? extends T> upstream, Runnable action) {
         super(upstream);
         this.action = action;
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> downstream) {
         upstream.subscribe().withSubscriber(new MultiOnCompletionInvokeProcessor(nonNull(downstream, "downstream")));
     }
 
@@ -25,7 +26,7 @@ public class MultiOnCompletionInvoke<T> extends AbstractMultiOperator<T, T> {
 
         private final AtomicBoolean actionInvoked = new AtomicBoolean();
 
-        public MultiOnCompletionInvokeProcessor(MultiSubscriber<? super T> downstream) {
+        public MultiOnCompletionInvokeProcessor(@NotNull MultiSubscriber<? super T> downstream) {
             super(downstream);
         }
 

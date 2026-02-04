@@ -7,6 +7,7 @@ import io.smallrye.mutiny.helpers.EmptyUniSubscription;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.subscription.UniEmitter;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Specialized {@link io.smallrye.mutiny.Uni} implementation for the case where the item is produced from a supplier.
@@ -19,6 +20,7 @@ import io.smallrye.mutiny.subscription.UniSubscriber;
 public class UniCreateFromEmitterWithState<T, S> extends AbstractUni<T> {
 
     private final BiConsumer<S, UniEmitter<? super T>> consumer;
+    @NotNull
     private final StateHolder<S> holder;
 
     public UniCreateFromEmitterWithState(Supplier<S> stateSupplier, BiConsumer<S, UniEmitter<? super T>> consumer) {
@@ -27,7 +29,7 @@ public class UniCreateFromEmitterWithState<T, S> extends AbstractUni<T> {
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super T> subscriber) {
+    public void subscribe(@NotNull UniSubscriber<? super T> subscriber) {
         S state;
         try {
             state = holder.get();

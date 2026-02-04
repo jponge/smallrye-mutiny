@@ -1,5 +1,7 @@
 package io.smallrye.mutiny.unchecked;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
@@ -23,7 +25,8 @@ public interface UncheckedBiConsumer<T, U> {
      * @param <U> the type of the second argument to the operation
      * @return the created {@link UncheckedBiConsumer}
      */
-    static <T, U> UncheckedBiConsumer<T, U> from(BiConsumer<T, U> consumer) {
+    @NotNull
+    static <T, U> UncheckedBiConsumer<T, U> from(@NotNull BiConsumer<T, U> consumer) {
         return consumer::accept;
     }
 
@@ -48,7 +51,8 @@ public interface UncheckedBiConsumer<T, U> {
      *         operation followed by the {@code after} operation
      * @throws NullPointerException if {@code after} is null
      */
-    default UncheckedBiConsumer<T, U> andThen(UncheckedBiConsumer<? super T, ? super U> after) {
+    @NotNull
+    default UncheckedBiConsumer<T, U> andThen(@NotNull UncheckedBiConsumer<? super T, ? super U> after) {
         Objects.requireNonNull(after);
 
         return (l, r) -> {
@@ -61,6 +65,7 @@ public interface UncheckedBiConsumer<T, U> {
      * @return the {@link BiConsumer} associated with this {@code UncheckedBiConsumer}. If the operation throws an
      *         exception, the exception is rethrown, wrapped in a {@link RuntimeException} if needed.
      */
+    @NotNull
     default BiConsumer<T, U> toBiConsumer() {
         return (x, y) -> {
             try {

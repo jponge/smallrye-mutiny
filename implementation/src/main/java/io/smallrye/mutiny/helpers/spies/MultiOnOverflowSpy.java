@@ -10,12 +10,16 @@ import java.util.function.Function;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.groups.MultiOverflowStrategy;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class MultiOnOverflowSpy<T> extends MultiSpyBase<T> {
 
+    @Nullable
     private final List<T> droppedItems;
     private final Function<MultiOverflowStrategy<? extends T>, Multi<? extends T>> strategyMapper;
 
+    @NotNull
     public List<T> droppedItems() {
         if (droppedItems != null) {
             List<T> view;
@@ -60,6 +64,7 @@ public class MultiOnOverflowSpy<T> extends MultiSpyBase<T> {
         nonNull(wrapper, "wrapper").subscribe().withSubscriber(downstream);
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "MultiOnItemSpy{" +

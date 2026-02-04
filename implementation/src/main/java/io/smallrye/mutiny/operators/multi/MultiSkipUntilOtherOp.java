@@ -14,6 +14,7 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.smallrye.mutiny.subscription.SerializedSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Skips items emitted by the upstream until the other publisher emits either an item or completes.
@@ -23,9 +24,10 @@ import io.smallrye.mutiny.subscription.SerializedSubscriber;
  */
 public final class MultiSkipUntilOtherOp<T, U> extends AbstractMultiOperator<T, T> {
 
+    @NotNull
     private final Publisher<U> other;
 
-    public MultiSkipUntilOtherOp(Multi<? extends T> upstream, Publisher<U> other) {
+    public MultiSkipUntilOtherOp(@NotNull Multi<? extends T> upstream, @NotNull Publisher<U> other) {
         super(upstream);
         this.other = ParameterValidation.nonNull(other, "other");
     }
@@ -48,7 +50,7 @@ public final class MultiSkipUntilOtherOp<T, U> extends AbstractMultiOperator<T, 
         }
 
         @Override
-        public void onSubscribe(Subscription s) {
+        public void onSubscribe(@NotNull Subscription s) {
             main.setOtherSubscription(s);
         }
 
@@ -94,7 +96,7 @@ public final class MultiSkipUntilOtherOp<T, U> extends AbstractMultiOperator<T, 
             return gate.get();
         }
 
-        void setOtherSubscription(Subscription s) {
+        void setOtherSubscription(@NotNull Subscription s) {
             if (other.compareAndSet(null, s)) {
                 s.request(1);
             } else {

@@ -7,9 +7,11 @@ import java.util.function.Supplier;
 import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
+import org.jetbrains.annotations.NotNull;
 
 public class UniOnItemIgnore<T> {
 
+    @NotNull
     private final UniOnItem<T> onItem;
 
     public UniOnItemIgnore(UniOnItem<T> onItem) {
@@ -71,7 +73,7 @@ public class UniOnItemIgnore<T> {
      * @return the new Uni
      */
     @CheckReturnValue
-    public <O> Uni<O> andSwitchTo(Supplier<Uni<? extends O>> supplier) {
+    public <O> Uni<O> andSwitchTo(@NotNull Supplier<Uni<? extends O>> supplier) {
         nonNull(supplier, "supplier");
         return onItem.transformToUni(ignored -> supplier.get());
     }

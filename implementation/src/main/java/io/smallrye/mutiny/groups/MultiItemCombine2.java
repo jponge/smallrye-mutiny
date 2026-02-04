@@ -9,6 +9,7 @@ import java.util.function.BiFunction;
 import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.tuples.Tuple2;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiItemCombine2<T1, T2> extends MultiItemCombineIterable {
 
@@ -22,6 +23,7 @@ public class MultiItemCombine2<T1, T2> extends MultiItemCombineIterable {
      *
      * @return the current {@link MultiItemCombine2}
      */
+    @NotNull
     @Override
     public MultiItemCombine2<T1, T2> collectFailures() {
         super.collectFailures();
@@ -44,6 +46,7 @@ public class MultiItemCombine2<T1, T2> extends MultiItemCombineIterable {
      *
      * @return the current {@link MultiItemCombine2}
      */
+    @NotNull
     @Override
     @CheckReturnValue
     public MultiItemCombine2<T1, T2> latestItems() {
@@ -68,7 +71,7 @@ public class MultiItemCombine2<T1, T2> extends MultiItemCombineIterable {
      */
     @SuppressWarnings("unchecked")
     @CheckReturnValue
-    public <O> Multi<O> using(BiFunction<T1, T2, O> combinator) {
+    public <O> Multi<O> using(@NotNull BiFunction<T1, T2, O> combinator) {
         nonNull(combinator, "combinator");
         return super.combine(args -> {
             size(args, 2, "args");

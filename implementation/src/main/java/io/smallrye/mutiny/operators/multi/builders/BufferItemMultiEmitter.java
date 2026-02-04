@@ -7,6 +7,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.subscription.MultiEmitter;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class BufferItemMultiEmitter<T> extends BaseMultiEmitter<T> {
 
@@ -23,8 +25,9 @@ public class BufferItemMultiEmitter<T> extends BaseMultiEmitter<T> {
         this.overflowBufferSize = overflowBufferSize;
     }
 
+    @NotNull
     @Override
-    public MultiEmitter<T> emit(T t) {
+    public MultiEmitter<T> emit(@Nullable T t) {
         if (done || isCancelled()) {
             return this;
         }
@@ -48,7 +51,7 @@ public class BufferItemMultiEmitter<T> extends BaseMultiEmitter<T> {
     }
 
     @Override
-    public void failed(Throwable failure) {
+    public void failed(@Nullable Throwable failure) {
         if (done || isCancelled()) {
             return;
         }
@@ -158,6 +161,7 @@ public class BufferItemMultiEmitter<T> extends BaseMultiEmitter<T> {
 
     public static class EmitterBufferOverflowException extends BufferOverflowException {
 
+        @NotNull
         @Override
         public String getMessage() {
             return "The buffer used by the emitter is full, because the downstream consumer did not request enough items.";

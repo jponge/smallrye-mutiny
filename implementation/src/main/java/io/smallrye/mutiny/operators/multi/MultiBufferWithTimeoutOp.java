@@ -21,6 +21,8 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.BackPressureFailure;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.smallrye.mutiny.subscription.SerializedSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Buffers items from upstream for a given duration and emits the <em>groups</em> as a single item downstream.
@@ -32,16 +34,19 @@ import io.smallrye.mutiny.subscription.SerializedSubscriber;
 public final class MultiBufferWithTimeoutOp<T> extends AbstractMultiOperator<T, List<T>> {
 
     private final int size;
+    @NotNull
     private final Supplier<List<T>> supplier;
+    @NotNull
     private final ScheduledExecutorService scheduler;
+    @NotNull
     private final Duration timeout;
     private final boolean emitEmptyListIfNoItem;
 
-    public MultiBufferWithTimeoutOp(Multi<T> upstream,
-            int size,
-            Duration timeout,
-            ScheduledExecutorService scheduler,
-            boolean emitEmptyListIfNoItem) {
+    public MultiBufferWithTimeoutOp(@NotNull Multi<T> upstream,
+                                    int size,
+                                    @NotNull Duration timeout,
+                                    @NotNull ScheduledExecutorService scheduler,
+                                    boolean emitEmptyListIfNoItem) {
         super(upstream);
         this.timeout = ParameterValidation.validate(timeout, "timeout");
         this.size = ParameterValidation.positive(size, "size");
@@ -75,17 +80,20 @@ public final class MultiBufferWithTimeoutOp<T> extends AbstractMultiOperator<T, 
         private final Duration duration;
         private final ScheduledExecutorService executor;
         private final Supplier<List<T>> supplier;
+        @NotNull
         private final Runnable flush;
 
         private final AtomicInteger terminated = new AtomicInteger(RUNNING);
         private final AtomicLong requested = new AtomicLong();
         private final AtomicInteger index = new AtomicInteger();
         private final boolean emitEmptyListIfNoItem;
+        @Nullable
         private List<T> current;
+        @Nullable
         private ScheduledFuture<?> task;
 
-        MultiBufferWithTimeoutProcessor(MultiSubscriber<? super List<T>> downstream, int size, Duration timeout,
-                ScheduledExecutorService executor, Supplier<List<T>> supplier, boolean emitEmptyListIfNoItem) {
+        MultiBufferWithTimeoutProcessor(@NotNull MultiSubscriber<? super List<T>> downstream, int size, Duration timeout,
+                                        ScheduledExecutorService executor, Supplier<List<T>> supplier, boolean emitEmptyListIfNoItem) {
             super(downstream);
             this.duration = timeout;
             this.executor = executor;
@@ -261,7 +269,7 @@ public final class MultiBufferWithTimeoutOp<T> extends AbstractMultiOperator<T, 
         }
 
         @Override
-        public void onSubscribe(Subscription subscription) {
+        public void onSubscribe(@NotNull Subscription subscription) {
             if (compareAndSetUpstreamSubscription(null, subscription)) {
                 doOnSubscribe();
                 downstream.onSubscribe(this);

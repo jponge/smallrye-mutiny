@@ -5,6 +5,7 @@ import java.util.concurrent.Flow;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiIgnoreOp<T> extends AbstractMultiOperator<T, Void> {
 
@@ -23,7 +24,7 @@ public class MultiIgnoreOp<T> extends AbstractMultiOperator<T, Void> {
         }
 
         @Override
-        public void onSubscribe(Flow.Subscription subscription) {
+        public void onSubscribe(@NotNull Flow.Subscription subscription) {
             if (compareAndSetUpstreamSubscription(null, subscription)) {
                 // Propagate subscription to downstream.
                 downstream.onSubscribe(this);

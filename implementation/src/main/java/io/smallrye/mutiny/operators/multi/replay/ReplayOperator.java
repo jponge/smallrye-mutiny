@@ -12,14 +12,18 @@ import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ReplayOperator<T> extends AbstractMulti<T> {
 
     private final Multi<T> upstream;
 
+    @NotNull
     private final AppendOnlyReplayList replayList;
 
     private final AtomicBoolean upstreamSubscriptionRequested = new AtomicBoolean();
+    @Nullable
     private volatile Subscription upstreamSubscription = null;
     protected final CopyOnWriteArrayList<ReplaySubscription> subscriptions = new CopyOnWriteArrayList<>();
 
@@ -34,7 +38,7 @@ public class ReplayOperator<T> extends AbstractMulti<T> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> subscriber) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> subscriber) {
         if (upstreamSubscriptionRequested.compareAndSet(false, true)) {
             upstream.subscribe(new UpstreamSubscriber(subscriber));
         }

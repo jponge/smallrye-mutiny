@@ -16,6 +16,8 @@ import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.MultiOperator;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class MultiFailOnItemTimeout<I> extends MultiOperator<I, I> {
     private final Duration timeout;
@@ -23,7 +25,7 @@ public class MultiFailOnItemTimeout<I> extends MultiOperator<I, I> {
     private final ScheduledExecutorService executor;
 
     public MultiFailOnItemTimeout(Multi<I> upstream, Duration timeout, Supplier<? extends Throwable> supplier,
-            ScheduledExecutorService executor) {
+                                  @Nullable ScheduledExecutorService executor) {
         super(upstream);
         this.timeout = timeout;
         this.supplier = supplier;
@@ -44,7 +46,7 @@ public class MultiFailOnItemTimeout<I> extends MultiOperator<I, I> {
         }
 
         @Override
-        public void onSubscribe(Subscription subscription) {
+        public void onSubscribe(@NotNull Subscription subscription) {
             if (!scheduleTimeout()) {
                 subscription.cancel();
                 downstream.onSubscribe(EmptyUniSubscription.DONE);

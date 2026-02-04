@@ -3,11 +3,15 @@ package io.smallrye.mutiny.helpers.spies;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.smallrye.mutiny.tuples.Tuple2;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class MultiOnTerminationSpy<T> extends MultiSpyBase<T> {
 
+    @Nullable
     private volatile Tuple2<Throwable, Boolean> lastTermination;
 
+    @Nullable
     public Throwable lastTerminationFailure() throws IllegalStateException {
         return (lastTermination == null) ? null : lastTermination.getItem1();
     }
@@ -34,6 +38,7 @@ public class MultiOnTerminationSpy<T> extends MultiSpyBase<T> {
         }).subscribe().withSubscriber(downstream);
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "MultiOnTerminationSpy{" +

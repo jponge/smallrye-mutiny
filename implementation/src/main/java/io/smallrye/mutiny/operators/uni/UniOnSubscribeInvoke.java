@@ -8,6 +8,7 @@ import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
 
 public class UniOnSubscribeInvoke<T> extends UniOperator<T, T> {
 
@@ -31,7 +32,7 @@ public class UniOnSubscribeInvoke<T> extends UniOperator<T, T> {
         }
 
         @Override
-        public void onSubscribe(UniSubscription subscription) {
+        public void onSubscribe(@NotNull UniSubscription subscription) {
             // Invoke callback
             try {
                 callback.accept(subscription);

@@ -11,6 +11,8 @@ import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class UniOnItemOrFailureFlatMap<I, O> extends UniOperator<I, O> {
 
@@ -23,7 +25,7 @@ public class UniOnItemOrFailureFlatMap<I, O> extends UniOperator<I, O> {
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super O> subscriber) {
+    public void subscribe(@NotNull UniSubscriber<? super O> subscriber) {
         AbstractUni.subscribe(upstream(), new UniOnItemOrFailureFlatMapProcessor(subscriber));
     }
 
@@ -31,12 +33,12 @@ public class UniOnItemOrFailureFlatMap<I, O> extends UniOperator<I, O> {
 
         private volatile UniSubscription innerSubscription;
 
-        public UniOnItemOrFailureFlatMapProcessor(UniSubscriber<? super O> downstream) {
+        public UniOnItemOrFailureFlatMapProcessor(@NotNull UniSubscriber<? super O> downstream) {
             super(downstream);
         }
 
         @Override
-        public void onSubscribe(UniSubscription subscription) {
+        public void onSubscribe(@NotNull UniSubscription subscription) {
             if (getCurrentUpstreamSubscription() == null) {
                 super.onSubscribe(subscription);
             } else if (innerSubscription == null) {
@@ -80,7 +82,7 @@ public class UniOnItemOrFailureFlatMap<I, O> extends UniOperator<I, O> {
         }
 
         @SuppressWarnings("unchecked")
-        private void performInnerSubscription(I item, Throwable failure) {
+        private void performInnerSubscription(I item, @Nullable Throwable failure) {
             Uni<? extends O> uni;
             try {
                 uni = mapper.apply(item, failure);

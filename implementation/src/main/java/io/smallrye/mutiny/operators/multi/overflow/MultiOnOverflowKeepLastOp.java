@@ -15,6 +15,7 @@ import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.operators.multi.AbstractMultiOperator;
 import io.smallrye.mutiny.operators.multi.MultiOperatorProcessor;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiOnOverflowKeepLastOp<T> extends AbstractMultiOperator<T, T> {
 
@@ -48,7 +49,7 @@ public class MultiOnOverflowKeepLastOp<T> extends AbstractMultiOperator<T, T> {
         }
 
         @Override
-        public void onSubscribe(Flow.Subscription subscription) {
+        public void onSubscribe(@NotNull Flow.Subscription subscription) {
             if (compareAndSetUpstreamSubscription(null, subscription)) {
                 downstream.onSubscribe(this);
                 subscription.request(Long.MAX_VALUE);

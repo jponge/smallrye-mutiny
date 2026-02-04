@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Execute a given (async) callback on subscription.
@@ -22,8 +23,8 @@ public final class MultiOnSubscribeInvokeOp<T> extends AbstractMultiOperator<T, 
 
     private final Consumer<? super Subscription> onSubscribe;
 
-    public MultiOnSubscribeInvokeOp(Multi<? extends T> upstream,
-            Consumer<? super Subscription> onSubscribe) {
+    public MultiOnSubscribeInvokeOp(@NotNull Multi<? extends T> upstream,
+                                    Consumer<? super Subscription> onSubscribe) {
         super(upstream);
         this.onSubscribe = onSubscribe;
     }
@@ -37,12 +38,12 @@ public final class MultiOnSubscribeInvokeOp<T> extends AbstractMultiOperator<T, 
 
     private final class OnSubscribeSubscriber extends MultiOperatorProcessor<T, T> {
 
-        OnSubscribeSubscriber(MultiSubscriber<? super T> downstream) {
+        OnSubscribeSubscriber(@NotNull MultiSubscriber<? super T> downstream) {
             super(downstream);
         }
 
         @Override
-        public void onSubscribe(Subscription s) {
+        public void onSubscribe(@NotNull Subscription s) {
             if (compareAndSetUpstreamSubscription(null, s)) {
                 try {
                     onSubscribe.accept(s);

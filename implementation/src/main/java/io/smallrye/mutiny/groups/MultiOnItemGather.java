@@ -12,6 +12,7 @@ import io.smallrye.common.annotation.Experimental;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.groups.Gatherer.Extraction;
 import io.smallrye.mutiny.operators.multi.MultiGather;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A builder to gather items emitted by a {@link Multi} into an accumulator.
@@ -36,6 +37,7 @@ public class MultiOnItemGather<I> {
      * @param <ACC> the type of the accumulator
      * @return the next step in the builder
      */
+    @NotNull
     @CheckReturnValue
     public <ACC> InitialAccumulatorStep<I, ACC> into(Supplier<ACC> initialAccumulatorSupplier) {
         nonNull(initialAccumulatorSupplier, "initialAccumulatorSupplier");
@@ -66,6 +68,7 @@ public class MultiOnItemGather<I> {
          *        upstream, and returns the new accumulator
          * @return the next step in the builder
          */
+        @NotNull
         @CheckReturnValue
         public ExtractStep<I, ACC> accumulate(BiFunction<ACC, I, ACC> accumulator) {
             nonNull(accumulator, "accumulator");
@@ -104,6 +107,7 @@ public class MultiOnItemGather<I> {
          * @param <O> the type of the value to emit
          * @return the next step in the builder
          */
+        @NotNull
         @CheckReturnValue
         public <O> FinalizerStep<I, ACC, O> extract(BiFunction<ACC, Boolean, Optional<Extraction<ACC, O>>> extractor) {
             nonNull(extractor, "extractor");
@@ -146,6 +150,7 @@ public class MultiOnItemGather<I> {
          *        containing the value to emit before the completion signal, if any
          * @return the gathering {@link Multi}
          */
+        @NotNull
         @CheckReturnValue
         public Multi<O> finalize(Function<ACC, Optional<O>> finalizer) {
             nonNull(finalizer, "finalizer");

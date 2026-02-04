@@ -18,6 +18,7 @@ import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
 
 public class UniOnItemTransformToMulti<I, O> extends AbstractMulti<O> {
 
@@ -30,7 +31,7 @@ public class UniOnItemTransformToMulti<I, O> extends AbstractMulti<O> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super O> subscriber) {
+    public void subscribe(@NotNull MultiSubscriber<? super O> subscriber) {
         if (subscriber == null) {
             throw new NullPointerException("The subscriber must not be `null`");
         }
@@ -41,7 +42,9 @@ public class UniOnItemTransformToMulti<I, O> extends AbstractMulti<O> {
     static final class FlatMapPublisherSubscriber<I, O>
             implements Subscriber<O>, UniSubscriber<I>, Flow.Subscription, ContextSupport {
 
+        @NotNull
         private final AtomicReference<Flow.Subscription> secondUpstream;
+        @NotNull
         private final AtomicReference<UniSubscription> firstUpstream;
         private final Subscriber<? super O> downstream;
         private final Function<? super I, ? extends Flow.Publisher<? extends O>> mapper;
@@ -116,7 +119,7 @@ public class UniOnItemTransformToMulti<I, O> extends AbstractMulti<O> {
          * @param subscription the subscription from the produced {@link Flow.Publisher}
          */
         @Override
-        public void onSubscribe(Flow.Subscription subscription) {
+        public void onSubscribe(@NotNull Flow.Subscription subscription) {
             if (secondUpstream.compareAndSet(null, subscription)) {
                 long r = requested.getAndSet(0L);
                 if (r != 0L) {

@@ -9,18 +9,20 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.subscription.Cancellable;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiOnCompletionCall<T> extends AbstractMultiOperator<T, T> {
 
+    @NotNull
     private final Supplier<Uni<?>> supplier;
 
-    public MultiOnCompletionCall(Multi<? extends T> upstream, Supplier<Uni<?>> supplier) {
+    public MultiOnCompletionCall(@NotNull Multi<? extends T> upstream, @NotNull Supplier<Uni<?>> supplier) {
         super(nonNull(upstream, "upstream"));
         this.supplier = nonNull(supplier, "supplier");
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> downstream) {
         upstream.subscribe().withSubscriber(new MultiOnCompletionCallProcessor(nonNull(downstream, "downstream")));
     }
 

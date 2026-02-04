@@ -6,6 +6,7 @@ import java.util.List;
 
 import io.smallrye.mutiny.groups.UniAndGroup;
 import io.smallrye.mutiny.helpers.ParameterValidation;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * An implementation of {@link Exception} collecting several causes.
@@ -20,35 +21,36 @@ import io.smallrye.mutiny.helpers.ParameterValidation;
  */
 public class CompositeException extends RuntimeException {
 
-    public CompositeException(List<Throwable> causes) {
+    public CompositeException(@NotNull List<Throwable> causes) {
         super("Multiple exceptions caught:", getFirstOrFail(causes));
         for (int i = 1; i < causes.size(); i++) {
             addSuppressed(causes.get(i));
         }
     }
 
-    private static Throwable getFirstOrFail(List<Throwable> causes) {
+    @NotNull
+    private static Throwable getFirstOrFail(@NotNull List<Throwable> causes) {
         if (causes == null || causes.isEmpty()) {
             throw new IllegalArgumentException("Composite Exception must contains at least one cause");
         }
         return ParameterValidation.nonNull(causes.get(0), "cause");
     }
 
-    private static Throwable getFirstOrFail(Throwable[] causes) {
+    private static Throwable getFirstOrFail(@NotNull Throwable[] causes) {
         if (causes == null || causes.length == 0) {
             throw new IllegalArgumentException("Composite Exception must contains at least one cause");
         }
         return ParameterValidation.nonNull(causes[0], "cause");
     }
 
-    public CompositeException(Throwable... causes) {
+    public CompositeException(@NotNull Throwable... causes) {
         super("Multiple exceptions caught:", getFirstOrFail(causes));
         for (int i = 1; i < causes.length; i++) {
             addSuppressed(causes[i]);
         }
     }
 
-    public CompositeException(CompositeException other, Throwable toBeAppended) {
+    public CompositeException(@NotNull CompositeException other, @NotNull Throwable toBeAppended) {
         Throwable[] suppressed = other.getSuppressed();
         for (Throwable throwable : suppressed) {
             addSuppressed(throwable);
@@ -57,6 +59,7 @@ public class CompositeException extends RuntimeException {
         initCause(other.getCause());
     }
 
+    @NotNull
     @Override
     public String getMessage() {
         String messageFromSuper = super.getMessage();
@@ -75,6 +78,7 @@ public class CompositeException extends RuntimeException {
         return message.toString();
     }
 
+    @NotNull
     public List<Throwable> getCauses() {
         List<Throwable> causes = new ArrayList<>();
         causes.add(getCause());

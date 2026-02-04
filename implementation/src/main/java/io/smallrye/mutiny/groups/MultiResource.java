@@ -12,6 +12,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.builders.ResourceMulti;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Allows configuring a <em>finalizer</em> to close the resource attached to the stream.
@@ -45,6 +46,7 @@ public class MultiResource<R, I> {
         return withFinalizer(actual, (r, ignored) -> actual.apply(r), actual);
     }
 
+    @NotNull
     static <R> Function<? super R, Uni<Void>> getUniFunction(Consumer<? super R> finalizer) {
         Consumer<? super R> callback = Infrastructure.decorate(ParameterValidation.nonNull(finalizer, "finalizer"));
         return r -> {
@@ -98,6 +100,7 @@ public class MultiResource<R, I> {
      *        be {@code null}.
      * @return the multi
      */
+    @NotNull
     @CheckReturnValue
     public Multi<I> withFinalizer(
             Function<? super R, Uni<Void>> onCompletion,

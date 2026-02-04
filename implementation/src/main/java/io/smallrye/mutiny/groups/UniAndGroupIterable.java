@@ -12,10 +12,12 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.uni.UniAndCombination;
+import org.jetbrains.annotations.NotNull;
 
 public class UniAndGroupIterable<T1> {
 
     private final Uni<? extends T1> source;
+    @NotNull
     private final List<? extends Uni<?>> unis;
 
     private boolean collectFailures;
@@ -42,6 +44,7 @@ public class UniAndGroupIterable<T1> {
         this.collectFailures = collectFailures;
     }
 
+    @NotNull
     @CheckReturnValue
     public UniAndGroupIterable<T1> collectFailures() {
         collectFailures = true;
@@ -59,6 +62,7 @@ public class UniAndGroupIterable<T1> {
      * @param level the concurrency level, must be strictly positive
      * @return an object to configure the combination logic
      */
+    @NotNull
     @CheckReturnValue
     public UniAndGroupIterable<T1> usingConcurrencyOf(int level) {
         this.concurrency = ParameterValidation.positive(level, "level");

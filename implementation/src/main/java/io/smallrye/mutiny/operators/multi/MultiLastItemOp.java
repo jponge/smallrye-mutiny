@@ -6,6 +6,8 @@ import java.util.concurrent.Flow.Subscription;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class MultiLastItemOp<T> extends AbstractMultiOperator<T, T> {
 
@@ -20,14 +22,14 @@ public final class MultiLastItemOp<T> extends AbstractMultiOperator<T, T> {
 
     static final class MultiLastItemProcessor<T> extends MultiOperatorProcessor<T, T> {
 
-        T last;
+        @Nullable T last;
 
         MultiLastItemProcessor(MultiSubscriber<? super T> downstream) {
             super(downstream);
         }
 
         @Override
-        public void onSubscribe(Subscription subscription) {
+        public void onSubscribe(@NotNull Subscription subscription) {
             if (compareAndSetUpstreamSubscription(null, subscription)) {
                 downstream.onSubscribe(this);
                 subscription.request(Long.MAX_VALUE);

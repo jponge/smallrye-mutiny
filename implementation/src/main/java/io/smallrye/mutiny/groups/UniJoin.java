@@ -13,6 +13,7 @@ import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.uni.builders.UniJoinAll;
 import io.smallrye.mutiny.operators.uni.builders.UniJoinFirst;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Join multiple {@link Uni Unis}.
@@ -40,6 +41,7 @@ public class UniJoin {
      * @param <T> the type of the {@link Uni} values
      * @return the object to configure the failure management strategy
      */
+    @NotNull
     @SafeVarargs
     @CheckReturnValue
     public final <T> JoinAllStrategy<T> all(Uni<T>... unis) {
@@ -59,6 +61,7 @@ public class UniJoin {
      * @param <T> the type of the {@link Uni} values
      * @return the object to configure the failure management strategy
      */
+    @NotNull
     @CheckReturnValue
     public final <T> JoinAllStrategy<T> all(List<Uni<T>> unis) {
         doesNotContainNull(unis, "unis");
@@ -116,6 +119,7 @@ public class UniJoin {
          * @param limit the concurrency limit, must be strictly positive
          * @return an object to conclude the join strategy
          */
+        @NotNull
         @CheckReturnValue
         public JoinAllStrategyTerminal<T> usingConcurrencyOf(int limit) {
             this.concurrency = ParameterValidation.positive(limit, "limit");
@@ -158,6 +162,7 @@ public class UniJoin {
      * @param <T> the type of the {@link Uni} values
      * @return the object to configure the failure management strategy
      */
+    @NotNull
     @SafeVarargs
     @CheckReturnValue
     public final <T> JoinFirstStrategy<T> first(Uni<T>... unis) {
@@ -177,6 +182,7 @@ public class UniJoin {
      * @param <T> the type of the {@link Uni} values
      * @return the object to configure the failure management strategy
      */
+    @NotNull
     @CheckReturnValue
     public final <T> JoinFirstStrategy<T> first(List<Uni<T>> unis) {
         doesNotContainNull(unis, "unis");
@@ -228,6 +234,7 @@ public class UniJoin {
          * @param limit the concurrency limit, must be strictly positive
          * @return an object to conclude the join strategy
          */
+        @NotNull
         @CheckReturnValue
         public JoinFirstStrategyTerminal<T> usingConcurrencyOf(int limit) {
             this.concurrency = ParameterValidation.positive(limit, "limit");
@@ -259,6 +266,7 @@ public class UniJoin {
      * @param <T> the type of the {@link Uni} values
      * @return a new builder
      */
+    @NotNull
     @CheckReturnValue
     public <T> Builder<T> builder() {
         return new Builder<>();
@@ -279,6 +287,7 @@ public class UniJoin {
          * @param uni a {@link Uni}
          * @return this builder instance
          */
+        @NotNull
         @CheckReturnValue
         public Builder<T> add(Uni<T> uni) {
             unis.add(uni);
@@ -290,6 +299,7 @@ public class UniJoin {
          *
          * @return the object to configure the failure management strategy
          */
+        @NotNull
         @CheckReturnValue
         public JoinAllStrategy<T> joinAll() {
             return UniJoin.this.all(unis);
@@ -300,6 +310,7 @@ public class UniJoin {
          *
          * @return the object to configure the failure management strategy
          */
+        @NotNull
         @CheckReturnValue
         public JoinFirstStrategy<T> joinFirst() {
             return UniJoin.this.first(unis);

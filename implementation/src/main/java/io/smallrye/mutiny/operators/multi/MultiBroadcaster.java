@@ -5,6 +5,7 @@ import java.time.Duration;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.multicast.MultiPublishOp;
+import org.jetbrains.annotations.Nullable;
 
 public class MultiBroadcaster {
 
@@ -20,7 +21,7 @@ public class MultiBroadcaster {
     }
 
     private static <T> Multi<T> createPublishImmediate(Multi<T> upstream, boolean cancelWhenNoOneIsListening,
-            Duration delayAfterLastDeparture) {
+                                                       @Nullable Duration delayAfterLastDeparture) {
         if (cancelWhenNoOneIsListening) {
             if (delayAfterLastDeparture != null) {
                 return Infrastructure
@@ -34,7 +35,7 @@ public class MultiBroadcaster {
     }
 
     private static <T> Multi<T> createPublishWithSubscribersThreshold(Multi<T> upstream, int numberOfSubscribers,
-            boolean cancelWhenNoOneIsListening, Duration delayAfterLastDeparture) {
+                                                                      boolean cancelWhenNoOneIsListening, @Nullable Duration delayAfterLastDeparture) {
         if (cancelWhenNoOneIsListening) {
             if (delayAfterLastDeparture != null) {
                 return Infrastructure.onMultiCreation(

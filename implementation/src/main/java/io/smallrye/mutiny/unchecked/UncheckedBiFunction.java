@@ -1,5 +1,7 @@
 package io.smallrye.mutiny.unchecked;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -26,7 +28,8 @@ public interface UncheckedBiFunction<T, U, R> {
      * @param <R> the type of the result of the function
      * @return the created {@link UncheckedBiFunction}
      */
-    static <T, U, R> UncheckedBiFunction<T, U, R> from(BiFunction<T, U, R> function) {
+    @NotNull
+    static <T, U, R> UncheckedBiFunction<T, U, R> from(@NotNull BiFunction<T, U, R> function) {
         return function::apply;
     }
 
@@ -34,6 +37,7 @@ public interface UncheckedBiFunction<T, U, R> {
      * @return a {@link Function} executing this {@code UncheckedFunction}.If the operation throws an exception, the
      *         exception is rethrown, wrapped in a {@link RuntimeException} if needed.
      */
+    @NotNull
     default BiFunction<T, U, R> toBiFunction() {
         return (t, u) -> {
             try {
@@ -69,7 +73,8 @@ public interface UncheckedBiFunction<T, U, R> {
      *         applies the {@code after} function
      * @throws NullPointerException if after is null
      */
-    default <V> UncheckedBiFunction<T, U, V> andThen(UncheckedFunction<? super R, ? extends V> after) {
+    @NotNull
+    default <V> UncheckedBiFunction<T, U, V> andThen(@NotNull UncheckedFunction<? super R, ? extends V> after) {
         Objects.requireNonNull(after);
         return (T t, U u) -> after.apply(apply(t, u));
     }

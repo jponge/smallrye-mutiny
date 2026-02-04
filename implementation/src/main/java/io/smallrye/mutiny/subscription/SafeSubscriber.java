@@ -9,6 +9,8 @@ import io.smallrye.mutiny.CompositeException;
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Wraps another Subscriber and ensures all onXXX methods conform the protocol
@@ -57,7 +59,7 @@ public final class SafeSubscriber<T> implements Subscriber<T>, Subscription, Con
     }
 
     @Override
-    public void onSubscribe(Subscription subscription) {
+    public void onSubscribe(@NotNull Subscription subscription) {
         if (subscribed.compareAndSet(false, true)) {
             this.upstream = subscription;
             try {
@@ -78,7 +80,7 @@ public final class SafeSubscriber<T> implements Subscriber<T>, Subscription, Con
     }
 
     @Override
-    public void onNext(T t) {
+    public void onNext(@Nullable T t) {
         if (done) {
             return;
         }

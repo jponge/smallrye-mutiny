@@ -7,6 +7,7 @@ import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Implements a {@link Flow.Publisher} which only calls {@code onComplete} immediately after subscription.
@@ -25,7 +26,7 @@ public final class EmptyMulti extends AbstractMulti<Object> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super Object> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super Object> downstream) {
         ParameterValidation.nonNullNpe(downstream, "downstream");
         Subscriptions.complete(downstream);
     }

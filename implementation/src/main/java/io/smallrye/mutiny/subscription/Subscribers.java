@@ -11,6 +11,7 @@ import io.smallrye.mutiny.CompositeException;
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
+import org.jetbrains.annotations.NotNull;
 
 public class Subscribers {
 
@@ -18,10 +19,11 @@ public class Subscribers {
     public static final Consumer<? super Throwable> NO_ON_FAILURE = failure -> new Exception(
             "Missing onFailure/onError handler in the subscriber", failure).printStackTrace(); // NOSONAR
 
-    public static <T> CancellableSubscriber<T> from(Context context, Consumer<? super T> onItem,
-            Consumer<? super Throwable> onFailure,
-            Runnable onCompletion,
-            Consumer<? super Subscription> onSubscription) {
+    @NotNull
+    public static <T> CancellableSubscriber<T> from(Context context, @NotNull Consumer<? super T> onItem,
+                                                    Consumer<? super Throwable> onFailure,
+                                                    Runnable onCompletion,
+                                                    @NotNull Consumer<? super Subscription> onSubscription) {
         return new CallbackBasedSubscriber<>(context, onItem, onFailure, onCompletion, onSubscription);
     }
 
@@ -32,17 +34,19 @@ public class Subscribers {
                 .newUpdater(CallbackBasedSubscriber.class, Subscription.class, "subscription");
 
         private final Context context;
+        @NotNull
         private final Consumer<? super T> onItem;
         private final Consumer<? super Throwable> onFailure;
         private final Runnable onCompletion;
+        @NotNull
         private final Consumer<? super Subscription> onSubscription;
 
         public CallbackBasedSubscriber(
                 Context context,
-                Consumer<? super T> onItem,
+                @NotNull Consumer<? super T> onItem,
                 Consumer<? super Throwable> onFailure,
                 Runnable onCompletion,
-                Consumer<? super Subscription> onSubscription) {
+                @NotNull Consumer<? super Subscription> onSubscription) {
             this.context = context;
             this.onItem = nonNull(onItem, "onItem");
             this.onFailure = onFailure;
@@ -56,7 +60,7 @@ public class Subscribers {
         }
 
         @Override
-        public void onSubscribe(Subscription s) {
+        public void onSubscribe(@NotNull Subscription s) {
             if (SUBSCRIPTION_UPDATER.compareAndSet(this, null, s)) {
                 try {
                     // onSubscription cannot be null

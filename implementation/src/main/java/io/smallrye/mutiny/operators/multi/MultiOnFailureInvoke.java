@@ -11,6 +11,7 @@ import io.smallrye.mutiny.CompositeException;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiOnFailureInvoke<T> extends AbstractMultiOperator<T, T> {
 
@@ -25,7 +26,7 @@ public class MultiOnFailureInvoke<T> extends AbstractMultiOperator<T, T> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> downstream) {
         upstream.subscribe().withSubscriber(new MultiOnFailureInvokeProcessor(nonNull(downstream, "downstream")));
     }
 

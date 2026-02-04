@@ -8,6 +8,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.smallrye.mutiny.subscription.SwitchableSubscriptionSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiRepeatUntilOp<T> extends AbstractMultiOperator<T, T> implements Multi<T> {
     private final Predicate<T> predicate;
@@ -29,7 +30,7 @@ public class MultiRepeatUntilOp<T> extends AbstractMultiOperator<T, T> implement
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> downstream) {
         ParameterValidation.nonNullNpe(downstream, "downstream");
         RepeatUntilProcessor<T> processor = new RepeatUntilProcessor<>(upstream, downstream,
                 times != Long.MAX_VALUE ? times - 1 : Long.MAX_VALUE,

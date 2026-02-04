@@ -12,6 +12,7 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.tuples.Functions;
 import io.smallrye.mutiny.tuples.Tuple5;
 import io.smallrye.mutiny.tuples.Tuples;
+import org.jetbrains.annotations.NotNull;
 
 public class UniAndGroup5<T1, T2, T3, T4, T5> extends UniAndGroupIterable<T1> {
 
@@ -20,6 +21,7 @@ public class UniAndGroup5<T1, T2, T3, T4, T5> extends UniAndGroupIterable<T1> {
         super(source, Arrays.asList(o1, o2, o3, o4));
     }
 
+    @NotNull
     @CheckReturnValue
     public UniAndGroup5<T1, T2, T3, T4, T5> collectFailures() {
         super.collectFailures();
@@ -42,6 +44,7 @@ public class UniAndGroup5<T1, T2, T3, T4, T5> extends UniAndGroupIterable<T1> {
      * @param level the concurrency level, must be strictly positive
      * @return an object to configure the combination logic
      */
+    @NotNull
     @CheckReturnValue
     public UniAndGroup5<T1, T2, T3, T4, T5> usingConcurrencyOf(int level) {
         super.usingConcurrencyOf(level);
@@ -65,7 +68,7 @@ public class UniAndGroup5<T1, T2, T3, T4, T5> extends UniAndGroupIterable<T1> {
     }
 
     @SuppressWarnings("unchecked")
-    private <O> Uni<O> combine(Functions.Function5<T1, T2, T3, T4, T5, O> combinator) {
+    private <O> Uni<O> combine(@NotNull Functions.Function5<T1, T2, T3, T4, T5, O> combinator) {
         Function<List<?>, O> function = list -> {
             Tuples.ensureArity(list, 5);
             T1 item1 = (T1) list.get(0);
@@ -86,7 +89,7 @@ public class UniAndGroup5<T1, T2, T3, T4, T5> extends UniAndGroupIterable<T1> {
     }
 
     @SuppressWarnings("unchecked")
-    private <O> Uni<O> combineUni(Functions.Function5<T1, T2, T3, T4, T5, Uni<O>> combinator) {
+    private <O> Uni<O> combineUni(@NotNull Functions.Function5<T1, T2, T3, T4, T5, Uni<O>> combinator) {
         Function<List<?>, Uni<O>> function = list -> {
             Tuples.ensureArity(list, 5);
             T1 item1 = (T1) list.get(0);

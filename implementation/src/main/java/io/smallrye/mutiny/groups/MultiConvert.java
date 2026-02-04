@@ -7,6 +7,7 @@ import java.util.function.Function;
 
 import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.mutiny.Multi;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Converts the upstream into another reactive type.
@@ -15,6 +16,7 @@ import io.smallrye.mutiny.Multi;
  */
 public class MultiConvert<T> {
 
+    @NotNull
     private final Multi<T> upstream;
 
     public MultiConvert(Multi<T> upstream) {
@@ -29,7 +31,7 @@ public class MultiConvert<T> {
      * @return an instance of R
      * @throws RuntimeException if the conversion fails.
      */
-    public <R> R with(Function<Multi<T>, R> converter) {
+    public <R> R with(@NotNull Function<Multi<T>, R> converter) {
         // No interception for converters.
         nonNull(converter, "converter");
         return converter.apply(upstream);

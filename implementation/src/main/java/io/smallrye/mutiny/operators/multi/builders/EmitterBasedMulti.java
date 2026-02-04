@@ -11,6 +11,7 @@ import io.smallrye.mutiny.subscription.BackPressureFailure;
 import io.smallrye.mutiny.subscription.BackPressureStrategy;
 import io.smallrye.mutiny.subscription.MultiEmitter;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public final class EmitterBasedMulti<T> extends AbstractMulti<T> {
 
@@ -31,7 +32,7 @@ public final class EmitterBasedMulti<T> extends AbstractMulti<T> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> downstream) {
         BaseMultiEmitter<T> emitter;
 
         switch (backpressure) {
@@ -76,6 +77,7 @@ public final class EmitterBasedMulti<T> extends AbstractMulti<T> {
             super(downstream);
         }
 
+        @NotNull
         @Override
         public MultiEmitter<T> emit(T item) {
             downstream.onItem(item);
@@ -96,6 +98,7 @@ public final class EmitterBasedMulti<T> extends AbstractMulti<T> {
             super(downstream);
         }
 
+        @NotNull
         @Override
         public final MultiEmitter<T> emit(T t) {
             if (requested.get() != 0) {
@@ -147,6 +150,7 @@ public final class EmitterBasedMulti<T> extends AbstractMulti<T> {
             super(downstream);
         }
 
+        @NotNull
         @Override
         public MultiEmitter<T> emit(T t) {
             queue.set(t);

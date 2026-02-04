@@ -14,6 +14,7 @@ import io.smallrye.mutiny.subscription.UniEmitter;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
 import io.smallrye.mutiny.tuples.Functions;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A {@link Uni} represents a lazy asynchronous action. It follows the subscription pattern, meaning that the action
@@ -61,6 +62,7 @@ public interface Uni<T> {
      * @return the factory used to create {@link Uni} instances.
      * @see UniCreate
      */
+    @NotNull
     @CheckReturnValue
     static UniCreate createFrom() {
         return UniCreate.INSTANCE;
@@ -86,7 +88,7 @@ public interface Uni<T> {
      * @return the outcome of the function.
      */
     @CheckReturnValue
-    default <O> O stage(Function<Uni<T>, O> stage) {
+    default <O> O stage(@NotNull Function<Uni<T>, O> stage) {
         return nonNull(stage, "stage").apply(this);
     }
 
@@ -95,6 +97,7 @@ public interface Uni<T> {
      *
      * @return the factory use to combine the uni instances
      */
+    @NotNull
     @CheckReturnValue
     static UniCombine combine() {
         return UniCombine.INSTANCE;
@@ -358,7 +361,7 @@ public interface Uni<T> {
      * @return a new {@link Uni} computing an item of type {@code <O>}.
      */
     @CheckReturnValue
-    default <O> Uni<O> map(Function<? super T, ? extends O> mapper) {
+    default <O> Uni<O> map(@NotNull Function<? super T, ? extends O> mapper) {
         return onItem().transform(nonNull(mapper, "mapper"));
     }
 
@@ -374,7 +377,7 @@ public interface Uni<T> {
      * @return the new {@link Uni}
      */
     @CheckReturnValue
-    default Uni<T> invoke(Consumer<? super T> callback) {
+    default Uni<T> invoke(@NotNull Consumer<? super T> callback) {
         Consumer<? super T> actual = nonNull(callback, "callback");
         return onItem().invoke(actual);
     }
@@ -390,7 +393,7 @@ public interface Uni<T> {
      * @return the new {@link Uni}
      */
     @CheckReturnValue
-    default Uni<T> invoke(Runnable callback) {
+    default Uni<T> invoke(@NotNull Runnable callback) {
         Runnable actual = nonNull(callback, "callback");
         return onItem().invoke(actual);
     }
@@ -453,7 +456,7 @@ public interface Uni<T> {
      *         in an asynchronous manner.
      */
     @CheckReturnValue
-    default <O> Uni<O> flatMap(Function<? super T, Uni<? extends O>> mapper) {
+    default <O> Uni<O> flatMap(@NotNull Function<? super T, Uni<? extends O>> mapper) {
         return onItem().transformToUni(nonNull(mapper, "mapper"));
     }
 
@@ -486,7 +489,7 @@ public interface Uni<T> {
      * @see #chain(Supplier)
      */
     @CheckReturnValue
-    default <O> Uni<O> chain(Function<? super T, Uni<? extends O>> mapper) {
+    default <O> Uni<O> chain(@NotNull Function<? super T, Uni<? extends O>> mapper) {
         Function<? super T, Uni<? extends O>> actual = nonNull(mapper, "mapper");
         return onItem().transformToUni(actual);
     }
@@ -519,7 +522,7 @@ public interface Uni<T> {
      * @see #chain(Supplier)
      */
     @CheckReturnValue
-    default <O> Uni<O> chain(Supplier<Uni<? extends O>> supplier) {
+    default <O> Uni<O> chain(@NotNull Supplier<Uni<? extends O>> supplier) {
         Supplier<Uni<? extends O>> actual = nonNull(supplier, "supplier");
         return onItem().transformToUni(ignored -> actual.get());
     }
@@ -547,7 +550,7 @@ public interface Uni<T> {
      * @see #onItemOrFailure()
      */
     @CheckReturnValue
-    default Uni<T> eventually(Runnable action) {
+    default Uni<T> eventually(@NotNull Runnable action) {
         return onTermination().invoke(nonNull(action, "action"));
     }
 
@@ -577,7 +580,7 @@ public interface Uni<T> {
      * @see #onItemOrFailure()
      */
     @CheckReturnValue
-    default <O> Uni<T> eventually(Supplier<Uni<? extends O>> supplier) {
+    default <O> Uni<T> eventually(@NotNull Supplier<Uni<? extends O>> supplier) {
         Supplier<Uni<? extends O>> actual = nonNull(supplier, "supplier");
         return onTermination().call((item, err, cancelled) -> actual.get());
     }
@@ -660,7 +663,7 @@ public interface Uni<T> {
      * @return the new {@link Uni}
      */
     @CheckReturnValue
-    default <R> Uni<R> plug(Function<Uni<T>, Uni<R>> operatorProvider) {
+    default <R> Uni<R> plug(@NotNull Function<Uni<T>, Uni<R>> operatorProvider) {
         Function<Uni<T>, Uni<R>> provider = nonNull(operatorProvider, "operatorProvider");
         return Infrastructure.onUniCreation(nonNull(provider.apply(this), "uni"));
     }
@@ -689,7 +692,7 @@ public interface Uni<T> {
      * @return the new {@link Uni}
      */
     @CheckReturnValue
-    default <O> Uni<O> replaceWith(Supplier<O> supplier) {
+    default <O> Uni<O> replaceWith(@NotNull Supplier<O> supplier) {
         return onItem().transform(ignore -> supplier.get());
     }
 
@@ -804,6 +807,7 @@ public interface Uni<T> {
      *
      * @return the object to configure the join behavior.
      */
+    @NotNull
     @CheckReturnValue
     static UniJoin join() {
         return UniJoin.SHARED_INSTANCE;

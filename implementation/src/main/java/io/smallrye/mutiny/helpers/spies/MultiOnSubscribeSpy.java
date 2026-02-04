@@ -4,9 +4,12 @@ import java.util.concurrent.Flow.Subscription;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class MultiOnSubscribeSpy<T> extends MultiSpyBase<T> {
 
+    @Nullable
     private volatile Subscription lastSubscription;
 
     public Subscription lastSubscription() {
@@ -31,6 +34,7 @@ public class MultiOnSubscribeSpy<T> extends MultiSpyBase<T> {
         }).subscribe().withSubscriber(downstream);
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "MultiOnSubscribeSpy{" +

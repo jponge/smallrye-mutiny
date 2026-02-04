@@ -17,6 +17,8 @@ import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.subscription.BackPressureFailure;
 import io.smallrye.mutiny.subscription.BackPressureStrategy;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Implementation of a processor using a queue to store items and allows a single subscriber to receive
@@ -34,12 +36,15 @@ import io.smallrye.mutiny.subscription.MultiSubscriber;
 public class UnicastProcessor<T> extends AbstractMulti<T> implements Processor<T, T>, Flow.Subscription {
 
     private final Runnable onTermination;
+    @NotNull
     private final Queue<T> queue;
 
     private volatile boolean done = false;
+    @Nullable
     private volatile Throwable failure = null;
     private volatile boolean cancelled = false;
 
+    @Nullable
     private volatile Flow.Subscriber<? super T> downstream = null;
     private static final AtomicReferenceFieldUpdater<UnicastProcessor, Flow.Subscriber> DOWNSTREAM_UPDATER = AtomicReferenceFieldUpdater
             .newUpdater(UnicastProcessor.class, Flow.Subscriber.class, "downstream");
@@ -55,6 +60,7 @@ public class UnicastProcessor<T> extends AbstractMulti<T> implements Processor<T
      * @param <I> the type of item
      * @return the unicast processor
      */
+    @NotNull
     public static <I> UnicastProcessor<I> create() {
         return new UnicastProcessor<>(Queues.<I> unbounded(Infrastructure.getBufferSizeS()).get(), null);
     }
@@ -67,11 +73,12 @@ public class UnicastProcessor<T> extends AbstractMulti<T> implements Processor<T
      * @param <I> the type of item
      * @return the unicast processor
      */
-    public static <I> UnicastProcessor<I> create(Queue<I> queue, Runnable onTermination) {
+    @NotNull
+    public static <I> UnicastProcessor<I> create(@NotNull Queue<I> queue, Runnable onTermination) {
         return new UnicastProcessor<>(queue, onTermination);
     }
 
-    private UnicastProcessor(Queue<T> queue, Runnable onTermination) {
+    private UnicastProcessor(@NotNull Queue<T> queue, Runnable onTermination) {
         this.queue = ParameterValidation.nonNull(queue, "queue");
         this.onTermination = onTermination;
     }
@@ -82,7 +89,7 @@ public class UnicastProcessor<T> extends AbstractMulti<T> implements Processor<T
         }
     }
 
-    void drainWithDownstream(Flow.Subscriber<? super T> actual) {
+    void drainWithDownstream(@NotNull Flow.Subscriber<? super T> actual) {
         int missed = 1;
 
         final Queue<T> q = queue;
@@ -165,7 +172,7 @@ public class UnicastProcessor<T> extends AbstractMulti<T> implements Processor<T
     }
 
     @Override
-    public void onSubscribe(Flow.Subscription upstream) {
+    public void onSubscribe(@NotNull Flow.Subscription upstream) {
         if (hasUpstream) {
             upstream.cancel();
             return;
@@ -180,7 +187,7 @@ public class UnicastProcessor<T> extends AbstractMulti<T> implements Processor<T
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> downstream) {
         ParameterValidation.nonNull(downstream, "downstream");
         if (DOWNSTREAM_UPDATER.compareAndSet(this, null, downstream)) {
             downstream.onSubscribe(this);
@@ -268,6 +275,7 @@ public class UnicastProcessor<T> extends AbstractMulti<T> implements Processor<T
         return downstream != null;
     }
 
+    @NotNull
     public SerializedProcessor<T, T> serialized() {
         return new SerializedProcessor<>(this);
     }

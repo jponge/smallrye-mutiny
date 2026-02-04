@@ -23,6 +23,7 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.MultiOperator;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Combines the latest values from multiple sources through a function.
@@ -32,8 +33,10 @@ import io.smallrye.mutiny.subscription.MultiSubscriber;
  */
 public class MultiCombineLatestOp<I, O> extends MultiOperator<I, O> {
 
+    @NotNull
     private final Iterable<? extends Publisher<? extends I>> upstreams;
 
+    @NotNull
     private final Function<List<?>, ? extends O> combinator;
 
     private final int bufferSize;
@@ -41,8 +44,8 @@ public class MultiCombineLatestOp<I, O> extends MultiOperator<I, O> {
     private final boolean delayErrors;
 
     public MultiCombineLatestOp(
-            Iterable<? extends Publisher<? extends I>> upstreams,
-            Function<List<?>, ? extends O> combinator,
+            @NotNull Iterable<? extends Publisher<? extends I>> upstreams,
+            @NotNull Function<List<?>, ? extends O> combinator,
             int bufferSize, boolean delayErrors) {
         super(null);
         this.upstreams = ParameterValidation.doesNotContainNull(upstreams, "upstreams");
@@ -52,7 +55,7 @@ public class MultiCombineLatestOp<I, O> extends MultiOperator<I, O> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super O> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super O> downstream) {
         Objects.requireNonNull(downstream, "The subscriber must not be `null`");
         List<Publisher<? extends I>> publishers = new ArrayList<>();
         this.upstreams.forEach(publishers::add);
@@ -82,7 +85,9 @@ public class MultiCombineLatestOp<I, O> extends MultiOperator<I, O> {
         private final MultiSubscriber<? super O> downstream;
         private final Function<List<?>, ? extends O> combinator;
         private final List<CombineLatestInnerSubscriber<I>> subscribers = new ArrayList<>();
+        @NotNull
         private final Queue<Object> queue;
+        @NotNull
         private final Object[] latest;
         private final boolean delayErrors;
 
@@ -134,7 +139,7 @@ public class MultiCombineLatestOp<I, O> extends MultiOperator<I, O> {
             cancelAll();
         }
 
-        private void subscribe(List<Publisher<? extends I>> sources) {
+        private void subscribe(@NotNull List<Publisher<? extends I>> sources) {
             int i = 0;
             for (CombineLatestInnerSubscriber<I> subscriber : subscribers) {
                 if (done || cancelled) {
@@ -337,7 +342,7 @@ public class MultiCombineLatestOp<I, O> extends MultiOperator<I, O> {
         }
 
         @Override
-        public void onSubscribe(Subscription s) {
+        public void onSubscribe(@NotNull Subscription s) {
             if (upstream.compareAndSet(null, s)) {
                 s.request(prefetch);
             }

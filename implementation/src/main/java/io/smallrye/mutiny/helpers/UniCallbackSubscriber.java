@@ -11,6 +11,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Implementation of a {@link UniSubscriber} based on callbacks.
@@ -24,8 +25,11 @@ public class UniCallbackSubscriber<T> implements UniSubscriber<T>, UniSubscripti
     private static final AtomicReferenceFieldUpdater<UniCallbackSubscriber, UniSubscription> SUBSCRIPTION_UPDATER = AtomicReferenceFieldUpdater
             .newUpdater(UniCallbackSubscriber.class, UniSubscription.class, "subscription");
 
+    @NotNull
     private final Consumer<? super T> onResultCallback;
+    @NotNull
     private final Consumer<? super Throwable> onFailureCallback;
+    @NotNull
     private final Context context;
 
     /**
@@ -36,16 +40,16 @@ public class UniCallbackSubscriber<T> implements UniSubscriber<T>, UniSubscripti
      * @param onFailureCallback callback invoked on failure event, must not be {@code null}
      * @param context the subscriber context, must not be {@code null}
      */
-    public UniCallbackSubscriber(Consumer<? super T> onResultCallback,
-            Consumer<? super Throwable> onFailureCallback,
-            Context context) {
+    public UniCallbackSubscriber(@NotNull Consumer<? super T> onResultCallback,
+                                 @NotNull Consumer<? super Throwable> onFailureCallback,
+                                 @NotNull Context context) {
         this.onResultCallback = nonNull(onResultCallback, "onResultCallback");
         this.onFailureCallback = nonNull(onFailureCallback, "onFailureCallback");
         this.context = nonNull(context, "context");
     }
 
     @Override
-    public final void onSubscribe(UniSubscription sub) {
+    public final void onSubscribe(@NotNull UniSubscription sub) {
         if (!SUBSCRIPTION_UPDATER.compareAndSet(this, null, sub)) {
             // cancelling this second subscription
             // because we already add a subscription (maybe CANCELLED)

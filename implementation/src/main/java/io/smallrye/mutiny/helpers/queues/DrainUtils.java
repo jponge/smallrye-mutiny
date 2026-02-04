@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BooleanSupplier;
 
 import io.smallrye.mutiny.helpers.Subscriptions;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Copy from Project Reactor.
@@ -37,10 +38,10 @@ public class DrainUtils {
      * @return true if the state indicates a completion state.
      */
     public static <T> boolean postCompleteRequest(long n,
-            Subscriber<? super T> downstream,
-            Queue<T> queue,
-            AtomicLong requested,
-            BooleanSupplier isCancelled) {
+                                                  @NotNull Subscriber<? super T> downstream,
+                                                  @NotNull Queue<T> queue,
+                                                  @NotNull AtomicLong requested,
+                                                  @NotNull BooleanSupplier isCancelled) {
 
         for (;;) {
             long r = requested.get();
@@ -77,10 +78,10 @@ public class DrainUtils {
      * @return true if the queue was completely drained or the drain process was cancelled
      */
     private static <T> boolean postCompleteDrain(long n,
-            Subscriber<? super T> downstream,
-            Queue<T> queue,
-            AtomicLong requested,
-            BooleanSupplier isCancelled) {
+                                                 @NotNull Subscriber<? super T> downstream,
+                                                 @NotNull Queue<T> queue,
+                                                 @NotNull AtomicLong requested,
+                                                 @NotNull BooleanSupplier isCancelled) {
 
         long e = n & COMPLETED_MASK;
 
@@ -136,10 +137,10 @@ public class DrainUtils {
      * @param requested the atomic long keeping track of requests
      * @param isCancelled callback to detect cancellation
      */
-    public static <T> void postComplete(Subscriber<? super T> downstream,
-            Queue<T> queue,
-            AtomicLong requested,
-            BooleanSupplier isCancelled) {
+    public static <T> void postComplete(@NotNull Subscriber<? super T> downstream,
+                                        @NotNull Queue<T> queue,
+                                        @NotNull AtomicLong requested,
+                                        @NotNull BooleanSupplier isCancelled) {
 
         if (queue.isEmpty()) {
             downstream.onComplete();

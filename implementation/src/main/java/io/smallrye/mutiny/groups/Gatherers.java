@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import io.smallrye.common.annotation.Experimental;
 import io.smallrye.mutiny.groups.Gatherer.Extraction;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Factory interface for creating {@link Gatherer} instances.
@@ -31,10 +32,11 @@ public interface Gatherers {
      * @param <O> the type of the items emitted to the downstream
      * @return a new {@link Gatherer}
      */
+    @NotNull
     static <I, ACC, O> Gatherer<I, ACC, O> of(Supplier<ACC> initialAccumulatorSupplier,
-            BiFunction<ACC, I, ACC> accumulatorFunction,
-            BiFunction<ACC, Boolean, Optional<Extraction<ACC, O>>> extractor,
-            Function<ACC, Optional<O>> finalizer) {
+                                              BiFunction<ACC, I, ACC> accumulatorFunction,
+                                              BiFunction<ACC, Boolean, Optional<Extraction<ACC, O>>> extractor,
+                                              Function<ACC, Optional<O>> finalizer) {
         return new DefaultGatherer<>(initialAccumulatorSupplier, accumulatorFunction, extractor, finalizer);
     }
 
@@ -50,6 +52,7 @@ public interface Gatherers {
      * @param <I> the type of the items emitted by the upstream and downstream
      * @return a new {@link Gatherer} that performs a scan operation
      */
+    @NotNull
     static <I> Gatherer<I, I, I> scan(Supplier<I> initialAccumulatorSupplier, BiFunction<I, I, I> accumulatorFunction) {
         return of(initialAccumulatorSupplier, accumulatorFunction,
                 (acc, done) -> done ? Optional.empty() : Optional.of(Extraction.of(acc, acc)), Optional::of);
@@ -67,6 +70,7 @@ public interface Gatherers {
      * @param <I> the type of the items emitted by the upstream and downstream
      * @return a new {@link Gatherer} that performs a fold operation
      */
+    @NotNull
     static <I> Gatherer<I, I, I> fold(Supplier<I> initialAccumulatorSupplier, BiFunction<I, I, I> accumulatorFunction) {
         return of(initialAccumulatorSupplier, accumulatorFunction, (acc, done) -> Optional.empty(), Optional::of);
     }
@@ -81,6 +85,7 @@ public interface Gatherers {
      * @param <I> the type of the items emitted by the upstream
      * @return a new {@link Gatherer} that performs a windowing operation
      */
+    @NotNull
     static <I> Gatherer<I, List<I>, List<I>> window(int size) {
         return of(ArrayList::new, (acc, next) -> {
             acc.add(next);
@@ -106,6 +111,7 @@ public interface Gatherers {
      * @param <I> the type of the items emitted by the upstream
      * @return a new {@link Gatherer} that performs a sliding window operation
      */
+    @NotNull
     static <I> Gatherer<I, List<I>, List<I>> slidingWindow(int size) {
         return of(ArrayList::new, (acc, item) -> {
             acc.add(item);
@@ -171,6 +177,7 @@ public interface Gatherers {
      * @param <I> the type of the items emitted by the upstream
      * @return the builder
      */
+    @NotNull
     static <I> Gatherer.Builder<I> builder() {
         return new Gatherer.Builder<>();
     }

@@ -8,6 +8,7 @@ import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class IterableBasedMulti<T> extends AbstractMulti<T> {
 
@@ -18,7 +19,7 @@ public class IterableBasedMulti<T> extends AbstractMulti<T> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> downstream) {
         ParameterValidation.nonNullNpe(downstream, "subscriber");
         Iterator<? extends T> iterator;
 
@@ -32,7 +33,7 @@ public class IterableBasedMulti<T> extends AbstractMulti<T> {
         subscribe(downstream, iterator);
     }
 
-    public static <T> void subscribe(MultiSubscriber<? super T> downstream, Iterator<? extends T> iterator) {
+    public static <T> void subscribe(@NotNull MultiSubscriber<? super T> downstream, @NotNull Iterator<? extends T> iterator) {
         boolean hasNext;
         try {
             hasNext = iterator.hasNext();

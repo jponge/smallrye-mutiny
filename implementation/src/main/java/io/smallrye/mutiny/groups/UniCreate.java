@@ -24,6 +24,7 @@ import io.smallrye.mutiny.operators.uni.UniNever;
 import io.smallrye.mutiny.operators.uni.builders.*;
 import io.smallrye.mutiny.subscription.UniEmitter;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Group methods allowing to create {@link Uni} instances from various sources.
@@ -48,7 +49,7 @@ public class UniCreate {
      * @return created {@link Uni}
      */
     @CheckReturnValue
-    public <I, T> Uni<T> converter(UniConverter<I, T> converter, I instance) {
+    public <I, T> Uni<T> converter(@NotNull UniConverter<I, T> converter, I instance) {
         return converter.from(instance);
     }
 
@@ -164,6 +165,7 @@ public class UniCreate {
      * @param <T> the type of item
      * @return the produced {@link Uni}
      */
+    @NotNull
     @CheckReturnValue
     public <T> Uni<T> future(Future<? extends T> future) {
         Future<? extends T> actual = ParameterValidation.nonNull(future, "future");
@@ -195,6 +197,7 @@ public class UniCreate {
      * @param <T> the type of item
      * @return the produced {@link Uni}
      */
+    @NotNull
     @CheckReturnValue
     public <T> Uni<T> future(Supplier<Future<? extends T>> supplier) {
         Supplier<Future<? extends T>> actual = Infrastructure.decorate(ParameterValidation.nonNull(supplier, "supplier"));
@@ -222,6 +225,7 @@ public class UniCreate {
      * @param <T> the type of item
      * @return the produced {@link Uni}
      */
+    @NotNull
     @CheckReturnValue
     public <T> Uni<T> future(Future<? extends T> future, Duration timeout) {
         Future<? extends T> actual = ParameterValidation.nonNull(future, "future");
@@ -253,6 +257,7 @@ public class UniCreate {
      * @param <T> the type of item
      * @return the produced {@link Uni}
      */
+    @NotNull
     @CheckReturnValue
     public <T> Uni<T> future(Supplier<Future<? extends T>> supplier, Duration timeout) {
         Supplier<Future<? extends T>> actual = Infrastructure.decorate(ParameterValidation.nonNull(supplier, "supplier"));
@@ -567,6 +572,7 @@ public class UniCreate {
      * @param <T> the virtual type of item
      * @return a never completing {@link Uni}
      */
+    @NotNull
     @SuppressWarnings("unchecked")
     @CheckReturnValue
     public <T> Uni<T> nothing() {
@@ -594,7 +600,7 @@ public class UniCreate {
      * @return the produced {@link Uni}
      */
     @CheckReturnValue
-    public <T> Uni<T> multi(Multi<T> multi) {
+    public <T> Uni<T> multi(@NotNull Multi<T> multi) {
         ParameterValidation.nonNull(multi, "multi");
         return multi.toUni();
     }

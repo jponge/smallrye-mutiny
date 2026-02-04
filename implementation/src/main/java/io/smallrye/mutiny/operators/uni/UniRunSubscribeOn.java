@@ -9,18 +9,20 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class UniRunSubscribeOn<I> extends UniOperator<I, I> {
 
+    @NotNull
     private final Executor executor;
 
-    public UniRunSubscribeOn(Uni<? extends I> upstream, Executor executor) {
+    public UniRunSubscribeOn(@NotNull Uni<? extends I> upstream, @NotNull Executor executor) {
         super(nonNull(upstream, "upstream"));
         this.executor = nonNull(executor, "executor");
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super I> subscriber) {
+    public void subscribe(@NotNull UniSubscriber<? super I> subscriber) {
         try {
             executor.execute(() -> {
                 try {
@@ -34,7 +36,7 @@ public class UniRunSubscribeOn<I> extends UniOperator<I, I> {
         }
     }
 
-    private void forwardFailure(UniSubscriber<? super I> subscriber, Throwable failure) {
+    private void forwardFailure(@NotNull UniSubscriber<? super I> subscriber, Throwable failure) {
         subscriber.onSubscribe(DONE);
         subscriber.onFailure(failure);
     }

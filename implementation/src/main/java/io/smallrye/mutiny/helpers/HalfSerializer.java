@@ -1,5 +1,7 @@
 package io.smallrye.mutiny.helpers;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.concurrent.Flow.Subscriber;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -26,8 +28,8 @@ public final class HalfSerializer {
      * @param wip the serialization work-in-progress counter
      * @param container the failure container
      */
-    public static <T> void onNext(Subscriber<? super T> subscriber, T item,
-            AtomicInteger wip, AtomicReference<Throwable> container) {
+    public static <T> void onNext(@NotNull Subscriber<? super T> subscriber, T item,
+                                  @NotNull AtomicInteger wip, @NotNull AtomicReference<Throwable> container) {
         if (wip.compareAndSet(0, 1)) {
             subscriber.onNext(item);
             if (wip.decrementAndGet() != 0) {
@@ -57,8 +59,8 @@ public final class HalfSerializer {
      * @param wip the serialization work-in-progress counter
      * @param container the failure container
      */
-    public static void onError(Subscriber<?> subscriber, Throwable failure,
-            AtomicInteger wip, AtomicReference<Throwable> container) {
+    public static void onError(@NotNull Subscriber<?> subscriber, Throwable failure,
+                               @NotNull AtomicInteger wip, @NotNull AtomicReference<Throwable> container) {
         if (Subscriptions.addFailure(container, failure)) {
             if (wip.getAndIncrement() == 0) {
                 subscriber.onError(Subscriptions.terminate(container));
@@ -74,7 +76,7 @@ public final class HalfSerializer {
      * @param wip the serialization work-in-progress counter
      * @param container the failure container
      */
-    public static void onComplete(Subscriber<?> subscriber, AtomicInteger wip, AtomicReference<Throwable> container) {
+    public static void onComplete(@NotNull Subscriber<?> subscriber, @NotNull AtomicInteger wip, @NotNull AtomicReference<Throwable> container) {
         Subscriptions.addFailure(container, COMPLETION_PLACEHOLDER);
         if (wip.getAndIncrement() == 0) {
             Throwable ex = Subscriptions.terminate(container);

@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.operators.MultiOperator;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A {@link Multi} subscribing upstream when a number of subscribers is reached.
@@ -25,7 +26,7 @@ public class MultiConnectAfter<T> extends MultiOperator<T, T> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> downstream) {
         if (downstream == null) {
             throw new NullPointerException("The subscriber must not be `null`");
         }

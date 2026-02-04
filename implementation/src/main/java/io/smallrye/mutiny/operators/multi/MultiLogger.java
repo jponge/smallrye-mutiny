@@ -8,13 +8,15 @@ import java.util.concurrent.atomic.AtomicLong;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiLogger<T> extends AbstractMultiOperator<T, T> {
 
+    @NotNull
     private final String identifier;
     private final AtomicLong increment = new AtomicLong(0L);
 
-    public MultiLogger(Multi<? extends T> upstream, String identifier) {
+    public MultiLogger(@NotNull Multi<? extends T> upstream, @NotNull String identifier) {
         super(nonNull(upstream, "upstream"));
         String id = nonNull(identifier, "identifier");
         if (id.isEmpty()) {
@@ -30,6 +32,7 @@ public class MultiLogger<T> extends AbstractMultiOperator<T, T> {
 
     private class MultiLoggerProcessor extends MultiOperatorProcessor<T, T> {
 
+        @NotNull
         private final String processorIdentifier;
 
         public MultiLoggerProcessor(MultiSubscriber<? super T> downstream, long increment) {

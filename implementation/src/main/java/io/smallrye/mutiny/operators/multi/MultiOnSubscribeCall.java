@@ -12,6 +12,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Execute a given callback on subscription.
@@ -32,7 +33,7 @@ public final class MultiOnSubscribeCall<T> extends AbstractMultiOperator<T, T> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> actual) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> actual) {
         if (actual == null) {
             throw new NullPointerException("Subscriber must not be `null`");
         }
@@ -51,7 +52,7 @@ public final class MultiOnSubscribeCall<T> extends AbstractMultiOperator<T, T> {
         }
 
         @Override
-        public void onSubscribe(Flow.Subscription s) {
+        public void onSubscribe(@NotNull Flow.Subscription s) {
             if (compareAndSetUpstreamSubscription(null, s)) {
                 try {
                     Uni<?> uni = Objects.requireNonNull(onSubscribe.apply(s), "The produced Uni must not be `null`");
@@ -113,7 +114,7 @@ public final class MultiOnSubscribeCall<T> extends AbstractMultiOperator<T, T> {
             }
         }
 
-        private void uniFailed(Throwable failure) {
+        private void uniFailed(@NotNull Throwable failure) {
             getAndSetUpstreamSubscription(CANCELLED).cancel();
             lock.lock();
             try {

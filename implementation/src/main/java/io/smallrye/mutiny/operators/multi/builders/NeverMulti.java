@@ -6,6 +6,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Represents a publisher that does not emits any signals (items, failures or completion).
@@ -30,7 +31,7 @@ public final class NeverMulti extends AbstractMulti<Object> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super Object> actual) {
+    public void subscribe(@NotNull MultiSubscriber<? super Object> actual) {
         actual.onSubscribe(Subscriptions.empty());
     }
 

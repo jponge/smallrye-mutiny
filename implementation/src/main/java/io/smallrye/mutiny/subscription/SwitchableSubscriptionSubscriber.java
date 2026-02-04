@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.helpers.Subscriptions;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * An implementation of {@link Subscription} that allows switching the upstream, dealing with the requests accordingly.
@@ -103,7 +104,7 @@ public abstract class SwitchableSubscriptionSubscriber<O> implements MultiSubscr
     }
 
     @Override
-    public void onSubscribe(Subscription s) {
+    public void onSubscribe(@NotNull Subscription s) {
         setOrSwitchUpstream(s);
     }
 
@@ -180,7 +181,7 @@ public abstract class SwitchableSubscriptionSubscriber<O> implements MultiSubscr
         drain();
     }
 
-    protected final void setOrSwitchUpstream(Subscription newUpstream) {
+    protected final void setOrSwitchUpstream(@NotNull Subscription newUpstream) {
         ParameterValidation.nonNullNpe(newUpstream, "newUpstream"); // Reactive Streams mandates an NPE here.
 
         if (cancelled.get()) {

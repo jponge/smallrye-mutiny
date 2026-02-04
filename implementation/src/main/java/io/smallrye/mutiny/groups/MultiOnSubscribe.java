@@ -13,6 +13,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.MultiOnSubscribeCall;
 import io.smallrye.mutiny.operators.multi.MultiOnSubscribeInvokeOp;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Group to configure the action to execute when the observed {@link Multi} sends a {@link Subscription}.
@@ -32,6 +33,7 @@ import io.smallrye.mutiny.operators.multi.MultiOnSubscribeInvokeOp;
  */
 public class MultiOnSubscribe<T> {
 
+    @NotNull
     private final Multi<T> upstream;
 
     public MultiOnSubscribe(Multi<T> upstream) {

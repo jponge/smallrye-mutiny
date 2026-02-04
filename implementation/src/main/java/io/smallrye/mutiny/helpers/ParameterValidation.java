@@ -1,5 +1,7 @@
 package io.smallrye.mutiny.helpers;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.time.Duration;
 import java.util.Collection;
 
@@ -23,7 +25,8 @@ public class ParameterValidation {
      * @param name the name of the parameter, must not be {@code null}
      * @return the duration is the validation passes.
      */
-    public static Duration validate(Duration duration, String name) {
+    @NotNull
+    public static Duration validate(@NotNull Duration duration, @NotNull String name) {
         nonNull(name, "name");
         if (duration == null) {
             throw new IllegalArgumentException(String.format("`%s` must not be `null`", name));
@@ -42,7 +45,8 @@ public class ParameterValidation {
      * @param <T> the type of the instance
      * @return the instance if the validation passes
      */
-    public static <T> T nonNull(T instance, String name) {
+    @NotNull
+    public static <T> T nonNull(@NotNull T instance, String name) {
         if (instance == null) {
             throw new IllegalArgumentException(String.format("`%s` must not be `null`", name));
         }
@@ -60,7 +64,8 @@ public class ParameterValidation {
      * @param <T> the type of the instance
      * @return the instance if the validation passes
      */
-    public static <T> T nonNullNpe(T instance, String name) {
+    @NotNull
+    public static <T> T nonNullNpe(@NotNull T instance, String name) {
         if (instance == null) {
             throw new NullPointerException(String.format("`%s` must not be `null`", name));
         }
@@ -131,7 +136,8 @@ public class ParameterValidation {
      * @param <T> the type of the instance
      * @return the instance if the validation passes
      */
-    public static <T extends Iterable<?>> T doesNotContainNull(T iterable, String name) {
+    @NotNull
+    public static <T extends Iterable<?>> T doesNotContainNull(@NotNull T iterable, String name) {
         nonNull(iterable, name);
         iterable.forEach(m -> {
             if (m == null) {
@@ -149,7 +155,8 @@ public class ParameterValidation {
      * @param <T> the type of the item contained in the array
      * @return the instance if the validation passes
      */
-    public static <T> T[] doesNotContainNull(T[] array, String name) {
+    @NotNull
+    public static <T> T[] doesNotContainNull(@NotNull T[] array, String name) {
         nonNull(array, name);
         for (int i = 0; i < array.length; i++) {
             if (array[i] == null) {
@@ -167,7 +174,8 @@ public class ParameterValidation {
      * @param <T> the type of the item contained in the array
      * @return the instance if the validation passes
      */
-    public static <T extends Collection<?>> T isNotEmpty(T collection, String name) {
+    @NotNull
+    public static <T extends Collection<?>> T isNotEmpty(@NotNull T collection, String name) {
         nonNull(collection, name);
         if (collection.isEmpty()) {
             throw new IllegalArgumentException(String.format("`%s` must not be empty", name));
@@ -184,7 +192,8 @@ public class ParameterValidation {
      * @param <T> the type of the instance
      * @return the instance if the validation passes
      */
-    public static <T extends Collection<?>> T size(T instance, int expectedSize, String name) {
+    @NotNull
+    public static <T extends Collection<?>> T size(@NotNull T instance, int expectedSize, String name) {
         nonNull(instance, name);
         if (instance.size() != expectedSize) {
             throw new IllegalArgumentException(String.format("`%s` must has size %d, but was %d", name, expectedSize,

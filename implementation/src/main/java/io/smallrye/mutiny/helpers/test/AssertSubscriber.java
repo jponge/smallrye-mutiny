@@ -17,6 +17,8 @@ import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * A {@link io.smallrye.mutiny.Multi} {@link Subscriber} for testing purposes that comes with useful assertion helpers.
@@ -55,6 +57,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
     /**
      * The subscription received from upstream.
      */
+    @Nullable
     private volatile Flow.Subscription subscription = null;
 
     /**
@@ -70,6 +73,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
     /**
      * The received failure.
      */
+    @Nullable
     private volatile Throwable failure = null;
 
     /**
@@ -97,6 +101,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
         COMPLETED
     }
 
+    @NotNull
     private volatile State state = State.INIT;
 
     /**
@@ -144,6 +149,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      * @param <T> the items type
      * @return a new subscriber
      */
+    @NotNull
     public static <T> AssertSubscriber<T> create() {
         return new AssertSubscriber<>(0);
     }
@@ -155,6 +161,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      * @param <T> the items type
      * @return a new subscriber
      */
+    @NotNull
     public static <T> AssertSubscriber<T> create(long requested) {
         return new AssertSubscriber<>(requested);
     }
@@ -166,6 +173,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      * @param <T> the items type
      * @return a new subscriber
      */
+    @NotNull
     public static <T> AssertSubscriber<T> create(Context context) {
         return new AssertSubscriber<>(context, 0, false);
     }
@@ -178,6 +186,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      * @param <T> the items type
      * @return a new subscriber
      */
+    @NotNull
     public static <T> AssertSubscriber<T> create(Context context, long requested) {
         return new AssertSubscriber<>(context, requested, false);
     }
@@ -192,6 +201,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      *
      * @return this {@link AssertSubscriber}
      */
+    @NotNull
     public AssertSubscriber<T> assertCompleted() {
         shouldHaveCompleted(hasCompleted(), getFailure(), getItems());
         return this;
@@ -204,8 +214,9 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      * @param expectedFailureMessage a message to be contained in the failure message, or {@code null} when any message is fine
      * @return this {@link AssertSubscriber}
      */
+    @NotNull
     public AssertSubscriber<T> assertFailedWith(Class<? extends Throwable> expectedTypeOfFailure,
-            String expectedFailureMessage) {
+                                                String expectedFailureMessage) {
         shouldHaveFailed(hasCompleted(), getFailure(), expectedTypeOfFailure, expectedFailureMessage);
         return this;
     }
@@ -216,6 +227,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      * @param expectedTypeOfFailure the expected failure type
      * @return this {@link AssertSubscriber}
      */
+    @NotNull
     public AssertSubscriber<T> assertFailedWith(Class<? extends Throwable> expectedTypeOfFailure) {
         shouldHaveFailed(hasCompleted(), getFailure(), expectedTypeOfFailure, null);
         return this;
@@ -226,6 +238,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      *
      * @return this {@link AssertSubscriber}
      */
+    @NotNull
     public AssertSubscriber<T> assertHasNotReceivedAnyItem() {
         shouldHaveReceivedNoItems(items);
         return this;
@@ -236,6 +249,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      *
      * @return this {@link AssertSubscriber}
      */
+    @NotNull
     public AssertSubscriber<T> assertSubscribed() {
         shouldBeSubscribed(numberOfSubscription);
         return this;
@@ -246,6 +260,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      *
      * @return this {@link AssertSubscriber}
      */
+    @NotNull
     public AssertSubscriber<T> assertNotSubscribed() {
         shouldNotBeSubscribed(numberOfSubscription);
         return this;
@@ -256,6 +271,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      *
      * @return this {@link AssertSubscriber}
      */
+    @NotNull
     public AssertSubscriber<T> assertTerminated() {
         shouldBeTerminated(hasCompleted(), getFailure());
         return this;
@@ -266,6 +282,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      *
      * @return this {@link AssertSubscriber}
      */
+    @NotNull
     public AssertSubscriber<T> assertNotTerminated() {
         shouldNotBeTerminated(hasCompleted(), getFailure());
         return this;
@@ -277,8 +294,9 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      * @param expected a sequence of items
      * @return this {@link AssertSubscriber}
      */
+    @NotNull
     @SafeVarargs
-    public final AssertSubscriber<T> assertItems(T... expected) {
+    public final AssertSubscriber<T> assertItems(@NotNull T... expected) {
         shouldHaveReceivedExactly(items, expected);
         return this;
     }
@@ -286,6 +304,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
     /**
      * @return get the last received item, potentially {@code null} if no items have been received.
      */
+    @Nullable
     public T getLastItem() {
         if (items.isEmpty()) {
             return null;
@@ -301,6 +320,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      * @param expected the expected item, must not be {@code null}
      * @return this {@link AssertSubscriber}
      */
+    @NotNull
     public AssertSubscriber<T> assertLastItem(T expected) {
         shouldHaveReceived(getLastItem(), expected);
         return this;
@@ -329,7 +349,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      * @return this {@link AssertSubscriber}
      * @see #awaitNextItems(int, int)
      */
-    public AssertSubscriber<T> awaitNextItem(Duration duration) {
+    public AssertSubscriber<T> awaitNextItem(@NotNull Duration duration) {
         return awaitNextItems(1, 1, duration);
     }
 
@@ -369,7 +389,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      * @param duration the timeout, must not be {@code null}
      * @return this {@link AssertSubscriber}
      */
-    public AssertSubscriber<T> awaitNextItems(int number, Duration duration) {
+    public AssertSubscriber<T> awaitNextItems(int number, @NotNull Duration duration) {
         return awaitNextItems(number, number, duration);
     }
 
@@ -382,7 +402,8 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      * @param duration the timeout, must not be {@code null}
      * @return this {@link AssertSubscriber}
      */
-    public AssertSubscriber<T> awaitNextItems(int number, int request, Duration duration) {
+    @NotNull
+    public AssertSubscriber<T> awaitNextItems(int number, int request, @NotNull Duration duration) {
         if (hasCompleted() || getFailure() != null) {
             if (hasCompleted()) {
                 throw new AssertionError("Expecting a next items, but a completion event has already being received");
@@ -422,7 +443,8 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      * @param duration the timeout, must not be {@code null}
      * @return this {@link AssertSubscriber}
      */
-    public AssertSubscriber<T> awaitItems(int number, Duration duration) {
+    @NotNull
+    public AssertSubscriber<T> awaitItems(int number, @NotNull Duration duration) {
         if (items.size() > number) {
             throw new AssertionError(
                     "Expected the number of items to be " + number + ", but it's already " + items.size());
@@ -462,7 +484,8 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      * @param duration the duration, must not be {@code null}
      * @return this {@link AssertSubscriber}
      */
-    public AssertSubscriber<T> awaitCompletion(Duration duration) {
+    @NotNull
+    public AssertSubscriber<T> awaitCompletion(@NotNull Duration duration) {
         try {
             awaitEvent(terminal, duration);
         } catch (TimeoutException e) {
@@ -508,7 +531,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      * @param assertion a check validating the received failure (if any). Must not be {@code null}
      * @return this {@link AssertSubscriber}
      */
-    public AssertSubscriber<T> awaitFailure(Consumer<Throwable> assertion) {
+    public AssertSubscriber<T> awaitFailure(@NotNull Consumer<Throwable> assertion) {
         return awaitFailure(assertion, DEFAULT_TIMEOUT);
     }
 
@@ -521,7 +544,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      * @param duration the max duration to wait, must not be {@code null}
      * @return this {@link AssertSubscriber}
      */
-    public AssertSubscriber<T> awaitFailure(Duration duration) {
+    public AssertSubscriber<T> awaitFailure(@NotNull Duration duration) {
         return awaitFailure(t -> {
         }, duration);
     }
@@ -539,7 +562,8 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      * @param duration the max duration to wait, must not be {@code null}
      * @return this {@link AssertSubscriber}
      */
-    public AssertSubscriber<T> awaitFailure(Consumer<Throwable> assertion, Duration duration) {
+    @NotNull
+    public AssertSubscriber<T> awaitFailure(@NotNull Consumer<Throwable> assertion, @NotNull Duration duration) {
         try {
             awaitEvent(terminal, duration);
         } catch (TimeoutException e) {
@@ -581,7 +605,8 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      * @param duration the duration, must not be {@code null}
      * @return this {@link AssertSubscriber}
      */
-    public AssertSubscriber<T> awaitSubscription(Duration duration) {
+    @NotNull
+    public AssertSubscriber<T> awaitSubscription(@NotNull Duration duration) {
         try {
             awaitEvent(subscribed, duration);
         } catch (TimeoutException e) {
@@ -591,7 +616,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
         return this;
     }
 
-    private void awaitEvent(CountDownLatch latch, Duration duration) throws TimeoutException {
+    private void awaitEvent(@NotNull CountDownLatch latch, @NotNull Duration duration) throws TimeoutException {
         // Are we already done?
         if (latch.getCount() == 0) {
             return;
@@ -607,7 +632,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
 
     private final List<EventListener> eventListeners = new CopyOnWriteArrayList<>();
 
-    private void awaitNextItemEvents(int number, int request, Duration duration) {
+    private void awaitNextItemEvents(int number, int request, @NotNull Duration duration) {
         NextItemTask<T> task = new NextItemTask<>(number, this);
         CompletableFuture<Void> future = task.future();
         if (request > 0) {
@@ -645,7 +670,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
         }
     }
 
-    private void awaitItemEvents(int expected, Duration duration) {
+    private void awaitItemEvents(int expected, @NotNull Duration duration) {
         ItemTask<T> task = new ItemTask<>(expected, duration.toMillis(), this);
         try {
             task.future().get(duration.toMillis(), TimeUnit.MILLISECONDS);
@@ -690,6 +715,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      *
      * @return this {@link AssertSubscriber}
      */
+    @NotNull
     public AssertSubscriber<T> cancel() {
         shouldBeSubscribed(numberOfSubscription);
         subscription.cancel();
@@ -705,6 +731,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      * @param req the number of items to request.
      * @return this {@link AssertSubscriber}
      */
+    @NotNull
     public synchronized AssertSubscriber<T> request(long req) {
         Subscriptions.add(pendingRequests, req);
         if (state != State.INIT) {
@@ -714,7 +741,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
     }
 
     @Override
-    public synchronized void onSubscribe(Flow.Subscription s) {
+    public synchronized void onSubscribe(@NotNull Flow.Subscription s) {
         numberOfSubscription++;
         subscription = s;
         state = State.SUBSCRIBED;
@@ -761,6 +788,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      *
      * @return the list
      */
+    @NotNull
     public List<T> getItems() {
         return items;
     }
@@ -780,7 +808,8 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
      * @param action the action
      * @return this {@link AssertSubscriber}
      */
-    public AssertSubscriber<T> run(Runnable action) {
+    @NotNull
+    public AssertSubscriber<T> run(@NotNull Runnable action) {
         try {
             action.run();
         } catch (AssertionError e) {
@@ -833,6 +862,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
 
     private record NextItemTask<T>(int expected, AssertSubscriber<T> subscriber) {
 
+        @NotNull
         public CompletableFuture<Void> future() {
             CompletableFuture<Void> future = new CompletableFuture<>();
             AtomicInteger count = new AtomicInteger(this.expected);
@@ -856,6 +886,7 @@ public class AssertSubscriber<T> implements MultiSubscriber<T>, ContextSupport {
 
     private record ItemTask<T>(int expected, long duration, AssertSubscriber<T> subscriber) {
 
+        @NotNull
         public CompletableFuture<Void> future() {
             CompletableFuture<Void> future = new CompletableFuture<>();
             long timeout = System.currentTimeMillis() + duration;

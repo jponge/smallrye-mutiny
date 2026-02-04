@@ -8,6 +8,7 @@ import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Concatenates a fixed set of Publishers.
@@ -18,18 +19,19 @@ import io.smallrye.mutiny.subscription.MultiSubscriber;
  */
 public class MultiConcatOp<T> extends AbstractMulti<T> {
 
+    @NotNull
     private final Publisher<? extends T>[] publishers;
 
     private final boolean postponeFailurePropagation;
 
     @SafeVarargs
-    public MultiConcatOp(boolean postponeFailurePropagation, Publisher<? extends T>... publishers) {
+    public MultiConcatOp(boolean postponeFailurePropagation, @NotNull Publisher<? extends T>... publishers) {
         this.publishers = ParameterValidation.doesNotContainNull(publishers, "publishers");
         this.postponeFailurePropagation = postponeFailurePropagation;
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> actual) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> actual) {
         if (actual == null) {
             throw new NullPointerException("The subscriber must not be `null`");
         }

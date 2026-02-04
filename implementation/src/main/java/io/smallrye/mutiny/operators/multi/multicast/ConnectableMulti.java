@@ -8,6 +8,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractMulti;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * A {@code ConnectableMulti} is similar to a regular {@link Multi}, except that it does not begin
@@ -51,7 +52,7 @@ public abstract class ConnectableMulti<T> extends AbstractMulti<T> {
      * @param duration the duration, can be {@code null}, if set must be positive
      * @return the new Multi instance
      */
-    public Multi<T> referenceCount(int count, Duration duration) {
+    public Multi<T> referenceCount(int count, @Nullable Duration duration) {
         if (duration != null) {
             ParameterValidation.validate(duration, "duration");
         }

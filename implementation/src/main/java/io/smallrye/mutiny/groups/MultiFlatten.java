@@ -11,6 +11,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.MultiConcatMapOp;
 import io.smallrye.mutiny.operators.multi.MultiFlatMapOp;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * The object to tune the <em>flatMap</em> operation
@@ -44,6 +45,7 @@ public class MultiFlatten<I, O> {
      *
      * @return this {@link MultiFlatten}
      */
+    @NotNull
     @CheckReturnValue
     public MultiFlatten<I, O> collectFailures() {
         return new MultiFlatten<>(upstream, mapper, requests, true);
@@ -55,6 +57,7 @@ public class MultiFlatten<I, O> {
      * @param requests the requests, must be strictly positive
      * @return this {@link MultiFlatten}
      */
+    @NotNull
     @CheckReturnValue
     public MultiFlatten<I, O> withRequests(int requests) {
         return new MultiFlatten<>(upstream, mapper, positive(requests, "requests"), collectFailureUntilCompletion);

@@ -14,9 +14,12 @@ import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class UniMemoizeOp<I> extends UniOperator<I, I> implements UniSubscriber<I>, ContextSupport {
 
+    @Nullable
     private UniSubscription currentUpstreamSubscription;
 
     private Context currentContext = Context.empty();
@@ -29,25 +32,27 @@ public class UniMemoizeOp<I> extends UniOperator<I, I> implements UniSubscriber<
 
     private final BooleanSupplier invalidationRequested;
 
+    @NotNull
     private State state = State.INIT;
 
     private final ReentrantLock internalLock = new ReentrantLock();
 
     private final List<UniSubscriber<? super I>> awaiters = new ArrayList<>();
 
+    @Nullable
     private Object cachedResult = null;
 
-    public UniMemoizeOp(Uni<? extends I> upstream) {
+    public UniMemoizeOp(@NotNull Uni<? extends I> upstream) {
         this(upstream, () -> false);
     }
 
-    public UniMemoizeOp(Uni<? extends I> upstream, BooleanSupplier invalidationRequested) {
+    public UniMemoizeOp(@NotNull Uni<? extends I> upstream, BooleanSupplier invalidationRequested) {
         super(nonNull(upstream, "upstream"));
         this.invalidationRequested = invalidationRequested;
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super I> subscriber) {
+    public void subscribe(@NotNull UniSubscriber<? super I> subscriber) {
         nonNull(subscriber, "subscriber");
 
         boolean shouldSubscribeUpstream = false;
@@ -117,13 +122,14 @@ public class UniMemoizeOp<I> extends UniOperator<I, I> implements UniSubscriber<
         }
     }
 
+    @NotNull
     private List<UniSubscriber<? super I>> gatherAwaiters() {
         ArrayList<UniSubscriber<? super I>> copy = new ArrayList<>(awaiters);
         awaiters.clear();
         return copy;
     }
 
-    private void notifyAwaiters(List<UniSubscriber<? super I>> toNotify, Object result) {
+    private void notifyAwaiters(@NotNull List<UniSubscriber<? super I>> toNotify, Object result) {
         Iterator<UniSubscriber<? super I>> iterator = toNotify.iterator();
         while (iterator.hasNext()) {
             UniSubscriber<? super I> awaiter = iterator.next();
@@ -148,7 +154,7 @@ public class UniMemoizeOp<I> extends UniOperator<I, I> implements UniSubscriber<
     }
 
     @SuppressWarnings("unchecked")
-    private void forwardTo(UniSubscriber<? super I> subscriber, Object result) {
+    private void forwardTo(@NotNull UniSubscriber<? super I> subscriber, Object result) {
         if (result instanceof Throwable) {
             subscriber.onFailure((Throwable) result);
         } else {

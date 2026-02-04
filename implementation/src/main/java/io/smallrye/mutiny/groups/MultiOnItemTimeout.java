@@ -12,10 +12,13 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.TimeoutException;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.MultiFailOnItemTimeout;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiOnItemTimeout<T> {
 
+    @NotNull
     private final Multi<T> failure;
+    @NotNull
     private final Duration timeout;
     private final ScheduledExecutorService executor;
 
@@ -32,6 +35,7 @@ public class MultiOnItemTimeout<T> {
      * @param executor the executor to use, must not be {@code null}
      * @return a new {@link MultiOnItemTimeout}
      */
+    @NotNull
     public MultiOnItemTimeout<T> on(ScheduledExecutorService executor) {
         return new MultiOnItemTimeout<>(failure, timeout, nonNull(executor, "executor"));
     }

@@ -11,8 +11,10 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.BackPressureFailure;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiOverflow<T> {
+    @NotNull
     private final Multi<T> upstream;
 
     public MultiOverflow(Multi<T> upstream) {
@@ -81,6 +83,7 @@ public class MultiOverflow<T> {
      * @param consumer the dropped item consumer, must not be {@code null}, must not return {@code null}
      * @return an object to select the overflow management strategy
      */
+    @NotNull
     @CheckReturnValue
     public MultiOverflowStrategy<T> invoke(Consumer<T> consumer) {
         Consumer<T> actual = Infrastructure.decorate(nonNull(consumer, "consumer"));
@@ -118,6 +121,7 @@ public class MultiOverflow<T> {
      * @param mapper a mapper of a dropped item to a {@link Uni}, must not be {@code null}, must not return {@code null}
      * @return an object to select the overflow management strategy
      */
+    @NotNull
     @CheckReturnValue
     public MultiOverflowStrategy<T> call(Function<T, Uni<?>> mapper) {
         Function<T, Uni<?>> actual = Infrastructure.decorate(nonNull(mapper, "mapper"));

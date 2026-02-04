@@ -12,6 +12,7 @@ import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
 
 public class UniOnCancellationCall<I> extends UniOperator<I, I> {
 
@@ -23,7 +24,7 @@ public class UniOnCancellationCall<I> extends UniOperator<I, I> {
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super I> subscriber) {
+    public void subscribe(@NotNull UniSubscriber<? super I> subscriber) {
         AbstractUni.subscribe(upstream(), new UniOnCancellationCallProcessor<I>(supplier, subscriber));
     }
 
@@ -37,11 +38,12 @@ public class UniOnCancellationCall<I> extends UniOperator<I, I> {
 
         private final Supplier<Uni<?>> supplier;
 
+        @NotNull
         private volatile State state = State.INIT;
         private static final AtomicReferenceFieldUpdater<UniOnCancellationCallProcessor, State> stateUpdater = AtomicReferenceFieldUpdater
                 .newUpdater(UniOnCancellationCallProcessor.class, State.class, "state");
 
-        public UniOnCancellationCallProcessor(Supplier<Uni<?>> supplier, UniSubscriber<? super I> downstream) {
+        public UniOnCancellationCallProcessor(Supplier<Uni<?>> supplier, @NotNull UniSubscriber<? super I> downstream) {
             super(downstream);
             this.supplier = supplier;
         }

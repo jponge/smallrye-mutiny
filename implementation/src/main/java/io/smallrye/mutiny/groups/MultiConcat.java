@@ -9,6 +9,7 @@ import io.smallrye.mutiny.CompositeException;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.MultiConcatOp;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Creates new {@link Multi} by concatenating several {@link Multi} or {@link Publisher}.
@@ -76,7 +77,7 @@ public class MultiConcat {
      *         passed {@code publishers}.
      */
     @CheckReturnValue
-    public <T> Multi<T> streams(Iterable<? extends Publisher<T>> iterable) {
+    public <T> Multi<T> streams(@NotNull Iterable<? extends Publisher<T>> iterable) {
         List<Publisher<T>> list = new ArrayList<>();
         iterable.forEach(list::add);
         //noinspection unchecked
@@ -90,6 +91,7 @@ public class MultiConcat {
      *
      * @return this {@link MultiConcat} configured to collect the failures.
      */
+    @NotNull
     @CheckReturnValue
     public MultiConcat collectFailures() {
         this.collectFailures = true;

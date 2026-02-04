@@ -1,5 +1,7 @@
 package io.smallrye.mutiny.tuples;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -27,6 +29,7 @@ public interface Tuple extends Iterable<Object> {
      *
      * @return the iterator
      */
+    @NotNull
     @Override
     default Iterator<Object> iterator() {
         return Collections.unmodifiableList(asList()).iterator();

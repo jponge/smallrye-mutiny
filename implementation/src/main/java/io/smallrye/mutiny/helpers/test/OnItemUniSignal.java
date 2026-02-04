@@ -1,5 +1,7 @@
 package io.smallrye.mutiny.helpers.test;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * A onItem signal.
  */
@@ -15,6 +17,7 @@ public final class OnItemUniSignal<T> implements UniSignal {
         return item;
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "OnItemSignal{" +

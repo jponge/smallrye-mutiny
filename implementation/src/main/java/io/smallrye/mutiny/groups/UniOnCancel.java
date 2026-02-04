@@ -10,9 +10,11 @@ import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.uni.UniOnCancellation;
 import io.smallrye.mutiny.operators.uni.UniOnCancellationCall;
+import org.jetbrains.annotations.NotNull;
 
 public class UniOnCancel<T> {
 
+    @NotNull
     private final Uni<T> upstream;
 
     public UniOnCancel(Uni<T> upstream) {

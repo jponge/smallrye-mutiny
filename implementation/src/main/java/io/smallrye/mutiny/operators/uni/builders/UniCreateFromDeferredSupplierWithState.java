@@ -10,9 +10,11 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class UniCreateFromDeferredSupplierWithState<S, T> extends AbstractUni<T> {
     private final Function<S, Uni<? extends T>> mapper;
+    @NotNull
     private final StateHolder<S> holder;
 
     public UniCreateFromDeferredSupplierWithState(Supplier<S> stateSupplier, Function<S, Uni<? extends T>> mapper) {
@@ -21,7 +23,7 @@ public class UniCreateFromDeferredSupplierWithState<S, T> extends AbstractUni<T>
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super T> subscriber) {
+    public void subscribe(@NotNull UniSubscriber<? super T> subscriber) {
         nonNull(subscriber, "subscriber");
 
         S state;

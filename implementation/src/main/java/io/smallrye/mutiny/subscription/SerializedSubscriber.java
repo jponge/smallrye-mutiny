@@ -7,6 +7,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Subscriber that makes sure signals are delivered sequentially in case the onNext, onError or onComplete methods are
@@ -28,8 +30,10 @@ public final class SerializedSubscriber<T> implements Subscription, MultiSubscri
 
     private volatile boolean cancelled;
 
+    @Nullable
     private LinkedArrayNode<T> head;
 
+    @Nullable
     private LinkedArrayNode<T> tail;
 
     private Throwable failure;
@@ -41,7 +45,7 @@ public final class SerializedSubscriber<T> implements Subscription, MultiSubscri
     }
 
     @Override
-    public void onSubscribe(Subscription s) {
+    public void onSubscribe(@NotNull Subscription s) {
         if (upstream.compareAndSet(null, s)) {
             downstream.onSubscribe(this);
         } else {
@@ -154,7 +158,7 @@ public final class SerializedSubscriber<T> implements Subscription, MultiSubscri
         }
     }
 
-    void serializedDrainLoop(Flow.Subscriber<? super T> actual) {
+    void serializedDrainLoop(@NotNull Flow.Subscriber<? super T> actual) {
         for (;;) {
 
             if (cancelled) {
@@ -234,6 +238,7 @@ public final class SerializedSubscriber<T> implements Subscription, MultiSubscri
 
         static final int DEFAULT_CAPACITY = 16;
 
+        @NotNull
         final T[] array;
         int count;
 

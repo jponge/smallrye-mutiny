@@ -10,6 +10,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.subscription.DemandPacer;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiDemandPacer<T> extends AbstractMultiOperator<T, T> {
 
@@ -43,7 +44,7 @@ public class MultiDemandPacer<T> extends AbstractMultiOperator<T, T> {
             this.pacer = pacer;
         }
 
-        private void demandAndSchedule(ScheduledExecutorService executor) {
+        private void demandAndSchedule(@NotNull ScheduledExecutorService executor) {
             if (upstream == Subscriptions.CANCELLED) {
                 return;
             }
@@ -74,7 +75,7 @@ public class MultiDemandPacer<T> extends AbstractMultiOperator<T, T> {
         }
 
         @Override
-        public void onSubscribe(Subscription subscription) {
+        public void onSubscribe(@NotNull Subscription subscription) {
             if (compareAndSetUpstreamSubscription(null, subscription)) {
                 downstream.onSubscribe(this);
                 try {

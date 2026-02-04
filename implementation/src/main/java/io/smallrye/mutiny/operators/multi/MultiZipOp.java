@@ -18,18 +18,20 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public final class MultiZipOp<O> extends AbstractMulti<O> {
 
+    @NotNull
     private final List<Publisher<?>> upstreams;
     private final Function<List<?>, ? extends O> combinator;
     private final int bufferSize;
     private final boolean collectFailures;
 
-    public MultiZipOp(Iterable<? extends Publisher<?>> upstreams,
-            Function<List<?>, ? extends O> combinator,
-            int bufferSize,
-            boolean collectFailures) {
+    public MultiZipOp(@NotNull Iterable<? extends Publisher<?>> upstreams,
+                      Function<List<?>, ? extends O> combinator,
+                      int bufferSize,
+                      boolean collectFailures) {
         this.upstreams = new LinkedList<>();
         upstreams.forEach(this.upstreams::add);
         this.combinator = combinator;
@@ -38,7 +40,7 @@ public final class MultiZipOp<O> extends AbstractMulti<O> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super O> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super O> downstream) {
         if (upstreams.isEmpty()) {
             Subscriptions.complete(downstream);
             return;
@@ -53,6 +55,7 @@ public final class MultiZipOp<O> extends AbstractMulti<O> {
 
         private final AtomicInteger wip = new AtomicInteger();
         private final MultiSubscriber<? super R> downstream;
+        @NotNull
         private final List<ZipSubscriber<R>> subscribers;
 
         private final Function<List<?>, ? extends R> combinator;
@@ -61,6 +64,7 @@ public final class MultiZipOp<O> extends AbstractMulti<O> {
         private final boolean collectFailures;
 
         private volatile boolean cancelled;
+        @NotNull
         private final List<Object> current;
 
         ZipCoordinator(MultiSubscriber<? super R> downstream,
@@ -83,7 +87,7 @@ public final class MultiZipOp<O> extends AbstractMulti<O> {
             this.current = new FixedSizeArrayList<>(n);
         }
 
-        void subscribe(List<Publisher<?>> sources) {
+        void subscribe(@NotNull List<Publisher<?>> sources) {
             for (int i = 0; i < sources.size(); i++) {
                 if (cancelled || (!collectFailures && failures.get() != null)) {
                     return;
@@ -112,7 +116,7 @@ public final class MultiZipOp<O> extends AbstractMulti<O> {
             }
         }
 
-        void error(ZipSubscriber<R> inner, Throwable e) {
+        void error(@NotNull ZipSubscriber<R> inner, Throwable e) {
             if (Subscriptions.addFailure(failures, e)) {
                 inner.done = true;
                 drain();
@@ -267,7 +271,7 @@ public final class MultiZipOp<O> extends AbstractMulti<O> {
         }
 
         @Override
-        public void onSubscribe(Flow.Subscription s) {
+        public void onSubscribe(@NotNull Flow.Subscription s) {
             if (upstream.compareAndSet(null, s)) {
                 queue = Queues.get(prefetch).get();
                 s.request(prefetch);

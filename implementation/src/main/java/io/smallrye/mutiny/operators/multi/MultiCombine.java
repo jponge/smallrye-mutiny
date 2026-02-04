@@ -8,6 +8,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.builders.CollectionBasedMulti;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiCombine {
 
@@ -15,8 +16,8 @@ public class MultiCombine {
         // avoid direct instantiation.
     }
 
-    public static <T> Multi<T> merge(List<Publisher<T>> participants, boolean collectFailures, int requests,
-            int concurrency) {
+    public static <T> Multi<T> merge(@NotNull List<Publisher<T>> participants, boolean collectFailures, int requests,
+                                     int concurrency) {
         List<Publisher<T>> candidates = ParameterValidation.doesNotContainNull(participants, "participants");
 
         if (participants.isEmpty()) {

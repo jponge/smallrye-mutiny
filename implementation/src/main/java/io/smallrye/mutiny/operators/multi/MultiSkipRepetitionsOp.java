@@ -6,6 +6,8 @@ import java.util.Comparator;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Eliminates the duplicated items from the upstream.
@@ -16,27 +18,29 @@ public final class MultiSkipRepetitionsOp<T> extends AbstractMultiOperator<T, T>
 
     private final Comparator<? super T> comparator;
 
-    public MultiSkipRepetitionsOp(Multi<T> upstream) {
+    public MultiSkipRepetitionsOp(@NotNull Multi<T> upstream) {
         this(upstream, null);
     }
 
-    public MultiSkipRepetitionsOp(Multi<T> upstream, Comparator<? super T> comparator) {
+    public MultiSkipRepetitionsOp(@NotNull Multi<T> upstream, Comparator<? super T> comparator) {
         super(upstream);
         this.comparator = comparator;
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> subscriber) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> subscriber) {
         nonNullNpe(subscriber, "subscriber");
         upstream.subscribe().withSubscriber(new MultiSkipRepetitionsProcessor<>(subscriber, comparator));
     }
 
     static final class MultiSkipRepetitionsProcessor<T> extends MultiOperatorProcessor<T, T> {
 
+        @NotNull
         private final Comparator<? super T> comparator;
+        @Nullable
         private T last;
 
-        public MultiSkipRepetitionsProcessor(MultiSubscriber<? super T> subscriber, Comparator<? super T> comparator) {
+        public MultiSkipRepetitionsProcessor(@NotNull MultiSubscriber<? super T> subscriber, @Nullable Comparator<? super T> comparator) {
             super(subscriber);
             if (comparator == null) {
                 this.comparator = (a, b) -> a.equals(b) ? 0 : 1;

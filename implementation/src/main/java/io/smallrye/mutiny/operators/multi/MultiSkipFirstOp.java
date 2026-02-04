@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Skips the first N items from upstream.
@@ -32,6 +33,7 @@ public final class MultiSkipFirstOp<T> extends AbstractMultiOperator<T, T> {
 
     static final class SkipFirstProcessor<T> extends MultiOperatorProcessor<T, T> {
 
+        @NotNull
         private final AtomicLong remaining;
 
         SkipFirstProcessor(MultiSubscriber<? super T> downstream, long items) {
@@ -40,7 +42,7 @@ public final class MultiSkipFirstOp<T> extends AbstractMultiOperator<T, T> {
         }
 
         @Override
-        public void onSubscribe(Subscription subscription) {
+        public void onSubscribe(@NotNull Subscription subscription) {
             if (compareAndSetUpstreamSubscription(null, subscription)) {
                 downstream.onSubscribe(this);
                 long l = remaining.get();

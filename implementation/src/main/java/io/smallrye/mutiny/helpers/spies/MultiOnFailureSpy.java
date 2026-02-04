@@ -5,12 +5,15 @@ import java.util.function.Predicate;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.groups.MultiOnFailure;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class MultiOnFailureSpy<T> extends MultiSpyBase<T> {
 
     private Predicate<? super Throwable> predicate;
     private Class<? extends Throwable> typeOfFailure;
 
+    @Nullable
     private volatile Throwable lastFailure;
 
     public Throwable lastFailure() {
@@ -53,6 +56,7 @@ public class MultiOnFailureSpy<T> extends MultiSpyBase<T> {
         }).subscribe().withSubscriber(dowstream);
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "MultiOnFailureSpy{" +

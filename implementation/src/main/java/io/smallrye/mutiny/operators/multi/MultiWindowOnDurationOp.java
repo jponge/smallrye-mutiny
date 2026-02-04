@@ -19,20 +19,24 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.processors.UnicastProcessor;
 import io.smallrye.mutiny.subscription.BackPressureFailure;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class MultiWindowOnDurationOp<T> extends AbstractMultiOperator<T, Multi<T>> {
 
+    @NotNull
     private final Duration duration;
+    @NotNull
     private final ScheduledExecutorService executor;
 
-    public MultiWindowOnDurationOp(Multi<T> upstream, Duration duration, ScheduledExecutorService executor) {
+    public MultiWindowOnDurationOp(@NotNull Multi<T> upstream, @NotNull Duration duration, @NotNull ScheduledExecutorService executor) {
         super(upstream);
         this.duration = ParameterValidation.validate(duration, "duration");
         this.executor = ParameterValidation.nonNull(executor, "executor");
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super Multi<T>> actual) {
+    public void subscribe(@NotNull MultiSubscriber<? super Multi<T>> actual) {
         upstream.subscribe().withSubscriber(new WindowTimeoutSubscriber<>(actual, duration, executor));
     }
 
@@ -40,9 +44,11 @@ public class MultiWindowOnDurationOp<T> extends AbstractMultiOperator<T, Multi<T
 
         private final Duration duration;
         private final ScheduledExecutorService scheduler;
+        @NotNull
         private final Queue<Object> queue;
 
         private Throwable failure;
+        @Nullable
         private UnicastProcessor<T> current;
 
         private final AtomicLong requested = new AtomicLong();
@@ -52,8 +58,8 @@ public class MultiWindowOnDurationOp<T> extends AbstractMultiOperator<T, Multi<T
         volatile boolean done;
         volatile boolean terminated;
 
-        WindowTimeoutSubscriber(MultiSubscriber<? super Multi<T>> downstream, Duration duration,
-                ScheduledExecutorService scheduler) {
+        WindowTimeoutSubscriber(@NotNull MultiSubscriber<? super Multi<T>> downstream, Duration duration,
+                                ScheduledExecutorService scheduler) {
             super(downstream);
             this.queue = Queues.createMpscQueue();
             this.duration = duration;
@@ -61,7 +67,7 @@ public class MultiWindowOnDurationOp<T> extends AbstractMultiOperator<T, Multi<T
         }
 
         @Override
-        public void onSubscribe(Subscription s) {
+        public void onSubscribe(@NotNull Subscription s) {
             if (compareAndSetUpstreamSubscription(null, s)) {
                 downstream.onSubscribe(this);
 
@@ -89,7 +95,7 @@ public class MultiWindowOnDurationOp<T> extends AbstractMultiOperator<T, Multi<T
             }
         }
 
-        Future<?> newPeriod() {
+        @NotNull Future<?> newPeriod() {
             try {
                 return scheduler
                         .scheduleAtFixedRate(new Tick(this), duration.toMillis(), duration.toMillis(),
@@ -264,7 +270,7 @@ public class MultiWindowOnDurationOp<T> extends AbstractMultiOperator<T, Multi<T
 
         static final Future<?> NONE = new CompletableFuture<>();
 
-        boolean replace(Future<?> task) {
+        boolean replace(@Nullable Future<?> task) {
             for (;;) {
                 Future current = container.get();
                 if (current == NONE) {

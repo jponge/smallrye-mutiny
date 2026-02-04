@@ -10,6 +10,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.MultiOperator;
 import io.smallrye.mutiny.operators.multi.builders.FailedMulti;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiSwitchOnEmpty<T> extends MultiOperator<T, T> {
     private final Supplier<Publisher<? extends T>> supplier;
@@ -20,7 +21,7 @@ public class MultiSwitchOnEmpty<T> extends MultiOperator<T, T> {
     }
 
     @Override
-    public void subscribe(Subscriber<? super T> downstream) {
+    public void subscribe(@NotNull Subscriber<? super T> downstream) {
         if (downstream == null) {
             throw new NullPointerException("The subscriber must not be `null`");
         }

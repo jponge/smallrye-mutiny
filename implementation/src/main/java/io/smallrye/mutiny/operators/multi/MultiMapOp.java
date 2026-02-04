@@ -7,17 +7,19 @@ import java.util.function.Function;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public final class MultiMapOp<T, U> extends AbstractMultiOperator<T, U> {
+    @NotNull
     private final Function<? super T, ? extends U> mapper;
 
-    public MultiMapOp(Multi<T> upstream, Function<? super T, ? extends U> mapper) {
+    public MultiMapOp(Multi<T> upstream, @NotNull Function<? super T, ? extends U> mapper) {
         super(upstream);
         this.mapper = ParameterValidation.nonNull(mapper, "mapper");
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super U> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super U> downstream) {
         if (downstream == null) {
             throw new NullPointerException("Subscriber is `null`");
         }

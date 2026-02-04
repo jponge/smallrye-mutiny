@@ -18,15 +18,20 @@ import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.MultiRetryOp;
 import io.smallrye.mutiny.operators.multi.MultiRetryWhenOp;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class MultiRetry<T> {
 
+    @NotNull
     private final Multi<T> upstream;
+    @NotNull
     private final Predicate<? super Throwable> onFailurePredicate;
     private Duration initialBackOff = Duration.ofSeconds(1);
     private Duration maxBackoff = ExponentialBackoff.MAX_BACKOFF;
     private double jitter = ExponentialBackoff.DEFAULT_JITTER;
     private boolean backOffConfigured = false;
+    @Nullable
     private ScheduledExecutorService executor = null;
 
     public MultiRetry(Multi<T> upstream,
@@ -42,6 +47,7 @@ public class MultiRetry<T> {
      * @param executor the scheduled executor, must not be {@code null}
      * @return this instance
      */
+    @NotNull
     @CheckReturnValue
     public MultiRetry<T> withExecutor(ScheduledExecutorService executor) {
         this.executor = nonNull(executor, "executor");
@@ -198,6 +204,7 @@ public class MultiRetry<T> {
      * @param maxBackOff the max back-off duration, must not be {@code null}, must not be negative.
      * @return this object to configure the retry policy.
      */
+    @NotNull
     @CheckReturnValue
     public MultiRetry<T> withBackOff(Duration initialBackOff, Duration maxBackOff) {
         this.backOffConfigured = true;
@@ -212,6 +219,7 @@ public class MultiRetry<T> {
      * @param jitter the jitter. Must be in [0.0, 1.0]
      * @return this object to configure the retry policy.
      */
+    @NotNull
     @CheckReturnValue
     public MultiRetry<T> withJitter(double jitter) {
         if (jitter < 0 || jitter > 1.0) {

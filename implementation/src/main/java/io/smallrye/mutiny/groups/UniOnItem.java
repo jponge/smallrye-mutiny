@@ -18,9 +18,11 @@ import io.smallrye.mutiny.operators.uni.UniOnItemTransform;
 import io.smallrye.mutiny.operators.uni.UniOnItemTransformToMulti;
 import io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni;
 import io.smallrye.mutiny.subscription.UniEmitter;
+import org.jetbrains.annotations.NotNull;
 
 public class UniOnItem<T> {
 
+    @NotNull
     private final Uni<T> upstream;
 
     public UniOnItem(Uni<T> upstream) {
@@ -183,6 +185,7 @@ public class UniOnItem<T> {
      *
      * @return the object to configure the delay.
      */
+    @NotNull
     @CheckReturnValue
     public UniOnItemDelay<T> delayIt() {
         return new UniOnItemDelay<>(upstream, null);
@@ -208,6 +211,7 @@ public class UniOnItem<T> {
      *
      * @return the object to configure the continuation logic.
      */
+    @NotNull
     @CheckReturnValue
     public UniOnItemIgnore<T> ignore() {
         return new UniOnItemIgnore<>(this);
@@ -254,7 +258,7 @@ public class UniOnItem<T> {
      * @return the new Uni
      */
     @CheckReturnValue
-    public <O> Uni<O> castTo(Class<O> target) {
+    public <O> Uni<O> castTo(@NotNull Class<O> target) {
         nonNull(target, "target");
         return transform(target::cast);
     }
@@ -280,6 +284,7 @@ public class UniOnItem<T> {
      *
      * @return the object to configure the behavior when receiving {@code null}
      */
+    @NotNull
     @CheckReturnValue
     public UniOnNull<T> ifNull() {
         return new UniOnNull<>(upstream);
@@ -291,6 +296,7 @@ public class UniOnItem<T> {
      *
      * @return the object to configure the behavior when receiving a {@code non-null} item
      */
+    @NotNull
     @CheckReturnValue
     public UniOnNotNull<T> ifNotNull() {
         return new UniOnNotNull<>(upstream);

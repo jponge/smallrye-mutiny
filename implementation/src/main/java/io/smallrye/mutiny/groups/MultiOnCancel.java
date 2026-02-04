@@ -10,9 +10,11 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.MultiOnCancellationCall;
 import io.smallrye.mutiny.operators.multi.MultiOnCancellationInvoke;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiOnCancel<T> {
 
+    @NotNull
     private final Multi<T> upstream;
 
     public MultiOnCancel(Multi<T> upstream) {

@@ -18,19 +18,22 @@ import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class UniAndCombination<I, O> extends UniOperator<I, O> {
 
     private static final Object SENTINEL = new Object();
 
     private final Function<List<?>, O> combinator;
+    @NotNull
     private final List<Uni<?>> unis;
     private final boolean collectAllFailureBeforeFiring;
     private final int concurrency;
 
-    public UniAndCombination(Uni<? extends I> upstream, List<? extends Uni<?>> others,
-            Function<List<?>, O> combinator,
-            boolean collectAllFailureBeforeFiring, int concurrency) {
+    public UniAndCombination(@Nullable Uni<? extends I> upstream, @NotNull List<? extends Uni<?>> others,
+                             Function<List<?>, O> combinator,
+                             boolean collectAllFailureBeforeFiring, int concurrency) {
         super(upstream);
         this.concurrency = concurrency;
 
@@ -46,7 +49,7 @@ public class UniAndCombination<I, O> extends UniOperator<I, O> {
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super O> subscriber) {
+    public void subscribe(@NotNull UniSubscriber<? super O> subscriber) {
         AndSupervisor andSupervisor = new AndSupervisor(subscriber);
         subscriber.onSubscribe(andSupervisor);
         // Must wait until the subscriber get a subscription before subscribing to the sources.
@@ -103,7 +106,7 @@ public class UniAndCombination<I, O> extends UniOperator<I, O> {
          * @param res the {@link UniHandler}
          * @param failed whether the {@code res} just fired a failure
          */
-        void check(UniHandler res, boolean failed) {
+        void check(@NotNull UniHandler res, boolean failed) {
             if (wip.getAndIncrement() > 0) {
                 return;
             }
@@ -147,7 +150,7 @@ public class UniAndCombination<I, O> extends UniOperator<I, O> {
             } while (wip.decrementAndGet() > 0 && incomplete > 0);
         }
 
-        private void computeAndFireTheOutcome(List<Throwable> failures, List<Object> items) {
+        private void computeAndFireTheOutcome(@NotNull List<Throwable> failures, List<Object> items) {
             if (failures.isEmpty()) {
                 O aggregated;
                 try {
@@ -165,12 +168,14 @@ public class UniAndCombination<I, O> extends UniOperator<I, O> {
             }
         }
 
+        @NotNull
         private List<Object> getItems() {
             return this.handlers.stream()
                     .map(u -> u.item)
                     .collect(Collectors.toList());
         }
 
+        @NotNull
         private List<Throwable> getFailures() {
             return handlers.stream()
                     .filter(u -> u.failure != null).map(u -> u.failure)
@@ -203,7 +208,7 @@ public class UniAndCombination<I, O> extends UniOperator<I, O> {
         }
 
         @Override
-        public final void onSubscribe(UniSubscription sub) {
+        public final void onSubscribe(@NotNull UniSubscription sub) {
             if (!SUBSCRIPTION_UPDATER.compareAndSet(this, null, sub)) {
                 // cancelling this second subscription
                 // because we already add a subscription (most probably CANCELLED)

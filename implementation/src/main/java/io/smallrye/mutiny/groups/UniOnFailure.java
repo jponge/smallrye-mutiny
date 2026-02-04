@@ -15,6 +15,8 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.uni.UniOnFailureFlatMap;
 import io.smallrye.mutiny.operators.uni.UniOnFailureTransform;
 import io.smallrye.mutiny.operators.uni.UniOnItemConsume;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Configures the failure handler.
@@ -41,9 +43,10 @@ public class UniOnFailure<T, E extends Throwable> {
 
     private final Uni<T> upstream;
     private final Class<E> typeOfFailure;
+    @NotNull
     private final Predicate<? super Throwable> predicate;
 
-    public UniOnFailure(Uni<T> upstream, Class<E> typeOfFailure, Predicate<? super Throwable> predicate) {
+    public UniOnFailure(Uni<T> upstream, Class<E> typeOfFailure, @Nullable Predicate<? super Throwable> predicate) {
         this.upstream = upstream;
         this.predicate = predicate == null ? x -> true : predicate;
         this.typeOfFailure = typeOfFailure;
@@ -249,6 +252,7 @@ public class UniOnFailure<T, E extends Throwable> {
      *
      * @return the object to configure the retry.
      */
+    @NotNull
     @CheckReturnValue
     public UniRetry<T> retry() {
         return new UniRetry<>(upstream, predicate);

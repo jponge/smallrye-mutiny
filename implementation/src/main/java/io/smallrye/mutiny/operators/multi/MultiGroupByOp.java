@@ -20,6 +20,8 @@ import io.smallrye.mutiny.helpers.queues.Queues;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class MultiGroupByOp<T, K, V> extends AbstractMultiOperator<T, GroupedMulti<K, V>> {
     private final Function<? super T, ? extends K> keySelector;
@@ -79,7 +81,7 @@ public final class MultiGroupByOp<T, K, V> extends AbstractMultiOperator<T, Grou
         }
 
         @Override
-        public void onSubscribe(Flow.Subscription subscription) {
+        public void onSubscribe(@NotNull Flow.Subscription subscription) {
             if (compareAndSetUpstreamSubscription(null, subscription)) {
                 // Propagate subscription to downstream.
                 downstream.onSubscribe(this);
@@ -185,7 +187,7 @@ public final class MultiGroupByOp<T, K, V> extends AbstractMultiOperator<T, Grou
             }
         }
 
-        public void cancel(K key) {
+        public void cancel(@Nullable K key) {
             Object mapKey = key != null ? key : NO_KEY;
             groups.remove(mapKey);
             if (groupCount.decrementAndGet() == 0) {
@@ -243,7 +245,7 @@ public final class MultiGroupByOp<T, K, V> extends AbstractMultiOperator<T, Grou
             }
         }
 
-        boolean isDoneOrCancelled(boolean d, boolean empty, Queue<?> q) {
+        boolean isDoneOrCancelled(boolean d, boolean empty, @NotNull Queue<?> q) {
             if (isCancelled()) {
                 q.clear();
                 return true;
@@ -270,8 +272,9 @@ public final class MultiGroupByOp<T, K, V> extends AbstractMultiOperator<T, Grou
         private final State<T, K> downstream;
         private final K key;
 
+        @NotNull
         static <T, K> GroupedUnicast<K, T> createWith(K key,
-                MultiGroupByProcessor<?, K, T> parent) {
+                                                      MultiGroupByProcessor<?, K, T> parent) {
             State<T, K> state = new State<>(parent, key);
             return new GroupedUnicast<>(key, state);
         }
@@ -282,7 +285,7 @@ public final class MultiGroupByOp<T, K, V> extends AbstractMultiOperator<T, Grou
         }
 
         @Override
-        public void subscribe(MultiSubscriber<? super T> s) {
+        public void subscribe(@NotNull MultiSubscriber<? super T> s) {
             downstream.subscribe(s);
         }
 
@@ -344,7 +347,7 @@ public final class MultiGroupByOp<T, K, V> extends AbstractMultiOperator<T, Grou
         }
 
         @Override
-        public void subscribe(Flow.Subscriber<? super T> s) {
+        public void subscribe(@NotNull Flow.Subscriber<? super T> s) {
             if (downstream.compareAndSet(null, s)) {
                 s.onSubscribe(this);
                 drain();

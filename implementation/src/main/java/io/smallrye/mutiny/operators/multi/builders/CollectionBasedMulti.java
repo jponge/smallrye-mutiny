@@ -8,26 +8,28 @@ import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class CollectionBasedMulti<T> extends AbstractMulti<T> {
 
     /**
      * The collection, immutable once set.
      */
+    @NotNull
     private final Collection<T> collection;
 
     @SafeVarargs
-    public CollectionBasedMulti(T... array) {
+    public CollectionBasedMulti(@NotNull T... array) {
         this.collection = Arrays.asList(ParameterValidation.doesNotContainNull(array, "array"));
     }
 
-    public CollectionBasedMulti(Collection<T> collection) {
+    public CollectionBasedMulti(@NotNull Collection<T> collection) {
         this.collection = Collections.unmodifiableCollection(
                 ParameterValidation.doesNotContainNull(collection, "collection"));
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> actual) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> actual) {
         ParameterValidation.nonNullNpe(actual, "subscriber");
         if (collection.isEmpty()) {
             Subscriptions.complete(actual);
@@ -39,17 +41,19 @@ public class CollectionBasedMulti<T> extends AbstractMulti<T> {
     private static final class CollectionSubscription<T> implements Flow.Subscription {
 
         private final MultiSubscriber<? super T> downstream;
+        @NotNull
         private final List<T> collection; // Immutable
         private int index;
 
         private volatile boolean cancelled;
-        AtomicLong requested = new AtomicLong();
+        @NotNull AtomicLong requested = new AtomicLong();
 
         public CollectionSubscription(MultiSubscriber<? super T> downstream, Collection<T> collection) {
             this.downstream = downstream;
             this.collection = wrapIfNotList(collection);
         }
 
+        @NotNull
         private List<T> wrapIfNotList(Collection<T> collection) {
             if (collection instanceof List) {
                 return (List<T>) collection;

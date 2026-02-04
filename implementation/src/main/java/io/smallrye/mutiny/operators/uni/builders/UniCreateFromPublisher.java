@@ -13,11 +13,13 @@ import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
 
 public class UniCreateFromPublisher<T> extends AbstractUni<T> {
+    @NotNull
     private final Flow.Publisher<? extends T> publisher;
 
-    public UniCreateFromPublisher(Flow.Publisher<? extends T> publisher) {
+    public UniCreateFromPublisher(@NotNull Flow.Publisher<? extends T> publisher) {
         this.publisher = nonNull(publisher, "publisher");
     }
 
@@ -60,7 +62,7 @@ public class UniCreateFromPublisher<T> extends AbstractUni<T> {
         // ---- Subscriber
 
         @Override
-        public void onSubscribe(Subscription sub) {
+        public void onSubscribe(@NotNull Subscription sub) {
             if (SUBSCRIPTION_UPDATER.compareAndSet(this, null, sub)) {
                 sub.request(1L);
             } else {

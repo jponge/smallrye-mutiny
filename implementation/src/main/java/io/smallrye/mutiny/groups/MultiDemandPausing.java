@@ -10,6 +10,7 @@ import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.operators.multi.MultiDemandPausingOp;
 import io.smallrye.mutiny.subscription.BackPressureStrategy;
 import io.smallrye.mutiny.subscription.DemandPauser;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Configures a pausable {@link Multi} stream.
@@ -30,6 +31,7 @@ public class MultiDemandPausing<T> {
     private boolean lateSubscription = false;
     private int bufferSize = Infrastructure.getMultiOverflowDefaultBufferSize();
     private boolean unbounded = false;
+    @NotNull
     private BackPressureStrategy bufferStrategy = BackPressureStrategy.BUFFER;
 
     public MultiDemandPausing(AbstractMulti<T> upstream) {
@@ -45,6 +47,7 @@ public class MultiDemandPausing<T> {
      * @param paused {@code true} to start paused, {@code false} to start flowing (default)
      * @return this configuration instance
      */
+    @NotNull
     @CheckReturnValue
     public MultiDemandPausing<T> paused(boolean paused) {
         this.paused = paused;
@@ -65,6 +68,7 @@ public class MultiDemandPausing<T> {
      *        (default)
      * @return this configuration instance
      */
+    @NotNull
     @CheckReturnValue
     public MultiDemandPausing<T> lateSubscription(boolean lateSubscription) {
         this.lateSubscription = lateSubscription;
@@ -82,6 +86,7 @@ public class MultiDemandPausing<T> {
      * @param bufferSize the maximum buffer size, must be positive
      * @return this configuration instance
      */
+    @NotNull
     @CheckReturnValue
     public MultiDemandPausing<T> bufferSize(int bufferSize) {
         this.bufferSize = positive(bufferSize, "bufferSize");
@@ -96,6 +101,7 @@ public class MultiDemandPausing<T> {
      *
      * @return this configuration instance
      */
+    @NotNull
     @CheckReturnValue
     public MultiDemandPausing<T> bufferUnconditionally() {
         this.bufferSize = Infrastructure.getMultiOverflowDefaultBufferSize();
@@ -116,6 +122,7 @@ public class MultiDemandPausing<T> {
      * @param bufferStrategy the buffer strategy, must not be {@code null}
      * @return this configuration instance
      */
+    @NotNull
     @CheckReturnValue
     public MultiDemandPausing<T> bufferStrategy(BackPressureStrategy bufferStrategy) {
         this.bufferStrategy = nonNull(bufferStrategy, "bufferStrategy");

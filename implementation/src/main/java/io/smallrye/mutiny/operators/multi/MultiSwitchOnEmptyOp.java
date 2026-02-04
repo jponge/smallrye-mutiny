@@ -7,12 +7,14 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.smallrye.mutiny.subscription.SwitchableSubscriptionSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Switches to another Multi if the upstream is empty (completes without having emitted any items).
  */
 public final class MultiSwitchOnEmptyOp<T> extends AbstractMultiOperator<T, T> {
 
+    @NotNull
     private final Publisher<? extends T> alternative;
 
     public MultiSwitchOnEmptyOp(Multi<? extends T> upstream, Publisher<? extends T> alternative) {
@@ -21,7 +23,7 @@ public final class MultiSwitchOnEmptyOp<T> extends AbstractMultiOperator<T, T> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> actual) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> actual) {
         SwitchIfEmptySubscriber<T> parent = new SwitchIfEmptySubscriber<>(actual, alternative);
         actual.onSubscribe(parent);
         upstream.subscribe().withSubscriber(parent);

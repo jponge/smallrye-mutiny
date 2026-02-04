@@ -9,6 +9,7 @@ import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.mutiny.CompositeException;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.operators.multi.MultiCombine;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Creates new {@link Multi} by merging several {@link Multi} or {@link Flow.Publisher}.
@@ -80,7 +81,7 @@ public class MultiMerge {
      * @return the new {@link Multi} emitting the items from the given set of {@link Flow.Publisher}
      */
     @CheckReturnValue
-    public <T> Multi<T> streams(Iterable<? extends Flow.Publisher<T>> iterable) {
+    public <T> Multi<T> streams(@NotNull Iterable<? extends Flow.Publisher<T>> iterable) {
         List<Flow.Publisher<T>> list = new ArrayList<>();
         iterable.forEach(list::add);
         return MultiCombine.merge(list, collectFailures, requests, concurrency);
@@ -93,6 +94,7 @@ public class MultiMerge {
      *
      * @return a new {@link MultiMerge} collecting failures
      */
+    @NotNull
     @CheckReturnValue
     public MultiMerge collectFailures() {
         return new MultiMerge(true, this.requests, this.concurrency);
@@ -104,6 +106,7 @@ public class MultiMerge {
      * @param requests the request
      * @return a new {@link MultiMerge} configured with the given requests
      */
+    @NotNull
     @CheckReturnValue
     public MultiMerge withRequests(int requests) {
         return new MultiMerge(this.collectFailures, requests, this.concurrency);
@@ -116,6 +119,7 @@ public class MultiMerge {
      * @param concurrency the concurrency
      * @return a new {@link MultiMerge} configured with the given concurrency
      */
+    @NotNull
     @CheckReturnValue
     public MultiMerge withConcurrency(int concurrency) {
         return new MultiMerge(this.collectFailures, this.requests, concurrency);

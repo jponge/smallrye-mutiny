@@ -9,6 +9,7 @@ import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.TimeoutException;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.uni.UniBlockingAwait;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Likes {@link UniAwait} but wrapping the item event into an {@link Optional}. This optional is empty if the
@@ -19,6 +20,7 @@ import io.smallrye.mutiny.operators.uni.UniBlockingAwait;
  */
 public class UniAwaitOptional<T> {
 
+    @NotNull
     private final Uni<T> upstream;
     private final Context context;
 
@@ -60,6 +62,7 @@ public class UniAwaitOptional<T> {
      * @param duration the duration, must not be {@code null}, must not be negative or zero.
      * @return the item from the {@link Uni}, potentially {@code null}
      */
+    @NotNull
     public Optional<T> atMost(Duration duration) {
         return Optional.ofNullable(UniBlockingAwait.await(upstream, duration, context));
     }

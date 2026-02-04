@@ -6,6 +6,7 @@ import java.util.function.LongConsumer;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiOnRequestInvoke<T> extends AbstractMultiOperator<T, T> {
 
@@ -17,7 +18,7 @@ public class MultiOnRequestInvoke<T> extends AbstractMultiOperator<T, T> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> downstream) {
         upstream.subscribe().withSubscriber(new MultiOnRequestInvokeOperator(nonNull(downstream, "downstream")));
     }
 

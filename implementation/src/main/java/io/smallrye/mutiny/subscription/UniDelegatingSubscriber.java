@@ -3,12 +3,14 @@ package io.smallrye.mutiny.subscription;
 import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 
 import io.smallrye.mutiny.Context;
+import org.jetbrains.annotations.NotNull;
 
 public class UniDelegatingSubscriber<I, O> implements UniSubscriber<I> {
 
+    @NotNull
     private final UniSubscriber<? super O> delegate;
 
-    public UniDelegatingSubscriber(UniSubscriber<? super O> subscriber) {
+    public UniDelegatingSubscriber(@NotNull UniSubscriber<? super O> subscriber) {
         this.delegate = nonNull(subscriber, "delegate");
     }
 

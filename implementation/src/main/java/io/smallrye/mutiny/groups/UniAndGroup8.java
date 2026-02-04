@@ -12,6 +12,7 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.tuples.Functions;
 import io.smallrye.mutiny.tuples.Tuple8;
 import io.smallrye.mutiny.tuples.Tuples;
+import org.jetbrains.annotations.NotNull;
 
 public class UniAndGroup8<T1, T2, T3, T4, T5, T6, T7, T8> extends UniAndGroupIterable<T1> {
 
@@ -21,6 +22,7 @@ public class UniAndGroup8<T1, T2, T3, T4, T5, T6, T7, T8> extends UniAndGroupIte
         super(source, Arrays.asList(o1, o2, o3, o4, o5, o6, o7));
     }
 
+    @NotNull
     @Override
     @CheckReturnValue
     public UniAndGroup8<T1, T2, T3, T4, T5, T6, T7, T8> collectFailures() {
@@ -44,6 +46,7 @@ public class UniAndGroup8<T1, T2, T3, T4, T5, T6, T7, T8> extends UniAndGroupIte
      * @param level the concurrency level, must be strictly positive
      * @return an object to configure the combination logic
      */
+    @NotNull
     @CheckReturnValue
     public UniAndGroup8<T1, T2, T3, T4, T5, T6, T7, T8> usingConcurrencyOf(int level) {
         super.usingConcurrencyOf(level);
@@ -67,7 +70,7 @@ public class UniAndGroup8<T1, T2, T3, T4, T5, T6, T7, T8> extends UniAndGroupIte
     }
 
     @SuppressWarnings("unchecked")
-    private <O> Uni<O> combine(Functions.Function8<T1, T2, T3, T4, T5, T6, T7, T8, O> combinator) {
+    private <O> Uni<O> combine(@NotNull Functions.Function8<T1, T2, T3, T4, T5, T6, T7, T8, O> combinator) {
         Function<List<?>, O> function = list -> {
             Tuples.ensureArity(list, 8);
             return combinator.apply(
@@ -91,7 +94,7 @@ public class UniAndGroup8<T1, T2, T3, T4, T5, T6, T7, T8> extends UniAndGroupIte
     }
 
     @SuppressWarnings("unchecked")
-    private <O> Uni<O> combineUni(Functions.Function8<T1, T2, T3, T4, T5, T6, T7, T8, Uni<O>> combinator) {
+    private <O> Uni<O> combineUni(@NotNull Functions.Function8<T1, T2, T3, T4, T5, T6, T7, T8, Uni<O>> combinator) {
         Function<List<?>, Uni<O>> function = list -> {
             Tuples.ensureArity(list, 8);
             return combinator.apply(

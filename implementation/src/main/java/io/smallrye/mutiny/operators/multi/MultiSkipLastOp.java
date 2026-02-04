@@ -6,6 +6,7 @@ import java.util.concurrent.Flow.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Skips the numberOfItems last items from upstream.
@@ -42,7 +43,7 @@ public final class MultiSkipLastOp<T> extends AbstractMultiOperator<T, T> {
         }
 
         @Override
-        public void onSubscribe(Subscription subscription) {
+        public void onSubscribe(@NotNull Subscription subscription) {
             if (compareAndSetUpstreamSubscription(null, subscription)) {
                 // Propagate subscription to downstream.
                 downstream.onSubscribe(this);
@@ -53,7 +54,7 @@ public final class MultiSkipLastOp<T> extends AbstractMultiOperator<T, T> {
         }
 
         @Override
-        public void onItem(T t) {
+        public void onItem(@NotNull T t) {
             if (queue.size() == numberOfItems) {
                 downstream.onItem(queue.pollFirst());
             }

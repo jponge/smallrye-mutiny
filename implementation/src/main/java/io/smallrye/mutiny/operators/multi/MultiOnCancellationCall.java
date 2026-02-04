@@ -8,18 +8,20 @@ import java.util.function.Supplier;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiOnCancellationCall<T> extends AbstractMultiOperator<T, T> {
 
+    @NotNull
     private final Supplier<Uni<?>> supplier;
 
-    public MultiOnCancellationCall(Multi<? extends T> upstream, Supplier<Uni<?>> supplier) {
+    public MultiOnCancellationCall(@NotNull Multi<? extends T> upstream, @NotNull Supplier<Uni<?>> supplier) {
         super(nonNull(upstream, "upstream"));
         this.supplier = nonNull(supplier, "supplier");
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> downstream) {
         upstream.subscribe().withSubscriber(new MultiOnCancellationCallProcessor(downstream));
     }
 
@@ -27,7 +29,7 @@ public class MultiOnCancellationCall<T> extends AbstractMultiOperator<T, T> {
 
         private final AtomicBoolean supplierInvoked = new AtomicBoolean();
 
-        public MultiOnCancellationCallProcessor(MultiSubscriber<? super T> downstream) {
+        public MultiOnCancellationCallProcessor(@NotNull MultiSubscriber<? super T> downstream) {
             super(downstream);
         }
 

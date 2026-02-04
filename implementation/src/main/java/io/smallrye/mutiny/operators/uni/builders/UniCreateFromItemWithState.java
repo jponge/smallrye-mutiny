@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 import io.smallrye.mutiny.helpers.EmptyUniSubscription;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Specialized {@link io.smallrye.mutiny.Uni} implementation for the case where the item is produced from a supplier.
@@ -18,6 +19,7 @@ import io.smallrye.mutiny.subscription.UniSubscriber;
 public class UniCreateFromItemWithState<T, S> extends AbstractUni<T> {
 
     private final Function<S, ? extends T> mapper;
+    @NotNull
     private final StateHolder<S> holder;
 
     public UniCreateFromItemWithState(Supplier<S> stateSupplier, Function<S, ? extends T> mapper) {
@@ -26,7 +28,7 @@ public class UniCreateFromItemWithState<T, S> extends AbstractUni<T> {
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super T> subscriber) {
+    public void subscribe(@NotNull UniSubscriber<? super T> subscriber) {
         subscriber.onSubscribe(EmptyUniSubscription.DONE);
         S state;
         try {

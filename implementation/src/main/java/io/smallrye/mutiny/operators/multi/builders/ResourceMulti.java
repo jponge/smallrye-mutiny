@@ -17,6 +17,7 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class ResourceMulti<R, I> extends AbstractMulti<I> {
     private final Supplier<? extends R> resourceSupplier;
@@ -39,7 +40,7 @@ public class ResourceMulti<R, I> extends AbstractMulti<I> {
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super I> subscriber) {
+    public void subscribe(@NotNull MultiSubscriber<? super I> subscriber) {
         R resource;
         try {
             resource = resourceSupplier.get();

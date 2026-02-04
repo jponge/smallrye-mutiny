@@ -8,6 +8,7 @@ import java.util.function.Predicate;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.MultiOverflowStrategy;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Helpers for creating {@link Uni} and {@link Multi} spies to observe events.
@@ -29,7 +30,7 @@ public interface Spy {
      * @param <T> the item type
      * @return a new {@link Uni}
      */
-    static <T> UniOnSubscribeSpy<T> onSubscribe(Uni<T> upstream) {
+    static <T> UniOnSubscribeSpy<T> onSubscribe(@NotNull Uni<T> upstream) {
         return (UniOnSubscribeSpy<T>) upstream.plug(uni -> new UniOnSubscribeSpy<>(upstream));
     }
 
@@ -40,7 +41,7 @@ public interface Spy {
      * @param <T> the item type
      * @return a new {@link Uni}
      */
-    static <T> UniOnCancellationSpy<T> onCancellation(Uni<T> upstream) {
+    static <T> UniOnCancellationSpy<T> onCancellation(@NotNull Uni<T> upstream) {
         return (UniOnCancellationSpy<T>) upstream.plug(uni -> new UniOnCancellationSpy<>(upstream));
     }
 
@@ -51,7 +52,7 @@ public interface Spy {
      * @param <T> the item type
      * @return a new {@link Uni}
      */
-    static <T> UniOnTerminationSpy<T> onTermination(Uni<T> upstream) {
+    static <T> UniOnTerminationSpy<T> onTermination(@NotNull Uni<T> upstream) {
         return (UniOnTerminationSpy<T>) upstream.plug(uni -> new UniOnTerminationSpy<>(upstream));
     }
 
@@ -62,7 +63,7 @@ public interface Spy {
      * @param <T> the item type
      * @return a new {@link Uni}
      */
-    static <T> UniOnItemSpy<T> onItem(Uni<T> upstream) {
+    static <T> UniOnItemSpy<T> onItem(@NotNull Uni<T> upstream) {
         return (UniOnItemSpy<T>) upstream.plug(uni -> new UniOnItemSpy<>(upstream));
     }
 
@@ -73,7 +74,7 @@ public interface Spy {
      * @param <T> the item type
      * @return a new {@link Uni}
      */
-    static <T> UniOnItemOrFailureSpy<T> onItemOrFailure(Uni<T> upstream) {
+    static <T> UniOnItemOrFailureSpy<T> onItemOrFailure(@NotNull Uni<T> upstream) {
         return (UniOnItemOrFailureSpy<T>) upstream.plug(uni -> new UniOnItemOrFailureSpy<>(upstream));
     }
 
@@ -84,7 +85,7 @@ public interface Spy {
      * @param <T> the item type
      * @return a new {@link Uni}
      */
-    static <T> UniOnFailureSpy<T> onFailure(Uni<T> upstream) {
+    static <T> UniOnFailureSpy<T> onFailure(@NotNull Uni<T> upstream) {
         return (UniOnFailureSpy<T>) upstream.plug(uni -> new UniOnFailureSpy<>(upstream));
     }
 
@@ -96,7 +97,7 @@ public interface Spy {
      * @param predicate a predicate to match a failure type
      * @return a new {@link Uni}
      */
-    static <T> UniOnFailureSpy<T> onFailure(Uni<T> upstream, Predicate<? super Throwable> predicate) {
+    static <T> UniOnFailureSpy<T> onFailure(@NotNull Uni<T> upstream, Predicate<? super Throwable> predicate) {
         return (UniOnFailureSpy<T>) upstream.plug(uni -> new UniOnFailureSpy<>(upstream, predicate));
     }
 
@@ -108,7 +109,7 @@ public interface Spy {
      * @param typeOfFailure the expected failure type
      * @return a new {@link Uni}
      */
-    static <T> UniOnFailureSpy<T> onFailure(Uni<T> upstream, Class<? extends Throwable> typeOfFailure) {
+    static <T> UniOnFailureSpy<T> onFailure(@NotNull Uni<T> upstream, Class<? extends Throwable> typeOfFailure) {
         return (UniOnFailureSpy<T>) upstream.plug(uni -> new UniOnFailureSpy<>(upstream, typeOfFailure));
     }
 
@@ -119,7 +120,7 @@ public interface Spy {
      * @param <T> the item type
      * @return a new {@link Uni}
      */
-    static <T> UniGlobalSpy<T> globally(Uni<T> upstream) {
+    static <T> UniGlobalSpy<T> globally(@NotNull Uni<T> upstream) {
         return (UniGlobalSpy<T>) upstream.plug(uni -> new UniGlobalSpy<>(upstream));
     }
 
@@ -132,7 +133,7 @@ public interface Spy {
      * @param <T> the items type
      * @return a new {@link Multi}
      */
-    static <T> MultiOnCancellationSpy<T> onCancellation(Multi<T> upstream) {
+    static <T> MultiOnCancellationSpy<T> onCancellation(@NotNull Multi<T> upstream) {
         return (MultiOnCancellationSpy<T>) upstream.plug(multi -> new MultiOnCancellationSpy<>(upstream));
     }
 
@@ -143,7 +144,7 @@ public interface Spy {
      * @param <T> the items type
      * @return a new {@link Multi}
      */
-    static <T> MultiOnCompletionSpy<T> onCompletion(Multi<T> upstream) {
+    static <T> MultiOnCompletionSpy<T> onCompletion(@NotNull Multi<T> upstream) {
         return (MultiOnCompletionSpy<T>) upstream.plug(multi -> new MultiOnCompletionSpy<>(upstream));
     }
 
@@ -154,7 +155,7 @@ public interface Spy {
      * @param <T> the items type
      * @return a new {@link Multi}
      */
-    static <T> MultiOnFailureSpy<T> onFailure(Multi<T> upstream) {
+    static <T> MultiOnFailureSpy<T> onFailure(@NotNull Multi<T> upstream) {
         return (MultiOnFailureSpy<T>) upstream.plug(multi -> new MultiOnFailureSpy<>(upstream));
     }
 
@@ -166,7 +167,7 @@ public interface Spy {
      * @param predicate a predicate to match a failure type
      * @return a new {@link Multi}
      */
-    static <T> MultiOnFailureSpy<T> onFailure(Multi<T> upstream, Predicate<? super Throwable> predicate) {
+    static <T> MultiOnFailureSpy<T> onFailure(@NotNull Multi<T> upstream, Predicate<? super Throwable> predicate) {
         return (MultiOnFailureSpy<T>) upstream.plug(multi -> new MultiOnFailureSpy<>(upstream, predicate));
     }
 
@@ -178,7 +179,7 @@ public interface Spy {
      * @param typeOfFailure the type of failure
      * @return a new {@link Multi}
      */
-    static <T> MultiOnFailureSpy<T> onFailure(Multi<T> upstream, Class<? extends Throwable> typeOfFailure) {
+    static <T> MultiOnFailureSpy<T> onFailure(@NotNull Multi<T> upstream, Class<? extends Throwable> typeOfFailure) {
         return (MultiOnFailureSpy<T>) upstream.plug(multi -> new MultiOnFailureSpy<>(upstream, typeOfFailure));
     }
 
@@ -189,7 +190,7 @@ public interface Spy {
      * @param <T> the items type
      * @return a new {@link Multi}
      */
-    static <T> MultiOnItemSpy<T> onItem(Multi<T> upstream) {
+    static <T> MultiOnItemSpy<T> onItem(@NotNull Multi<T> upstream) {
         return onItem(upstream, true);
     }
 
@@ -201,7 +202,7 @@ public interface Spy {
      * @param <T> the items type
      * @return a new {@link Multi}
      */
-    static <T> MultiOnItemSpy<T> onItem(Multi<T> upstream, boolean trackItems) {
+    static <T> MultiOnItemSpy<T> onItem(@NotNull Multi<T> upstream, boolean trackItems) {
         return (MultiOnItemSpy<T>) upstream.plug(multi -> new MultiOnItemSpy<>(upstream, trackItems));
     }
 
@@ -212,7 +213,7 @@ public interface Spy {
      * @param <T> the items type
      * @return a new {@link Multi}
      */
-    static <T> MultiOnRequestSpy<T> onRequest(Multi<T> upstream) {
+    static <T> MultiOnRequestSpy<T> onRequest(@NotNull Multi<T> upstream) {
         return (MultiOnRequestSpy<T>) upstream.plug(multi -> new MultiOnRequestSpy<>(upstream));
     }
 
@@ -223,7 +224,7 @@ public interface Spy {
      * @param <T> the items type
      * @return a new {@link Multi}
      */
-    static <T> MultiOnSubscribeSpy<T> onSubscribe(Multi<T> upstream) {
+    static <T> MultiOnSubscribeSpy<T> onSubscribe(@NotNull Multi<T> upstream) {
         return (MultiOnSubscribeSpy<T>) upstream.plug(multi -> new MultiOnSubscribeSpy<>(upstream));
     }
 
@@ -234,7 +235,7 @@ public interface Spy {
      * @param <T> the items type
      * @return a new {@link Multi}
      */
-    static <T> MultiOnTerminationSpy<T> onTermination(Multi<T> upstream) {
+    static <T> MultiOnTerminationSpy<T> onTermination(@NotNull Multi<T> upstream) {
         return (MultiOnTerminationSpy<T>) upstream.plug(multi -> new MultiOnTerminationSpy<>(upstream));
     }
 
@@ -246,8 +247,8 @@ public interface Spy {
      * @param <T> the items type
      * @return a new {@link Multi}
      */
-    static <T> MultiOnOverflowSpy<T> onOverflow(Multi<T> upstream,
-            Function<MultiOverflowStrategy<? extends T>, Multi<? extends T>> strategyMapper) {
+    static <T> MultiOnOverflowSpy<T> onOverflow(@NotNull Multi<T> upstream,
+                                                Function<MultiOverflowStrategy<? extends T>, Multi<? extends T>> strategyMapper) {
         return onOverflow(upstream, true, strategyMapper);
     }
 
@@ -260,8 +261,8 @@ public interface Spy {
      * @param <T> the items type
      * @return a new {@link Multi}
      */
-    static <T> MultiOnOverflowSpy<T> onOverflow(Multi<T> upstream, boolean trackItems,
-            Function<MultiOverflowStrategy<? extends T>, Multi<? extends T>> strategyMapper) {
+    static <T> MultiOnOverflowSpy<T> onOverflow(@NotNull Multi<T> upstream, boolean trackItems,
+                                                Function<MultiOverflowStrategy<? extends T>, Multi<? extends T>> strategyMapper) {
         return (MultiOnOverflowSpy<T>) upstream.plug(multi -> {
             Function<MultiOverflowStrategy<? extends T>, Multi<? extends T>> actual = nonNull(strategyMapper, "strategyMapper");
             return new MultiOnOverflowSpy<>(upstream, trackItems, actual);
@@ -281,7 +282,7 @@ public interface Spy {
      * @param <T> the items type
      * @return a new {@link Multi}
      */
-    static <T> MultiGlobalSpy<T> globally(Multi<T> upstream) {
+    static <T> MultiGlobalSpy<T> globally(@NotNull Multi<T> upstream) {
         return (MultiGlobalSpy<T>) upstream.plug(multi -> new MultiGlobalSpy<>(upstream));
     }
 }

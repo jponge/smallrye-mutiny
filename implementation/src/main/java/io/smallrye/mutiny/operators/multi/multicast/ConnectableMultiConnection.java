@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 
 import io.smallrye.mutiny.subscription.Cancellable;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.Nullable;
 
 public class ConnectableMultiConnection implements Runnable, Consumer<Cancellable> {
 
@@ -31,7 +32,7 @@ public class ConnectableMultiConnection implements Runnable, Consumer<Cancellabl
     }
 
     @Override
-    public void accept(Cancellable action) {
+    public void accept(@Nullable Cancellable action) {
         for (;;) {
             Cancellable current = onCancellation.get();
             if (current == CANCELLED) {

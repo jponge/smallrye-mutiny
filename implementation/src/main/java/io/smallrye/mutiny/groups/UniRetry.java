@@ -18,6 +18,8 @@ import io.smallrye.mutiny.helpers.ExponentialBackoff;
 import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.uni.UniRetryAtMost;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 // TODO This method should be renamed to UniOnFailureRetry, however it's a breaking change.
 public class UniRetry<T> {
@@ -31,6 +33,7 @@ public class UniRetry<T> {
 
     private boolean backOffConfigured = false;
 
+    @Nullable
     private ScheduledExecutorService executor = null;
 
     public UniRetry(Uni<T> upstream, Predicate<? super Throwable> onFailurePredicate) {
@@ -45,6 +48,7 @@ public class UniRetry<T> {
      * @param executor the scheduled executor, must not be {@code null}
      * @return this instance
      */
+    @NotNull
     @CheckReturnValue
     public UniRetry<T> withExecutor(ScheduledExecutorService executor) {
         this.executor = nonNull(executor, "executor");
@@ -198,6 +202,7 @@ public class UniRetry<T> {
      * @param maxBackOff the max back-off duration, must not be {@code null}, must not be negative.
      * @return this object to configure the retry policy.
      */
+    @NotNull
     @CheckReturnValue
     public UniRetry<T> withBackOff(Duration initialBackOff, Duration maxBackOff) {
         this.backOffConfigured = true;
@@ -212,6 +217,7 @@ public class UniRetry<T> {
      * @param jitter the jitter. Must be in [0.0, 1.0]
      * @return this object to configure the retry policy.
      */
+    @NotNull
     @CheckReturnValue
     public UniRetry<T> withJitter(double jitter) {
         if (jitter < 0 || jitter > 1.0) {

@@ -3,19 +3,24 @@ package io.smallrye.mutiny.helpers.spies;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.tuples.Tuple3;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class UniOnTerminationSpy<T> extends UniSpyBase<T> {
 
+    @Nullable
     private volatile Tuple3<T, Throwable, Boolean> lastTermination;
 
     UniOnTerminationSpy(Uni<T> upstream) {
         super(upstream);
     }
 
+    @Nullable
     public T lastTerminationItem() throws IllegalStateException {
         return (lastTermination == null) ? null : lastTermination.getItem1();
     }
 
+    @Nullable
     public Throwable lastTerminationFailure() throws IllegalStateException {
         return (lastTermination == null) ? null : lastTermination.getItem2();
     }
@@ -31,7 +36,7 @@ public class UniOnTerminationSpy<T> extends UniSpyBase<T> {
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull UniSubscriber<? super T> downstream) {
         upstream()
                 .onTermination().invoke((i, f, c) -> {
                     incrementInvocationCount();
@@ -40,6 +45,7 @@ public class UniOnTerminationSpy<T> extends UniSpyBase<T> {
                 .subscribe().withSubscriber(downstream);
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "UniOnTerminationSpy{" +

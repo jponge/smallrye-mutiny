@@ -9,6 +9,7 @@ import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.tuples.Functions;
 import io.smallrye.mutiny.tuples.Tuple4;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiItemCombine4<T1, T2, T3, T4> extends MultiItemCombineIterable {
 
@@ -22,6 +23,7 @@ public class MultiItemCombine4<T1, T2, T3, T4> extends MultiItemCombineIterable 
      *
      * @return the current {@link MultiItemCombine4}
      */
+    @NotNull
     @Override
     @CheckReturnValue
     public MultiItemCombine4<T1, T2, T3, T4> collectFailures() {
@@ -45,6 +47,7 @@ public class MultiItemCombine4<T1, T2, T3, T4> extends MultiItemCombineIterable 
      *
      * @return the current {@link MultiItemCombine4}
      */
+    @NotNull
     @Override
     @CheckReturnValue
     public MultiItemCombine4<T1, T2, T3, T4> latestItems() {
@@ -69,7 +72,7 @@ public class MultiItemCombine4<T1, T2, T3, T4> extends MultiItemCombineIterable 
      */
     @SuppressWarnings("unchecked")
     @CheckReturnValue
-    public <O> Multi<O> using(Functions.Function4<T1, T2, T3, T4, O> combinator) {
+    public <O> Multi<O> using(@NotNull Functions.Function4<T1, T2, T3, T4, O> combinator) {
         nonNull(combinator, "combinator");
         return super.combine(args -> {
             size(args, 4, "args");

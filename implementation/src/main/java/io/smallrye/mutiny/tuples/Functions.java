@@ -1,5 +1,7 @@
 package io.smallrye.mutiny.tuples;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.List;
 import java.util.function.Function;
 
@@ -15,7 +17,7 @@ public final class Functions {
 
         @SuppressWarnings("unchecked")
         @Override
-        default R apply(List<Object> objects) {
+        default R apply(@NotNull List<Object> objects) {
             return apply((T1) objects.get(0), (T2) objects.get(1), (T3) objects.get(2));
         }
     }
@@ -26,7 +28,7 @@ public final class Functions {
 
         @SuppressWarnings("unchecked")
         @Override
-        default R apply(List<Object> objects) {
+        default R apply(@NotNull List<Object> objects) {
             return apply((T1) objects.get(0), (T2) objects.get(1), (T3) objects.get(2), (T4) objects.get(3));
         }
     }
@@ -37,7 +39,7 @@ public final class Functions {
 
         @SuppressWarnings("unchecked")
         @Override
-        default R apply(List<Object> objects) {
+        default R apply(@NotNull List<Object> objects) {
             return apply((T1) objects.get(0), (T2) objects.get(1),
                     (T3) objects.get(2), (T4) objects.get(3), (T5) objects.get(4));
         }
@@ -49,7 +51,7 @@ public final class Functions {
 
         @SuppressWarnings("unchecked")
         @Override
-        default R apply(List<Object> objects) {
+        default R apply(@NotNull List<Object> objects) {
             return apply((T1) objects.get(0), (T2) objects.get(1),
                     (T3) objects.get(2), (T4) objects.get(3), (T5) objects.get(4), (T6) objects.get(5));
         }
@@ -61,7 +63,7 @@ public final class Functions {
 
         @SuppressWarnings("unchecked")
         @Override
-        default R apply(List<Object> objects) {
+        default R apply(@NotNull List<Object> objects) {
             return apply((T1) objects.get(0), (T2) objects.get(1),
                     (T3) objects.get(2), (T4) objects.get(3), (T5) objects.get(4), (T6) objects.get(5), (T7) objects.get(6));
         }
@@ -73,7 +75,7 @@ public final class Functions {
 
         @SuppressWarnings("unchecked")
         @Override
-        default R apply(List<Object> objects) {
+        default R apply(@NotNull List<Object> objects) {
             return apply((T1) objects.get(0), (T2) objects.get(1),
                     (T3) objects.get(2), (T4) objects.get(3), (T5) objects.get(4), (T6) objects.get(5),
                     (T7) objects.get(6), (T8) objects.get(7));
@@ -86,7 +88,7 @@ public final class Functions {
 
         @SuppressWarnings("unchecked")
         @Override
-        default R apply(List<Object> objects) {
+        default R apply(@NotNull List<Object> objects) {
             return apply((T1) objects.get(0), (T2) objects.get(1),
                     (T3) objects.get(2), (T4) objects.get(3), (T5) objects.get(4), (T6) objects.get(5),
                     (T7) objects.get(6), (T8) objects.get(7), (T9) objects.get(8));

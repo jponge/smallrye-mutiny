@@ -14,6 +14,7 @@ import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.subscription.BackPressureFailure;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Implementation of {@link Processor} that broadcast all subsequently observed items to its current
@@ -46,6 +47,7 @@ public class BroadcastProcessor<T> extends AbstractMulti<T> implements Processor
     /**
      * The array of currently subscribed subscribers.
      */
+    @NotNull
     final AtomicReference<List<BroadcastSubscription<T>>> subscribers;
 
     /**
@@ -59,6 +61,7 @@ public class BroadcastProcessor<T> extends AbstractMulti<T> implements Processor
      * @param <T> the type of item
      * @return the new {@code BroadcastProcessor}
      */
+    @NotNull
     public static <T> BroadcastProcessor<T> create() {
         return new BroadcastProcessor<>();
     }
@@ -70,6 +73,7 @@ public class BroadcastProcessor<T> extends AbstractMulti<T> implements Processor
         subscribers = new AtomicReference<>(new CopyOnWriteArrayList<>());
     }
 
+    @NotNull
     public SerializedProcessor<T, T> serialized() {
         return new SerializedProcessor<>(this);
     }
@@ -103,7 +107,7 @@ public class BroadcastProcessor<T> extends AbstractMulti<T> implements Processor
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super T> downstream) {
         BroadcastSubscription<T> subscription = new BroadcastSubscription<>(downstream, this);
         downstream.onSubscribe(subscription);
         if (addSubscription(subscription)) {
@@ -122,7 +126,7 @@ public class BroadcastProcessor<T> extends AbstractMulti<T> implements Processor
     }
 
     @Override
-    public void onSubscribe(Subscription subscription) {
+    public void onSubscribe(@NotNull Subscription subscription) {
         if (subscribers.get() == TERMINATED) {
             subscription.cancel();
             return;
@@ -131,7 +135,7 @@ public class BroadcastProcessor<T> extends AbstractMulti<T> implements Processor
     }
 
     @Override
-    public void onNext(T item) {
+    public void onNext(@NotNull T item) {
         ParameterValidation.nonNullNpe(item, "item");
         List<BroadcastSubscription<T>> subscriptions = subscribers.get();
         if (subscriptions != TERMINATED) {
@@ -143,7 +147,7 @@ public class BroadcastProcessor<T> extends AbstractMulti<T> implements Processor
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public void onError(Throwable failure) {
+    public void onError(@NotNull Throwable failure) {
         ParameterValidation.nonNullNpe(failure, "failure");
         List<BroadcastSubscription<?>> subscriptions = subscribers.getAndSet((List) TERMINATED);
         if (subscriptions == TERMINATED) {

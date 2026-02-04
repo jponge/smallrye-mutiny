@@ -11,6 +11,8 @@ import java.util.stream.Collector;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class MultiCollectorOp<T, A, R> extends AbstractMultiOperator<T, R> {
 
@@ -25,7 +27,7 @@ public final class MultiCollectorOp<T, A, R> extends AbstractMultiOperator<T, R>
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super R> downstream) {
+    public void subscribe(@NotNull MultiSubscriber<? super R> downstream) {
         A initialValue;
         BiConsumer<A, ? super T> accumulator;
         Function<A, ? extends R> finisher;
@@ -59,6 +61,7 @@ public final class MultiCollectorOp<T, A, R> extends AbstractMultiOperator<T, R>
         private final BiConsumer<A, T> accumulator;
         private final Function<A, R> finisher;
         // Only accessed in the serialized callbacks
+        @Nullable
         private A intermediate;
 
         CollectorProcessor(MultiSubscriber<? super R> downstream,

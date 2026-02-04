@@ -9,32 +9,37 @@ import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.subscription.BackPressureFailure;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class IntervalMulti extends AbstractMulti<Long> {
 
+    @NotNull
     private final ScheduledExecutorService executor;
+    @Nullable
     private final Duration initialDelay;
+    @NotNull
     private final Duration period;
 
     public IntervalMulti(
-            Duration initialDelay,
-            Duration period,
-            ScheduledExecutorService executor) {
+            @NotNull Duration initialDelay,
+            @NotNull Duration period,
+            @NotNull ScheduledExecutorService executor) {
         this.initialDelay = ParameterValidation.validate(initialDelay, "initialDelay");
         this.period = ParameterValidation.validate(period, "period");
         this.executor = ParameterValidation.nonNull(executor, "executor");
     }
 
     public IntervalMulti(
-            Duration period,
-            ScheduledExecutorService executor) {
+            @NotNull Duration period,
+            @NotNull ScheduledExecutorService executor) {
         this.initialDelay = null;
         this.period = ParameterValidation.validate(period, "period");
         this.executor = ParameterValidation.nonNull(executor, "executor");
     }
 
     @Override
-    public void subscribe(MultiSubscriber<? super Long> actual) {
+    public void subscribe(@NotNull MultiSubscriber<? super Long> actual) {
         IntervalRunnable runnable = new IntervalRunnable(actual, period, initialDelay, executor);
         actual.onSubscribe(runnable);
         // Only start the ticks when we get the first request.

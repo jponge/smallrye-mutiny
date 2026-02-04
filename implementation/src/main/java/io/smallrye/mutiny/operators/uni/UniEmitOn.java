@@ -8,11 +8,13 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class UniEmitOn<I> extends UniOperator<I, I> {
+    @NotNull
     private final Executor executor;
 
-    public UniEmitOn(Uni<I> upstream, Executor executor) {
+    public UniEmitOn(Uni<I> upstream, @NotNull Executor executor) {
         super(upstream);
         this.executor = nonNull(executor, "executor");
     }

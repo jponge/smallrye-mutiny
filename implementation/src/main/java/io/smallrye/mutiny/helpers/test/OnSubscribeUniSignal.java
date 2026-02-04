@@ -1,6 +1,7 @@
 package io.smallrye.mutiny.helpers.test;
 
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A onSubscribe signal.
@@ -17,6 +18,7 @@ public final class OnSubscribeUniSignal implements UniSignal {
         return subscription;
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "OnSubscribeSignal{" +

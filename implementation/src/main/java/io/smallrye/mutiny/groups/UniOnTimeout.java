@@ -12,9 +12,11 @@ import io.smallrye.mutiny.TimeoutException;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.uni.UniFailOnTimeout;
+import org.jetbrains.annotations.NotNull;
 
 public class UniOnTimeout<T> {
 
+    @NotNull
     private final Uni<T> failure;
     private final Duration timeout;
     private final ScheduledExecutorService executor;
@@ -31,6 +33,7 @@ public class UniOnTimeout<T> {
      * @param timeout the timeout, must not be {@code null}, must be strictly positive.
      * @return a new {@link UniOnTimeout}
      */
+    @NotNull
     @CheckReturnValue
     public UniOnTimeout<T> after(Duration timeout) {
         return new UniOnTimeout<>(failure, validate(timeout, "timeout"), executor);
@@ -43,6 +46,7 @@ public class UniOnTimeout<T> {
      * @param executor the executor to use, must not be {@code null}
      * @return a new {@link UniOnTimeout}
      */
+    @NotNull
     @CheckReturnValue
     public UniOnTimeout<T> on(ScheduledExecutorService executor) {
         return new UniOnTimeout<>(failure, timeout, nonNull(executor, "executor"));

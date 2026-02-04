@@ -12,6 +12,7 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.uni.UniOnSubscribeCall;
 import io.smallrye.mutiny.operators.uni.UniOnSubscribeInvoke;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Group to configure the action to execute when the observed {@link Uni} sends a {@link UniSubscription}.
@@ -33,6 +34,7 @@ import io.smallrye.mutiny.subscription.UniSubscription;
  */
 public class UniOnSubscribe<T> {
 
+    @NotNull
     private final Uni<T> upstream;
 
     public UniOnSubscribe(Uni<T> upstream) {

@@ -9,6 +9,8 @@ import java.util.function.Predicate;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ExponentialBackoff {
 
@@ -29,8 +31,9 @@ public class ExponentialBackoff {
      * @param executor the executor used for the delay
      * @return the function
      */
+    @NotNull
     public static Function<Multi<Throwable>, Publisher<Long>> randomExponentialBackoffFunction(
-            long numRetries, Duration firstBackoff, Duration maxBackoff,
+            long numRetries, @NotNull Duration firstBackoff, @NotNull Duration maxBackoff,
             double jitterFactor, ScheduledExecutorService executor) {
 
         validate(firstBackoff, maxBackoff, jitterFactor, executor);
@@ -39,7 +42,7 @@ public class ExponentialBackoff {
             int index;
 
             @Override
-            public Publisher<Long> apply(Multi<Throwable> t) {
+            public Publisher<Long> apply(@NotNull Multi<Throwable> t) {
                 return t.onItem().transformToUniAndConcatenate(failure -> {
                     int iteration = index++;
                     if (iteration >= numRetries) {
@@ -56,7 +59,7 @@ public class ExponentialBackoff {
         };
     }
 
-    private static Duration getNextDelay(Duration firstBackoff, Duration maxBackoff, double jitterFactor, int iteration) {
+    private static Duration getNextDelay(@NotNull Duration firstBackoff, @NotNull Duration maxBackoff, double jitterFactor, int iteration) {
         Duration nextBackoff = getNextAttemptDelay(firstBackoff, maxBackoff, iteration);
 
         // Compute the jitter
@@ -100,8 +103,9 @@ public class ExponentialBackoff {
      * @param executor the executor used for the delay
      * @return the function
      */
+    @NotNull
     public static Function<Multi<Throwable>, Publisher<Long>> randomExponentialBackoffFunctionExpireAt(
-            long expireAt, Duration firstBackoff, Duration maxBackoff,
+            long expireAt, @NotNull Duration firstBackoff, @NotNull Duration maxBackoff,
             double jitterFactor, ScheduledExecutorService executor) {
 
         validate(firstBackoff, maxBackoff, jitterFactor, executor);
@@ -110,7 +114,7 @@ public class ExponentialBackoff {
             int index;
 
             @Override
-            public Publisher<Long> apply(Multi<Throwable> t) {
+            public Publisher<Long> apply(@NotNull Multi<Throwable> t) {
                 return t.onItem().transformToUniAndConcatenate(failure -> {
                     int iteration = index++;
                     Duration delay = getNextDelay(firstBackoff, maxBackoff, jitterFactor, iteration);
@@ -130,7 +134,7 @@ public class ExponentialBackoff {
         };
     }
 
-    private static long getJitter(double jitterFactor, Duration nextBackoff) {
+    private static long getJitter(double jitterFactor, @NotNull Duration nextBackoff) {
         long jitterOffset;
         try {
             jitterOffset = nextBackoff.multipliedBy((long) (100 * jitterFactor))
@@ -142,7 +146,8 @@ public class ExponentialBackoff {
         return jitterOffset;
     }
 
-    private static Duration getNextAttemptDelay(Duration firstBackoff, Duration maxBackoff, int iteration) {
+    @Nullable
+    private static Duration getNextAttemptDelay(@NotNull Duration firstBackoff, @NotNull Duration maxBackoff, int iteration) {
         Duration nextBackoff;
         try {
             nextBackoff = firstBackoff.multipliedBy((long) Math.pow(2, iteration));
@@ -155,14 +160,15 @@ public class ExponentialBackoff {
         return nextBackoff;
     }
 
-    public static Function<Multi<Throwable>, Publisher<Long>> backoffWithPredicateFactory(final Duration initialBackOff,
-            final double jitter, final Duration maxBackoff, Predicate<? super Throwable> predicate,
-            ScheduledExecutorService pool) {
+    @NotNull
+    public static Function<Multi<Throwable>, Publisher<Long>> backoffWithPredicateFactory(@NotNull final Duration initialBackOff,
+                                                                                          final double jitter, @NotNull final Duration maxBackoff, @NotNull Predicate<? super Throwable> predicate,
+                                                                                          ScheduledExecutorService pool) {
         return new Function<>() {
             int index = 0;
 
             @Override
-            public Publisher<Long> apply(Multi<Throwable> stream) {
+            public Publisher<Long> apply(@NotNull Multi<Throwable> stream) {
                 return stream.onItem()
                         .transformToUniAndConcatenate(failure -> {
                             int iteration = index++;
@@ -184,11 +190,12 @@ public class ExponentialBackoff {
         };
     }
 
+    @NotNull
     public static Function<Multi<Throwable>, Publisher<Long>> noBackoffPredicateFactory(
-            Predicate<? super Throwable> predicate) {
+            @NotNull Predicate<? super Throwable> predicate) {
         return new Function<>() {
             @Override
-            public Publisher<Long> apply(Multi<Throwable> stream) {
+            public Publisher<Long> apply(@NotNull Multi<Throwable> stream) {
                 return stream.onItem()
                         .transformToUniAndConcatenate(failure -> {
                             try {

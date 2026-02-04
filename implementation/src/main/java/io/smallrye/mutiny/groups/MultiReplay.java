@@ -8,6 +8,7 @@ import java.util.concurrent.Flow;
 import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.operators.multi.replay.ReplayOperator;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Group to configure replaying a {@link Multi} to multiple subscribers.
@@ -24,6 +25,7 @@ public class MultiReplay {
      *        replaying all events
      * @return this group
      */
+    @NotNull
     @CheckReturnValue
     public MultiReplay upTo(long numberOfItemsToReplay) {
         this.numberOfItemsToReplay = positive(numberOfItemsToReplay, "numberOfItemsToReplay");
@@ -60,6 +62,7 @@ public class MultiReplay {
      * @param <T> the items type
      * @return a replaying {@link Multi}
      */
+    @NotNull
     @CheckReturnValue
     public <T> Multi<T> ofMulti(Multi<T> upstream) {
         return new ReplayOperator<>(nonNull(upstream, "upstream"), numberOfItemsToReplay);
@@ -77,6 +80,7 @@ public class MultiReplay {
      * @return a replaying {@link Multi}
      * @see #ofMulti(Multi)
      */
+    @NotNull
     @CheckReturnValue
     public <T> Multi<T> ofSeedAndMulti(Iterable<T> seed, Multi<T> upstream) {
         return new ReplayOperator<>(nonNull(upstream, "upstream"), numberOfItemsToReplay, nonNull(seed, "seed"));

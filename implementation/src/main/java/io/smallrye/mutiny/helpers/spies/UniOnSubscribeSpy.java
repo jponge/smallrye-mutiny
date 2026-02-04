@@ -3,9 +3,12 @@ package io.smallrye.mutiny.helpers.spies;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class UniOnSubscribeSpy<T> extends UniSpyBase<T> {
 
+    @Nullable
     private volatile UniSubscription lastSubscription;
 
     public UniSubscription lastSubscription() {
@@ -23,7 +26,7 @@ public class UniOnSubscribeSpy<T> extends UniSpyBase<T> {
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super T> downstream) {
+    public void subscribe(@NotNull UniSubscriber<? super T> downstream) {
         upstream()
                 .onSubscription().invoke(uniSubscription -> {
                     incrementInvocationCount();
@@ -32,6 +35,7 @@ public class UniOnSubscribeSpy<T> extends UniSpyBase<T> {
                 .subscribe().withSubscriber(downstream);
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "UniOnSubscribeSpy{" +

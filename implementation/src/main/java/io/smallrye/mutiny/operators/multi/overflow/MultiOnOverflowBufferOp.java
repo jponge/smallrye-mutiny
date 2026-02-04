@@ -18,6 +18,7 @@ import io.smallrye.mutiny.operators.multi.AbstractMultiOperator;
 import io.smallrye.mutiny.operators.multi.MultiOperatorProcessor;
 import io.smallrye.mutiny.subscription.BackPressureFailure;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class MultiOnOverflowBufferOp<T> extends AbstractMultiOperator<T, T> {
 
@@ -60,7 +61,7 @@ public class MultiOnOverflowBufferOp<T> extends AbstractMultiOperator<T, T> {
         }
 
         @Override
-        public void onSubscribe(Subscription subscription) {
+        public void onSubscribe(@NotNull Subscription subscription) {
             if (compareAndSetUpstreamSubscription(null, subscription)) {
                 downstream.onSubscribe(this);
                 subscription.request(Long.MAX_VALUE);
@@ -84,7 +85,7 @@ public class MultiOnOverflowBufferOp<T> extends AbstractMultiOperator<T, T> {
             }
         }
 
-        private void notifyOnOverflowInvoke(T t, BackPressureFailure bpf) {
+        private void notifyOnOverflowInvoke(T t, @NotNull BackPressureFailure bpf) {
             if (dropConsumer != null) {
                 try {
                     dropConsumer.accept(t);
@@ -95,7 +96,7 @@ public class MultiOnOverflowBufferOp<T> extends AbstractMultiOperator<T, T> {
             onFailure(bpf);
         }
 
-        private void notifyOnOverflowCall(T t, BackPressureFailure bpf) {
+        private void notifyOnOverflowCall(T t, @NotNull BackPressureFailure bpf) {
             MultiSubscriber<? super T> subscriber = this.downstream;
             super.cancel();
             try {

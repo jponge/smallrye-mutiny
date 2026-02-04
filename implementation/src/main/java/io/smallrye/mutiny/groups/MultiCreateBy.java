@@ -4,6 +4,7 @@ import java.util.concurrent.Flow;
 
 import io.smallrye.common.annotation.CheckReturnValue;
 import io.smallrye.mutiny.Multi;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Allows the creation of instances of {@link Multi} by merging/combining/concatenating multiple upstreams.
@@ -23,6 +24,7 @@ public class MultiCreateBy {
      *
      * @return the object to configure the concatenation
      */
+    @NotNull
     @CheckReturnValue
     public MultiConcat concatenating() {
         return new MultiConcat(false);
@@ -36,6 +38,7 @@ public class MultiCreateBy {
      *
      * @return the object to configure the merge
      */
+    @NotNull
     @CheckReturnValue
     public MultiMerge merging() {
         return new MultiMerge(false, 128, 128);
@@ -58,6 +61,7 @@ public class MultiCreateBy {
      *
      * @return the object to configure the combination
      */
+    @NotNull
     @CheckReturnValue
     public MultiItemCombination combining() {
         return new MultiItemCombination();
@@ -69,6 +73,7 @@ public class MultiCreateBy {
      *
      * @return the object to configure the repetition
      */
+    @NotNull
     @CheckReturnValue
     public MultiRepetition repeating() {
         return new MultiRepetition();
@@ -80,6 +85,7 @@ public class MultiCreateBy {
      *
      * @return the object to configure the replay behavior
      */
+    @NotNull
     @CheckReturnValue
     public MultiReplay replaying() {
         return new MultiReplay();

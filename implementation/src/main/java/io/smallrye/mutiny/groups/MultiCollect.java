@@ -17,6 +17,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.multi.MultiCollectorOp;
 import io.smallrye.mutiny.operators.multi.MultiLastItemOp;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Collects / aggregates items from the upstream and send the resulting <em>collection</em> / structure when the
@@ -28,6 +29,7 @@ import io.smallrye.mutiny.operators.multi.MultiLastItemOp;
  */
 public class MultiCollect<T> {
 
+    @NotNull
     private final Multi<T> upstream;
 
     public MultiCollect(Multi<T> upstream) {
@@ -283,6 +285,7 @@ public class MultiCollect<T> {
      * @param predicate the predicate, must not be {@code null}.
      * @return the object to configure the item collection.
      */
+    @NotNull
     @CheckReturnValue
     public MultiCollect<T> where(Predicate<T> predicate) {
         // Decoration happens in where.
@@ -303,6 +306,7 @@ public class MultiCollect<T> {
      * @param predicate the predicate, must not be {@code null}.
      * @return the object to configure the item collection.
      */
+    @NotNull
     @CheckReturnValue
     public MultiCollect<T> when(Function<? super T, Uni<Boolean>> predicate) {
         // Decoration happens in `when`

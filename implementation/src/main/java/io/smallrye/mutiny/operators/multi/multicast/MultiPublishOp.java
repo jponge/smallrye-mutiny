@@ -18,6 +18,8 @@ import io.smallrye.mutiny.subscription.BackPressureFailure;
 import io.smallrye.mutiny.subscription.Cancellable;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * A connectable observable which shares an underlying source and dispatches source values to subscribers in a
@@ -44,6 +46,7 @@ public final class MultiPublishOp<T> extends ConnectableMulti<T> {
 
     private final Publisher<T> onSubscribe;
 
+    @NotNull
     public static <T> ConnectableMulti<T> create(Multi<T> upstream) {
         final AtomicReference<PublishSubscriber<T>> curr = new AtomicReference<>();
         Publisher<T> onSubscribe = new InnerPublisher<>(curr, 128);
@@ -64,7 +67,7 @@ public final class MultiPublishOp<T> extends ConnectableMulti<T> {
     }
 
     @Override
-    public void connect(ConnectableMultiConnection connection) {
+    public void connect(@NotNull ConnectableMultiConnection connection) {
         boolean doConnect;
         PublishSubscriber<T> ps;
         // we loop because concurrent connect/disconnect and termination may change the state
@@ -129,11 +132,13 @@ public final class MultiPublishOp<T> extends ConnectableMulti<T> {
         /**
          * Tracks the subscribed InnerSubscribers.
          */
+        @NotNull
         final AtomicReference<InnerSubscriber<T>[]> subscribers;
         /**
          * Atomically changed from false to true by connect to make sure the
          * connection is only performed by one thread.
          */
+        @NotNull
         final AtomicBoolean shouldConnect;
 
         final AtomicReference<Subscription> upstream = new AtomicReference<>();
@@ -178,7 +183,7 @@ public final class MultiPublishOp<T> extends ConnectableMulti<T> {
         }
 
         @Override
-        public void onSubscribe(Subscription s) {
+        public void onSubscribe(@NotNull Subscription s) {
             if (this.upstream.compareAndSet(null, s)) {
                 s.request(bufferSize);
             }
@@ -300,7 +305,7 @@ public final class MultiPublishOp<T> extends ConnectableMulti<T> {
          * @return true if there is indeed a terminal condition
          */
         @SuppressWarnings("unchecked")
-        boolean isEmptyOrCompleted(Throwable term, boolean empty) {
+        boolean isEmptyOrCompleted(@Nullable Throwable term, boolean empty) {
             // first of all, check if there is actually a terminal event
             if (term != null) {
                 // is it a completion event (impl. note, this is much cheaper than checking for isError)

@@ -12,17 +12,21 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractUni;
 import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.UniSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 public class UniOnFailureTransform<I, O, E extends Throwable> extends UniOperator<I, O> {
 
+    @NotNull
     private final Function<E, ? extends Throwable> mapper;
+    @NotNull
     private final Predicate<? super Throwable> predicate;
+    @NotNull
     private final Class<E> typeOfFailure;
 
-    public UniOnFailureTransform(Uni<I> upstream,
-            Predicate<? super Throwable> predicate,
-            Function<E, ? extends Throwable> mapper,
-            Class<E> typeOfFailure) {
+    public UniOnFailureTransform(@NotNull Uni<I> upstream,
+                                 @NotNull Predicate<? super Throwable> predicate,
+                                 @NotNull Function<E, ? extends Throwable> mapper,
+                                 @NotNull Class<E> typeOfFailure) {
         super(nonNull(upstream, "upstream"));
         this.mapper = nonNull(mapper, "mapper");
         this.predicate = nonNull(predicate, "predicate");
@@ -30,13 +34,13 @@ public class UniOnFailureTransform<I, O, E extends Throwable> extends UniOperato
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super O> subscriber) {
+    public void subscribe(@NotNull UniSubscriber<? super O> subscriber) {
         AbstractUni.subscribe(upstream(), new UniOnFailureTransformProcessor(subscriber));
     }
 
     private class UniOnFailureTransformProcessor extends UniOperatorProcessor<I, O> {
 
-        public UniOnFailureTransformProcessor(UniSubscriber<? super O> downstream) {
+        public UniOnFailureTransformProcessor(@NotNull UniSubscriber<? super O> downstream) {
             super(downstream);
         }
 

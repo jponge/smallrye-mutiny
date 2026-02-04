@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Ensures that the events between the upstream and downstream follow
@@ -31,12 +32,16 @@ public class StrictMultiSubscriber<T>
 
     private final Subscriber<? super T> downstream;
 
+    @NotNull
     private final AtomicReference<Throwable> failure;
 
+    @NotNull
     private final AtomicLong requested;
 
+    @NotNull
     private final AtomicReference<Subscription> upstream;
 
+    @NotNull
     private final AtomicBoolean once;
 
     volatile boolean done;
@@ -67,7 +72,7 @@ public class StrictMultiSubscriber<T>
     }
 
     @Override
-    public void onSubscribe(Subscription s) {
+    public void onSubscribe(@NotNull Subscription s) {
         if (once.compareAndSet(false, true)) {
             downstream.onSubscribe(this);
             Subscriptions.setIfEmptyAndRequest(this.upstream, requested, s);

@@ -14,6 +14,7 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.smallrye.mutiny.subscription.SerializedSubscriber;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Emits items from upstream until another Publisher signals an event (items, failures or completion).
@@ -24,9 +25,10 @@ import io.smallrye.mutiny.subscription.SerializedSubscriber;
  */
 public final class MultiSelectFirstUntilOtherOp<T, U> extends AbstractMultiOperator<T, T> {
 
+    @NotNull
     private final Publisher<U> other;
 
-    public MultiSelectFirstUntilOtherOp(Multi<? extends T> upstream, Publisher<U> other) {
+    public MultiSelectFirstUntilOtherOp(@NotNull Multi<? extends T> upstream, @NotNull Publisher<U> other) {
         super(upstream);
         this.other = ParameterValidation.nonNull(other, "other");
     }
@@ -48,7 +50,7 @@ public final class MultiSelectFirstUntilOtherOp<T, U> extends AbstractMultiOpera
         }
 
         @Override
-        public void onSubscribe(Subscription s) {
+        public void onSubscribe(@NotNull Subscription s) {
             main.setOtherSubscription(s);
         }
 
@@ -91,7 +93,7 @@ public final class MultiSelectFirstUntilOtherOp<T, U> extends AbstractMultiOpera
             super(new SerializedSubscriber<>(downstream));
         }
 
-        void setOtherSubscription(Subscription s) {
+        void setOtherSubscription(@NotNull Subscription s) {
             if (other.compareAndSet(null, s)) {
                 s.request(1);
             } else {
