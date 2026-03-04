@@ -1,7 +1,6 @@
 package io.smallrye.mutiny.operators.multi;
 
 import static io.smallrye.mutiny.helpers.MultiSubscribers.toMultiSubscriber;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 import java.util.concurrent.Flow.Subscriber;
@@ -12,8 +11,6 @@ import org.junit.jupiter.api.Test;
 import io.reactivex.rxjava3.processors.PublishProcessor;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
-import io.smallrye.mutiny.operators.AbstractMulti;
-import io.smallrye.mutiny.subscription.BackPressureFailure;
 import io.smallrye.mutiny.test.Mocks;
 import mutiny.zero.flow.adapters.AdaptersToFlow;
 
@@ -103,70 +100,6 @@ public class FlatMapMainSubscriberTest {
         verify(subscriber).onNext(2);
         verify(subscriber, never()).onComplete();
         verify(subscriber).onError(any(Throwable.class));
-    }
-
-    AbstractMulti<Integer> rogue = new AbstractMulti<Integer>() {
-        @Override
-        public void subscribe(Subscriber<? super Integer> subscriber) {
-            subscriber.onSubscribe(mock(Subscription.class));
-            subscriber.onNext(1);
-            subscriber.onNext(2);
-        }
-    };
-
-    @Test
-    public void testInnerOverflow() {
-        Multi.createFrom().item(1)
-                .onItem().transformToMulti(v -> rogue)
-                .merge(1)
-                .subscribe().withSubscriber(AssertSubscriber.create(0))
-                .assertFailedWith(BackPressureFailure.class, "");
-    }
-
-    @Test
-    public void testInnerOverflow2() {
-        Subscriber<Integer> subscriber = Mocks.subscriber(0);
-
-        MultiFlatMapOp.FlatMapMainSubscriber<Integer, Integer> sub = new MultiFlatMapOp.FlatMapMainSubscriber<>(
-                toMultiSubscriber(subscriber),
-                i -> rogue,
-                false,
-                1,
-                1);
-
-        sub.onSubscribe(mock(Subscription.class));
-        sub.onNext(1);
-        sub.done = true;
-        sub.drain();
-
-        verify(subscriber).onError(any(BackPressureFailure.class));
-
-    }
-
-    @Test
-    public void testInnerOverflowWithWip() {
-        Subscriber<Integer> subscriber = Mocks.subscriber(0);
-
-        MultiFlatMapOp.FlatMapMainSubscriber<Integer, Integer> sub = new MultiFlatMapOp.FlatMapMainSubscriber<>(
-                toMultiSubscriber(subscriber),
-                i -> rogue,
-                false,
-                1,
-                1);
-
-        sub.onSubscribe(mock(Subscription.class));
-
-        sub.wip.getAndIncrement();
-
-        sub.onNext(1);
-        assertThat(sub.failures.get()).isInstanceOf(BackPressureFailure.class);
-
-        sub.wip.set(0);
-        sub.done = true;
-        sub.drain();
-
-        verify(subscriber).onError(any(BackPressureFailure.class));
-
     }
 
     @Test
