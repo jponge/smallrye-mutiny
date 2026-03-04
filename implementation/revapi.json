@@ -51,7 +51,17 @@
     "criticality" : "highlight",
     "minSeverity" : "POTENTIALLY_BREAKING",
     "minCriticality" : "documented",
-    "differences" : [ ]
+    "differences" : [ {
+      "code" : "java.class.noLongerInheritsFromClass",
+      "old" : "class io.smallrye.mutiny.operators.multi.MultiFlatMapOp.FlatMapMainSubscriber<I, O>",
+      "new" : "class io.smallrye.mutiny.operators.multi.MultiFlatMapOp.FlatMapMainSubscriber<I, O>",
+      "justification" : "Internal refactoring: replaced FlatMapManager inheritance with shared MPSC queue. FlatMapManager was package-private and not part of public API."
+    }, {
+      "code" : "java.field.visibilityReduced",
+      "old" : "field io.smallrye.mutiny.operators.multi.MultiFlatMapOp.FlatMapMainSubscriber<I, O>.inners",
+      "new" : "field io.smallrye.mutiny.operators.multi.MultiFlatMapOp.FlatMapMainSubscriber<I, O>.inners",
+      "justification" : "Internal refactoring: inners field changed from inherited AtomicReference array to private ArrayList. Not part of public API."
+    } ]
   }
 }, {
   "extension" : "revapi.reporter.json",

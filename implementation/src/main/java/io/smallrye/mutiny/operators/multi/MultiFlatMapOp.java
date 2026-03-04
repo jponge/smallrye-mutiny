@@ -1,12 +1,13 @@
 package io.smallrye.mutiny.operators.multi;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.Flow;
 import java.util.concurrent.Flow.Subscription;
 import java.util.concurrent.atomic.*;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.Multi;
@@ -14,7 +15,6 @@ import io.smallrye.mutiny.helpers.ParameterValidation;
 import io.smallrye.mutiny.helpers.Subscriptions;
 import io.smallrye.mutiny.helpers.queues.Queues;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
-import io.smallrye.mutiny.subscription.BackPressureFailure;
 import io.smallrye.mutiny.subscription.ContextSupport;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 
@@ -51,16 +51,16 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         upstream.subscribe(Infrastructure.onMultiSubscription(upstream, sub));
     }
 
-    public static final class FlatMapMainSubscriber<I, O> extends FlatMapManager<FlatMapInner<O>>
+    public static final class FlatMapMainSubscriber<I, O>
             implements MultiSubscriber<I>, Subscription, ContextSupport {
 
         final boolean delayError;
         final int maxConcurrency;
         final int requests;
-        final int limit;
         final Function<? super I, ? extends Flow.Publisher<? extends O>> mapper;
-        final Supplier<? extends Queue<O>> innerQueueSupplier;
         final MultiSubscriber<? super O> downstream;
+
+        final Queue<O> queue;
 
         final AtomicReference<Throwable> failures = new AtomicReference<>();
 
@@ -68,6 +68,7 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         volatile boolean cancelled;
 
         volatile Subscription upstream = null;
+        @SuppressWarnings("rawtypes")
         private static final AtomicReferenceFieldUpdater<FlatMapMainSubscriber, Subscription> UPSTREAM_UPDATER = AtomicReferenceFieldUpdater
                 .newUpdater(FlatMapMainSubscriber.class, Subscription.class, "upstream");
 
@@ -75,13 +76,10 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
         AtomicInteger wip = new AtomicInteger();
 
-        @SuppressWarnings("rawtypes")
-        static final FlatMapInner[] EMPTY_INNER_ARRAY = new FlatMapInner[0];
-
-        @SuppressWarnings("rawtypes")
-        static final FlatMapInner[] TERMINATED_INNER_ARRAY = new FlatMapInner[0];
-
-        int lastIndex;
+        private final ArrayList<FlatMapInner<O>> inners = new ArrayList<>();
+        private volatile boolean terminated;
+        final AtomicInteger activeCount = new AtomicInteger();
+        final AtomicLong pendingUpstreamRequests = new AtomicLong();
 
         public FlatMapMainSubscriber(MultiSubscriber<? super O> downstream,
                 Function<? super I, ? extends Flow.Publisher<? extends O>> mapper,
@@ -93,36 +91,38 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
             this.delayError = delayError;
             this.maxConcurrency = concurrency;
             this.requests = requests;
-            this.innerQueueSupplier = requests == 0 ? Queues.getXsQueueSupplier() : Queues.get(requests);
-            this.limit = Subscriptions.unboundedOrLimit(concurrency);
+            this.queue = Queues.createMpscQueue();
         }
 
-        @SuppressWarnings("unchecked")
-        @Override
-        FlatMapInner<O>[] empty() {
-            return EMPTY_INNER_ARRAY;
+        boolean addInner(FlatMapInner<O> inner) {
+            synchronized (inners) {
+                if (terminated) {
+                    return false;
+                }
+                inners.add(inner);
+            }
+            activeCount.incrementAndGet();
+            return true;
         }
 
-        @SuppressWarnings("unchecked")
-        @Override
-        FlatMapInner<O>[] terminated() {
-            return TERMINATED_INNER_ARRAY;
+        void removeInner(FlatMapInner<O> inner) {
+            synchronized (inners) {
+                inners.remove(inner);
+            }
+            activeCount.decrementAndGet();
         }
 
-        @SuppressWarnings("unchecked")
-        @Override
-        FlatMapInner<O>[] newArray(int size) {
-            return new FlatMapInner[size];
-        }
-
-        @Override
-        void setIndex(FlatMapInner<O> entry, int index) {
-            entry.index = index;
-        }
-
-        @Override
-        void unsubscribeEntry(FlatMapInner<O> entry, boolean fromOnError) {
-            entry.cancel(fromOnError);
+        void cancelAllInners() {
+            List<FlatMapInner<O>> snapshot;
+            synchronized (inners) {
+                terminated = true;
+                snapshot = new ArrayList<>(inners);
+                inners.clear();
+            }
+            activeCount.set(0);
+            for (FlatMapInner<O> inner : snapshot) {
+                inner.cancelSubscription();
+            }
         }
 
         @Override
@@ -141,8 +141,7 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 cancelled = true;
 
                 if (wip.getAndIncrement() == 0) {
-                    UPSTREAM_UPDATER.getAndSet(this, Subscriptions.CANCELLED).cancel();
-                    unsubscribe();
+                    cancelUpstream();
                 }
             }
         }
@@ -172,13 +171,13 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                 cancelled = true;
                 done = true;
                 Subscriptions.addFailure(failures, e);
-                cancelUpstream(false);
+                cancelUpstream();
                 handleTerminationIfDone();
                 return;
             }
 
             FlatMapInner<O> inner = new FlatMapInner<>(this, requests);
-            if (add(inner)) {
+            if (addInner(inner)) {
                 p.subscribe(inner);
             }
         }
@@ -192,11 +191,7 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
             Subscriptions.addFailure(failures, failure);
             done = true;
             if (!delayError) {
-                for (FlatMapInner<O> inner : inners.getAndSet(terminated())) {
-                    if (inner != null) {
-                        inner.cancel(false);
-                    }
-                }
+                cancelAllInners();
             }
             drain();
         }
@@ -211,29 +206,17 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
             drain();
         }
 
-        void tryEmit(FlatMapInner<O> inner, O item) {
+        void tryEmit(O item) {
             if (wip.compareAndSet(0, 1)) {
                 long req = requested.get();
-                Queue<O> q = inner.queue;
-                if (req != 0 && (q == null || q.isEmpty())) {
+                if (req != 0L && queue.isEmpty()) {
                     downstream.onNext(item);
 
                     if (req != Long.MAX_VALUE) {
                         requested.decrementAndGet();
                     }
-
-                    inner.request(1);
                 } else {
-                    if (q == null) {
-                        q = getOrCreateInnerQueue(inner);
-                    }
-
-                    if (!q.offer(item)) {
-                        failOverflow();
-                        inner.done = true;
-                        drainLoop();
-                        return;
-                    }
+                    queue.offer(item);
                 }
                 if (wip.decrementAndGet() == 0) {
                     return;
@@ -241,11 +224,7 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
 
                 drainLoop();
             } else {
-                Queue<O> q = getOrCreateInnerQueue(inner);
-                if (!q.offer(item)) {
-                    failOverflow();
-                    inner.done = true;
-                }
+                queue.offer(item);
                 drain();
             }
         }
@@ -260,156 +239,40 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         void drainLoop() {
             int missed = 1;
 
-            final MultiSubscriber<? super O> a = downstream;
-
             for (;;) {
-
-                boolean d;
-
-                FlatMapInner<O>[] as = get();
-
-                int n = as.length;
-
-                boolean noSources = isEmpty();
-
                 if (ifDoneOrCancelled()) {
                     return;
                 }
 
-                boolean again = false;
-
                 long r = requested.get();
                 long e = 0L;
-                long replenishMain = 0L;
 
-                if (r != 0L && !noSources) {
-
-                    int j = lastIndex;
-                    for (int i = 0; i < n; i++) {
-                        if (cancelled) {
-                            cancelUpstream(false);
-                            return;
-                        }
-
-                        FlatMapInner<O> inner = as[j];
-                        if (inner != null) {
-                            d = inner.done;
-                            Queue<O> q = inner.queue;
-                            if (d && q == null) {
-                                remove(inner.index);
-                                again = true;
-                                replenishMain++;
-                            } else if (q != null) {
-                                while (e != r) {
-                                    d = inner.done;
-
-                                    O v;
-
-                                    try {
-                                        v = q.poll();
-                                    } catch (Throwable ex) {
-                                        Subscriptions.addFailure(failures, ex);
-                                        v = null;
-                                        d = true;
-                                    }
-
-                                    boolean empty = v == null;
-
-                                    if (ifDoneOrCancelled()) {
-                                        return;
-                                    }
-
-                                    if (d && empty) {
-                                        remove(inner.index);
-                                        again = true;
-                                        replenishMain++;
-                                        break;
-                                    }
-
-                                    if (empty) {
-                                        break;
-                                    }
-
-                                    a.onItem(v);
-
-                                    e++;
-                                }
-
-                                if (e == r) {
-                                    d = inner.done;
-                                    boolean empty = q.isEmpty();
-                                    if (d && empty) {
-                                        remove(inner.index);
-                                        again = true;
-                                        replenishMain++;
-                                    }
-                                }
-
-                                if (e != 0L) {
-                                    if (!inner.done) {
-                                        inner.request(e);
-                                    }
-                                    if (r != Long.MAX_VALUE) {
-                                        r = requested.addAndGet(-e);
-                                        if (r == 0L) {
-                                            break; // 0 .. numberOfItems - 1
-                                        }
-                                    }
-                                    e = 0L;
-                                }
-                            }
-                        }
-
-                        if (r == 0L) {
-                            break;
-                        }
-
-                        if (++j == n) {
-                            j = 0;
-                        }
+                while (e != r) {
+                    if (cancelled) {
+                        cancelUpstream();
+                        return;
                     }
-
-                    lastIndex = j;
+                    O v = queue.poll();
+                    if (v == null) {
+                        break;
+                    }
+                    downstream.onNext(v);
+                    e++;
                 }
 
-                if (r == 0L && !noSources) {
-                    as = get();
-                    n = as.length;
+                if (e != 0L && r != Long.MAX_VALUE) {
+                    requested.addAndGet(-e);
+                }
 
-                    for (int i = 0; i < n; i++) {
-                        if (cancelled) {
-                            cancelUpstream(false);
-                            return;
-                        }
-
-                        FlatMapInner<O> inner = as[i];
-                        if (inner == null) {
-                            continue;
-                        }
-
-                        d = inner.done;
-                        Queue<O> q = inner.queue;
-                        boolean empty = (q == null || q.isEmpty());
-
-                        // if we have a non-empty source then quit the cleanup
-                        if (!empty) {
-                            break;
-                        }
-
-                        if (d && empty) {
-                            remove(inner.index);
-                            again = true;
-                            replenishMain++;
-                        }
+                if (queue.isEmpty()) {
+                    long replenish = pendingUpstreamRequests.getAndSet(0);
+                    if (replenish != 0L && !done && !cancelled) {
+                        upstream.request(replenish);
                     }
                 }
 
-                if (replenishMain != 0L && !done && !cancelled) {
-                    upstream.request(replenishMain);
-                }
-
-                if (again) {
-                    continue;
+                if (ifDoneOrCancelled()) {
+                    return;
                 }
 
                 missed = wip.addAndGet(-missed);
@@ -419,35 +282,30 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
             }
         }
 
-        private void cancelUpstream(boolean fromOnError) {
+        private void cancelUpstream() {
             Subscription subscription = UPSTREAM_UPDATER.getAndSet(this, Subscriptions.CANCELLED);
             if (subscription != null) {
                 subscription.cancel();
-                FlatMapInner<O>[] currentInners = inners.get();
-                for (FlatMapInner<O> inner : currentInners) {
-                    if (inner != null) {
-                        inner.cancel(false);
-                    }
-                }
             }
-            unsubscribe(fromOnError);
+            cancelAllInners();
+            queue.clear();
         }
 
         boolean ifDoneOrCancelled() {
             if (cancelled) {
-                cancelUpstream(false);
+                cancelUpstream();
                 return true;
             }
 
             return handleTerminationIfDone();
-
         }
 
         private boolean handleTerminationIfDone() {
             boolean wasDone = done;
-            boolean isEmpty = isEmpty();
+            boolean noActive = activeCount.get() == 0;
+            boolean queueEmpty = queue.isEmpty();
             if (delayError) {
-                if (wasDone && isEmpty) {
+                if (wasDone && noActive && queueEmpty) {
                     Throwable e = failures.get();
                     if (e != null && e != Subscriptions.TERMINATED) {
                         Throwable throwable = failures.getAndSet(Subscriptions.TERMINATED);
@@ -462,10 +320,10 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
                     Throwable e = failures.get();
                     if (e != null && e != Subscriptions.TERMINATED) {
                         Throwable throwable = failures.getAndSet(Subscriptions.TERMINATED);
-                        unsubscribe(true);
+                        cancelAllInners();
                         downstream.onFailure(throwable);
                         return true;
-                    } else if (isEmpty) {
+                    } else if (noActive && queueEmpty) {
                         downstream.onCompletion();
                         return true;
                     }
@@ -474,41 +332,25 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
             return false;
         }
 
+        void innerComplete(FlatMapInner<O> inner) {
+            removeInner(inner);
+            if (!done && !cancelled) {
+                pendingUpstreamRequests.incrementAndGet();
+            }
+            drain();
+        }
+
         void innerError(FlatMapInner<O> inner, Throwable fail) {
-            if (fail != null) {
-                if (Subscriptions.addFailure(failures, fail)) {
-                    inner.done = true;
-                    if (!delayError) {
-                        cancelUpstream(true);
-                        downstream.onFailure(fail);
-                        return;
-                    }
-                    drain();
+            removeInner(inner);
+            if (Subscriptions.addFailure(failures, fail)) {
+                if (!delayError) {
+                    done = true;
+                    cancelUpstream();
+                } else if (!done && !cancelled) {
+                    pendingUpstreamRequests.incrementAndGet();
                 }
-            } else {
                 drain();
             }
-        }
-
-        void failOverflow() {
-            Throwable e = new BackPressureFailure("Buffer full, cannot emit item");
-            Subscriptions.addFailure(failures, e);
-        }
-
-        void innerComplete() {
-            if (wip.getAndIncrement() != 0) {
-                return;
-            }
-            drainLoop();
-        }
-
-        Queue<O> getOrCreateInnerQueue(FlatMapInner<O> inner) {
-            Queue<O> q = inner.queue;
-            if (q == null) {
-                q = innerQueueSupplier.get();
-                inner.queue = q;
-            }
-            return q;
         }
 
         @Override
@@ -521,88 +363,62 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         }
     }
 
-    static final class FlatMapInner<O> implements Subscription, MultiSubscriber<O>, ContextSupport {
+    static final class FlatMapInner<O> implements MultiSubscriber<O>, ContextSupport {
 
         final FlatMapMainSubscriber<?, O> parent;
 
-        final int requests;
+        final int prefetch;
 
-        final int limit;
+        final int replenishMark;
 
         volatile Subscription subscription = null;
+        @SuppressWarnings("rawtypes")
         private static final AtomicReferenceFieldUpdater<FlatMapInner, Subscription> SUBSCRIPTION_UPDATER = AtomicReferenceFieldUpdater
                 .newUpdater(FlatMapInner.class, Subscription.class, "subscription");
 
-        long produced;
+        int produced;
 
-        volatile Queue<O> queue;
-
-        volatile boolean done;
-
-        int index;
-
-        FlatMapInner(FlatMapMainSubscriber<?, O> parent, int requests) {
+        FlatMapInner(FlatMapMainSubscriber<?, O> parent, int prefetch) {
             this.parent = parent;
-            this.requests = requests;
-            this.limit = Subscriptions.unboundedOrLimit(requests);
+            this.prefetch = prefetch;
+            this.replenishMark = Subscriptions.unboundedOrLimit(prefetch);
         }
 
         @Override
         public void onSubscribe(Subscription s) {
             Objects.requireNonNull(s);
             if (SUBSCRIPTION_UPDATER.compareAndSet(this, null, s)) {
-                s.request(Subscriptions.unboundedOrRequests(requests));
+                s.request(Subscriptions.unboundedOrRequests(prefetch));
             }
         }
 
         @Override
         public void onItem(O item) {
-            parent.tryEmit(this, item);
+            int p = produced + 1;
+            if (p >= replenishMark) {
+                produced = 0;
+                subscription.request(p);
+            } else {
+                produced = p;
+            }
+            parent.tryEmit(item);
         }
 
         @Override
         public void onFailure(Throwable failure) {
             Objects.requireNonNull(failure);
-            done = true;
             parent.innerError(this, failure);
         }
 
         @Override
         public void onCompletion() {
-            done = true;
-            parent.innerComplete();
+            parent.innerComplete(this);
         }
 
-        @Override
-        public void request(long n) {
-            if (n <= 0L) {
-                onFailure(Subscriptions.getInvalidRequestException());
-            } else {
-                long p = produced + n;
-                if (p >= limit) {
-                    produced = 0L;
-                    subscription.request(p);
-                } else {
-                    produced = p;
-                }
-            }
-        }
-
-        @Override
-        public void cancel() {
-            cancel(true);
-        }
-
-        public void cancel(boolean doNotCancel) {
-            if (!doNotCancel) {
-                Subscription last = SUBSCRIPTION_UPDATER.getAndSet(this, Subscriptions.CANCELLED);
-                if (last != null) {
-                    last.cancel();
-                }
-            }
-            if (queue != null) {
-                queue.clear();
-                queue = null;
+        void cancelSubscription() {
+            Subscription last = SUBSCRIPTION_UPDATER.getAndSet(this, Subscriptions.CANCELLED);
+            if (last != null) {
+                last.cancel();
             }
         }
 
