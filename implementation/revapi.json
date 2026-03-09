@@ -61,6 +61,15 @@
       "old" : "field io.smallrye.mutiny.operators.multi.MultiFlatMapOp.FlatMapMainSubscriber<I, O>.inners",
       "new" : "field io.smallrye.mutiny.operators.multi.MultiFlatMapOp.FlatMapMainSubscriber<I, O>.inners",
       "justification" : "Internal refactoring: inners field changed from inherited AtomicReference array to private ArrayList. Not part of public API."
+    },
+    {
+      "ignore": true,
+      "code": "java.field.visibilityReduced",
+      "old": "field io.smallrye.mutiny.operators.multi.FlatMapManager<T>.inners @ io.smallrye.mutiny.operators.multi.MultiFlatMapOp.FlatMapMainSubscriber<I, O>",
+      "new": "field io.smallrye.mutiny.operators.multi.MultiFlatMapOp.FlatMapMainSubscriber<I, O>.inners",
+      "oldVisibility": "protected",
+      "newVisibility": "private",
+      "justification": "Internal refactoring: inners field changed from inherited AtomicReference array to private ArrayList. Not part of public API."
     } ]
   }
 }, {
