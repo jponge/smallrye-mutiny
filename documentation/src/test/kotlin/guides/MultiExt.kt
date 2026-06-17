@@ -32,10 +32,12 @@ fun multiBuilderWithBackPressure() {
 suspend fun suspendMultiBuilder() {
     // <multiBuilderSuspend>
     // import io.smallrye.mutiny.coroutines.multi
+    var value = getDBString()
     coroutineScope {
         val multi = multiSuspend<String>(context = this) {
             emit("hello")
             emit("world")
+            emit(value)
         }
     }
     // </multiBuilderSuspend>
