@@ -77,12 +77,14 @@ class InfrastructureTest {
         try {
             System.setProperty("mutiny.buffer-size.s", "1024");
             System.setProperty("mutiny.buffer-size.xs", "64");
+            Infrastructure.reload();
             assertThat(Infrastructure.getBufferSizeXs()).isEqualTo(64);
             assertThat(Infrastructure.getBufferSizeS()).isEqualTo(1024);
         } finally {
             System.clearProperty("mutiny.buffer-size.s");
             System.clearProperty("mutiny.buffer-size.xs");
         }
+        Infrastructure.reload();
         assertThat(Infrastructure.getBufferSizeXs()).isEqualTo(32);
         assertThat(Infrastructure.getBufferSizeS()).isEqualTo(256);
     }

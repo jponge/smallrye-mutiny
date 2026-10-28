@@ -75,8 +75,8 @@ public class Infrastructure {
         reloadMultiInterceptors();
         reloadCallbackDecorators();
         multiOverflowDefaultBufferSize = 128;
-        bufferSizeXs = 32;
-        bufferSizeS = 256;
+        bufferSizeXs = resolveBufferSize("mutiny.buffer-size.xs", 32, 8);
+        bufferSizeS = resolveBufferSize("mutiny.buffer-size.s", 256, 16);
     }
 
     /**
@@ -463,18 +463,25 @@ public class Infrastructure {
         multiOverflowDefaultBufferSize = positive(size, "size");
     }
 
+    private static int resolveBufferSize(String property, int defaultValue, int minimum) {
+        String propVal = System.getProperty(property);
+        if (propVal != null) {
+            try {
+                return Math.max(minimum, Integer.parseInt(propVal));
+            } catch (NumberFormatException e) {
+                return defaultValue;
+            }
+        }
+        return defaultValue;
+    }
+
     /**
      * Get the xs buffer size (for internal usage).
      *
      * @return the buffer size
      */
     public static int getBufferSizeXs() {
-        String propVal = System.getProperty("mutiny.buffer-size.xs");
-        if (propVal != null) {
-            return Math.max(8, Integer.parseInt(propVal));
-        } else {
-            return bufferSizeXs;
-        }
+        return bufferSizeXs;
     }
 
     /**
@@ -492,12 +499,7 @@ public class Infrastructure {
      * @return the buffer size
      */
     public static int getBufferSizeS() {
-        String propVal = System.getProperty("mutiny.buffer-size.s");
-        if (propVal != null) {
-            return Math.max(16, Integer.parseInt(propVal));
-        } else {
-            return bufferSizeS;
-        }
+        return bufferSizeS;
     }
 
     /**
