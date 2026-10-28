@@ -534,11 +534,7 @@ public class Infrastructure {
     private static int resolveBufferSize(String property, int defaultValue, int minimum) {
         String propVal = System.getProperty(property);
         if (propVal != null) {
-            try {
-                return Math.max(minimum, Integer.parseInt(propVal));
-            } catch (NumberFormatException e) {
-                return defaultValue;
-            }
+            return Math.max(minimum, Integer.parseInt(propVal));
         }
         return defaultValue;
     }
