@@ -40,17 +40,6 @@ public class Infrastructure {
     private static final boolean DISABLE_CALLBACK_DECORATORS = Boolean.getBoolean(DISABLE_CALLBACK_DECORATORS_PROP_NAME);
 
     static {
-        ServiceLoader<ExecutorConfiguration> executorLoader = ServiceLoader.load(ExecutorConfiguration.class);
-        Iterator<ExecutorConfiguration> iterator = executorLoader.iterator();
-        if (iterator.hasNext()) {
-            ExecutorConfiguration next = iterator.next();
-            setDefaultExecutor(nonNull(next.getDefaultWorkerExecutor(), "executor"));
-        } else {
-            setDefaultExecutor();
-        }
-
-        reload();
-
         resetCanCallerThreadBeBlockedSupplier();
     }
 
@@ -67,16 +56,62 @@ public class Infrastructure {
 
     private static int multiOverflowDefaultBufferSize = 128;
 
-    private static int bufferSizeXs = 32;
-    private static int bufferSizeS = 256;
+    private static int bufferSizeXs = resolveBufferSize("mutiny.buffer-size.xs", 32, 8);
+    private static int bufferSizeS = resolveBufferSize("mutiny.buffer-size.s", 256, 16);
 
     public static void reload() {
+        ServiceLoader<ExecutorConfiguration> executorLoader = ServiceLoader.load(ExecutorConfiguration.class);
+        Iterator<ExecutorConfiguration> iterator = executorLoader.iterator();
+        if (iterator.hasNext()) {
+            ExecutorConfiguration next = iterator.next();
+            setDefaultExecutor(nonNull(next.getDefaultWorkerExecutor(), "executor"));
+        } else {
+            setDefaultExecutor();
+        }
         reloadUniInterceptors();
         reloadMultiInterceptors();
         reloadCallbackDecorators();
+        resetCanCallerThreadBeBlockedSupplier();
         multiOverflowDefaultBufferSize = 128;
         bufferSizeXs = resolveBufferSize("mutiny.buffer-size.xs", 32, 8);
         bufferSizeS = resolveBufferSize("mutiny.buffer-size.s", 256, 16);
+    }
+
+    public static void configure(InfrastructureConfiguration config) {
+        nonNull(config, "config");
+        if (config.getDefaultExecutor() != null) {
+            setDefaultExecutor(config.getDefaultExecutor(), false);
+        }
+        if (config.getUniInterceptors() != null) {
+            UNI_INTERCEPTORS = config.getUniInterceptors().toArray(new UniInterceptor[0]);
+        }
+        if (config.getMultiInterceptors() != null) {
+            MULTI_INTERCEPTORS = config.getMultiInterceptors().toArray(new MultiInterceptor[0]);
+        }
+        if (config.getCallbackDecorators() != null) {
+            CALLBACK_DECORATORS = config.getCallbackDecorators().toArray(new CallbackDecorator[0]);
+        }
+        if (config.getDroppedExceptionHandler() != null) {
+            droppedExceptionHandler = config.getDroppedExceptionHandler();
+        }
+        if (config.getCanCallerThreadBeBlockedSupplier() != null) {
+            canCallerThreadBeBlockedSupplier = config.getCanCallerThreadBeBlockedSupplier();
+        }
+        if (config.getOperatorLogger() != null) {
+            operatorLogger = config.getOperatorLogger();
+        }
+        if (config.getCompletableFutureWrapper() != null) {
+            completableFutureWrapper = config.getCompletableFutureWrapper();
+        }
+        if (config.getBufferSizeXs() > 0) {
+            bufferSizeXs = config.getBufferSizeXs();
+        }
+        if (config.getBufferSizeS() > 0) {
+            bufferSizeS = config.getBufferSizeS();
+        }
+        if (config.getMultiOverflowDefaultBufferSize() > 0) {
+            multiOverflowDefaultBufferSize = config.getMultiOverflowDefaultBufferSize();
+        }
     }
 
     /**
@@ -121,16 +156,49 @@ public class Infrastructure {
     }
 
     public static ScheduledExecutorService getDefaultWorkerPool() {
+        if (DEFAULT_SCHEDULER == null) {
+            getDefaultExecutor();
+        }
         return DEFAULT_SCHEDULER;
     }
 
     public static Executor getDefaultExecutor() {
+        if (DEFAULT_EXECUTOR == null) {
+            ServiceLoader<ExecutorConfiguration> loader = ServiceLoader.load(ExecutorConfiguration.class);
+            Iterator<ExecutorConfiguration> iterator = loader.iterator();
+            if (iterator.hasNext()) {
+                setDefaultExecutor(nonNull(iterator.next().getDefaultWorkerExecutor(), "executor"));
+            } else {
+                setDefaultExecutor();
+            }
+        }
         return DEFAULT_EXECUTOR;
+    }
+
+    private static UniInterceptor[] uniInterceptors() {
+        if (UNI_INTERCEPTORS == null) {
+            reloadUniInterceptors();
+        }
+        return UNI_INTERCEPTORS;
+    }
+
+    private static MultiInterceptor[] multiInterceptors() {
+        if (MULTI_INTERCEPTORS == null) {
+            reloadMultiInterceptors();
+        }
+        return MULTI_INTERCEPTORS;
+    }
+
+    private static CallbackDecorator[] callbackDecorators() {
+        if (CALLBACK_DECORATORS == null) {
+            reloadCallbackDecorators();
+        }
+        return CALLBACK_DECORATORS;
     }
 
     public static <T> Uni<T> onUniCreation(Uni<T> instance) {
         Uni<T> current = instance;
-        for (UniInterceptor interceptor : UNI_INTERCEPTORS) {
+        for (UniInterceptor interceptor : uniInterceptors()) {
             current = interceptor.onUniCreation(current);
         }
         return current;
@@ -138,7 +206,7 @@ public class Infrastructure {
 
     public static <T> Multi<T> onMultiCreation(Multi<T> instance) {
         Multi<T> current = instance;
-        for (MultiInterceptor interceptor : MULTI_INTERCEPTORS) {
+        for (MultiInterceptor interceptor : multiInterceptors()) {
             current = interceptor.onMultiCreation(current);
         }
         return current;
@@ -146,7 +214,7 @@ public class Infrastructure {
 
     public static <T> UniSubscriber<? super T> onUniSubscription(Uni<T> instance, UniSubscriber<? super T> subscriber) {
         UniSubscriber<? super T> current = subscriber;
-        for (UniInterceptor interceptor : UNI_INTERCEPTORS) {
+        for (UniInterceptor interceptor : uniInterceptors()) {
             current = interceptor.onSubscription(instance, current);
         }
         return current;
@@ -155,7 +223,7 @@ public class Infrastructure {
     public static <T> Subscriber<? super T> onMultiSubscription(Flow.Publisher<? extends T> instance,
             Subscriber<? super T> subscriber) {
         Subscriber<? super T> current = subscriber;
-        for (MultiInterceptor interceptor : MULTI_INTERCEPTORS) {
+        for (MultiInterceptor interceptor : multiInterceptors()) {
             current = interceptor.onSubscription(instance, current);
         }
         return current;
@@ -163,7 +231,7 @@ public class Infrastructure {
 
     public static <T> Supplier<T> decorate(Supplier<T> supplier) {
         Supplier<T> current = supplier;
-        for (CallbackDecorator interceptor : CALLBACK_DECORATORS) {
+        for (CallbackDecorator interceptor : callbackDecorators()) {
             current = interceptor.decorate(current);
         }
         return current;
@@ -171,7 +239,7 @@ public class Infrastructure {
 
     public static <T> Consumer<T> decorate(Consumer<T> consumer) {
         Consumer<T> current = consumer;
-        for (CallbackDecorator interceptor : CALLBACK_DECORATORS) {
+        for (CallbackDecorator interceptor : callbackDecorators()) {
             current = interceptor.decorate(current);
         }
         return current;
@@ -179,7 +247,7 @@ public class Infrastructure {
 
     public static LongConsumer decorate(LongConsumer consumer) {
         LongConsumer current = consumer;
-        for (CallbackDecorator interceptor : CALLBACK_DECORATORS) {
+        for (CallbackDecorator interceptor : callbackDecorators()) {
             current = interceptor.decorate(current);
         }
         return current;
@@ -187,7 +255,7 @@ public class Infrastructure {
 
     public static <R> LongFunction<R> decorate(LongFunction<R> function) {
         LongFunction<R> current = function;
-        for (CallbackDecorator interceptor : CALLBACK_DECORATORS) {
+        for (CallbackDecorator interceptor : callbackDecorators()) {
             current = interceptor.decorate(current);
         }
         return current;
@@ -195,7 +263,7 @@ public class Infrastructure {
 
     public static Runnable decorate(Runnable runnable) {
         Runnable current = runnable;
-        for (CallbackDecorator interceptor : CALLBACK_DECORATORS) {
+        for (CallbackDecorator interceptor : callbackDecorators()) {
             current = interceptor.decorate(current);
         }
         return current;
@@ -203,7 +271,7 @@ public class Infrastructure {
 
     public static <V> Callable<V> decorate(Callable<V> callable) {
         Callable<V> current = callable;
-        for (CallbackDecorator interceptor : CALLBACK_DECORATORS) {
+        for (CallbackDecorator interceptor : callbackDecorators()) {
             current = interceptor.decorate(current);
         }
         return current;
@@ -211,7 +279,7 @@ public class Infrastructure {
 
     public static <T1, T2> BiConsumer<T1, T2> decorate(BiConsumer<T1, T2> consumer) {
         BiConsumer<T1, T2> current = consumer;
-        for (CallbackDecorator interceptor : CALLBACK_DECORATORS) {
+        for (CallbackDecorator interceptor : callbackDecorators()) {
             current = interceptor.decorate(current);
         }
         return current;
@@ -219,7 +287,7 @@ public class Infrastructure {
 
     public static <I1, I2, I3, O> Functions.Function3<I1, I2, I3, O> decorate(Functions.Function3<I1, I2, I3, O> function) {
         Functions.Function3<I1, I2, I3, O> current = function;
-        for (CallbackDecorator interceptor : CALLBACK_DECORATORS) {
+        for (CallbackDecorator interceptor : callbackDecorators()) {
             current = interceptor.decorate(current);
         }
         return current;
@@ -228,7 +296,7 @@ public class Infrastructure {
     public static <I1, I2, I3, I4, O> Functions.Function4<I1, I2, I3, I4, O> decorate(
             Functions.Function4<I1, I2, I3, I4, O> function) {
         Functions.Function4<I1, I2, I3, I4, O> current = function;
-        for (CallbackDecorator interceptor : CALLBACK_DECORATORS) {
+        for (CallbackDecorator interceptor : callbackDecorators()) {
             current = interceptor.decorate(current);
         }
         return current;
@@ -237,7 +305,7 @@ public class Infrastructure {
     public static <I1, I2, I3, I4, I5, O> Functions.Function5<I1, I2, I3, I4, I5, O> decorate(
             Functions.Function5<I1, I2, I3, I4, I5, O> function) {
         Functions.Function5<I1, I2, I3, I4, I5, O> current = function;
-        for (CallbackDecorator interceptor : CALLBACK_DECORATORS) {
+        for (CallbackDecorator interceptor : callbackDecorators()) {
             current = interceptor.decorate(current);
         }
         return current;
@@ -246,7 +314,7 @@ public class Infrastructure {
     public static <I1, I2, I3, I4, I5, I6, O> Functions.Function6<I1, I2, I3, I4, I5, I6, O> decorate(
             Functions.Function6<I1, I2, I3, I4, I5, I6, O> function) {
         Functions.Function6<I1, I2, I3, I4, I5, I6, O> current = function;
-        for (CallbackDecorator interceptor : CALLBACK_DECORATORS) {
+        for (CallbackDecorator interceptor : callbackDecorators()) {
             current = interceptor.decorate(current);
         }
         return current;
@@ -255,7 +323,7 @@ public class Infrastructure {
     public static <I1, I2, I3, I4, I5, I6, I7, O> Functions.Function7<I1, I2, I3, I4, I5, I6, I7, O> decorate(
             Functions.Function7<I1, I2, I3, I4, I5, I6, I7, O> function) {
         Functions.Function7<I1, I2, I3, I4, I5, I6, I7, O> current = function;
-        for (CallbackDecorator interceptor : CALLBACK_DECORATORS) {
+        for (CallbackDecorator interceptor : callbackDecorators()) {
             current = interceptor.decorate(current);
         }
         return current;
@@ -264,7 +332,7 @@ public class Infrastructure {
     public static <I1, I2, I3, I4, I5, I6, I7, I8, O> Functions.Function8<I1, I2, I3, I4, I5, I6, I7, I8, O> decorate(
             Functions.Function8<I1, I2, I3, I4, I5, I6, I7, I8, O> function) {
         Functions.Function8<I1, I2, I3, I4, I5, I6, I7, I8, O> current = function;
-        for (CallbackDecorator interceptor : CALLBACK_DECORATORS) {
+        for (CallbackDecorator interceptor : callbackDecorators()) {
             current = interceptor.decorate(current);
         }
         return current;
@@ -273,7 +341,7 @@ public class Infrastructure {
     public static <I1, I2, I3, I4, I5, I6, I7, I8, I9, O> Functions.Function9<I1, I2, I3, I4, I5, I6, I7, I8, I9, O> decorate(
             Functions.Function9<I1, I2, I3, I4, I5, I6, I7, I8, I9, O> function) {
         Functions.Function9<I1, I2, I3, I4, I5, I6, I7, I8, I9, O> current = function;
-        for (CallbackDecorator interceptor : CALLBACK_DECORATORS) {
+        for (CallbackDecorator interceptor : callbackDecorators()) {
             current = interceptor.decorate(current);
         }
         return current;
@@ -281,7 +349,7 @@ public class Infrastructure {
 
     public static <I, O> Function<I, O> decorate(Function<I, O> function) {
         Function<I, O> current = function;
-        for (CallbackDecorator interceptor : CALLBACK_DECORATORS) {
+        for (CallbackDecorator interceptor : callbackDecorators()) {
             current = interceptor.decorate(current);
         }
         return current;
@@ -289,7 +357,7 @@ public class Infrastructure {
 
     public static <I1, I2, O> BiFunction<I1, I2, O> decorate(BiFunction<I1, I2, O> function) {
         BiFunction<I1, I2, O> current = function;
-        for (CallbackDecorator interceptor : CALLBACK_DECORATORS) {
+        for (CallbackDecorator interceptor : callbackDecorators()) {
             current = interceptor.decorate(current);
         }
         return current;
@@ -297,7 +365,7 @@ public class Infrastructure {
 
     public static <T> BinaryOperator<T> decorate(BinaryOperator<T> operator) {
         BinaryOperator<T> current = operator;
-        for (CallbackDecorator interceptor : CALLBACK_DECORATORS) {
+        for (CallbackDecorator interceptor : callbackDecorators()) {
             current = interceptor.decorate(current);
         }
         return current;
@@ -306,7 +374,7 @@ public class Infrastructure {
     public static <T1, T2, T3> Functions.TriConsumer<T1, T2, T3> decorate(
             Functions.TriConsumer<T1, T2, T3> consumer) {
         Functions.TriConsumer<T1, T2, T3> current = consumer;
-        for (CallbackDecorator interceptor : CALLBACK_DECORATORS) {
+        for (CallbackDecorator interceptor : callbackDecorators()) {
             current = interceptor.decorate(current);
         }
         return current;
@@ -403,7 +471,7 @@ public class Infrastructure {
 
     public static BooleanSupplier decorate(BooleanSupplier supplier) {
         BooleanSupplier current = supplier;
-        for (CallbackDecorator interceptor : CALLBACK_DECORATORS) {
+        for (CallbackDecorator interceptor : callbackDecorators()) {
             current = interceptor.decorate(current);
         }
         return current;
@@ -411,7 +479,7 @@ public class Infrastructure {
 
     public static <T> Predicate<T> decorate(Predicate<T> predicate) {
         Predicate<T> current = predicate;
-        for (CallbackDecorator interceptor : CALLBACK_DECORATORS) {
+        for (CallbackDecorator interceptor : callbackDecorators()) {
             current = interceptor.decorate(current);
         }
         return current;
