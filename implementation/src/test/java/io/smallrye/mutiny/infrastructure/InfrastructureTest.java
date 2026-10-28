@@ -24,6 +24,7 @@ class InfrastructureTest {
 
     @AfterEach
     void reset() {
+        Infrastructure.resetDroppedExceptionHandler();
         Infrastructure.reload();
     }
 

@@ -11,8 +11,7 @@ Most operators relying on such capacity let you pass either a `ScheduledExecutor
 
 ## Default behavior
 
-Mutiny performs no work at class load time.
-Executor creation and interceptor discovery are deferred to first use:
+Mutiny defers executor creation and interceptor discovery to first use:
 
 - The first call to `Infrastructure.getDefaultExecutor()` triggers a `ServiceLoader` lookup for `ExecutorConfiguration`. If no provider is found, Mutiny creates a cached thread pool and a `ScheduledExecutorService` that delegates to it.
 - The first call that needs interceptors (e.g., creating a `Uni` or `Multi`) triggers `ServiceLoader` lookups for `UniInterceptor`, `MultiInterceptor`, and `CallbackDecorator`.
