@@ -130,8 +130,8 @@ public class Infrastructure {
 
     public static <T> Uni<T> onUniCreation(Uni<T> instance) {
         Uni<T> current = instance;
-        for (UniInterceptor itcp : UNI_INTERCEPTORS) {
-            current = itcp.onUniCreation(current);
+        for (UniInterceptor interceptor : UNI_INTERCEPTORS) {
+            current = interceptor.onUniCreation(current);
         }
         return current;
     }
@@ -155,8 +155,8 @@ public class Infrastructure {
     public static <T> Subscriber<? super T> onMultiSubscription(Flow.Publisher<? extends T> instance,
             Subscriber<? super T> subscriber) {
         Subscriber<? super T> current = subscriber;
-        for (MultiInterceptor itcp : MULTI_INTERCEPTORS) {
-            current = itcp.onSubscription(instance, current);
+        for (MultiInterceptor interceptor : MULTI_INTERCEPTORS) {
+            current = interceptor.onSubscription(instance, current);
         }
         return current;
     }
