@@ -71,7 +71,6 @@ public class Infrastructure {
     private static int bufferSizeS = 256;
 
     public static void reload() {
-        clearInterceptors();
         reloadUniInterceptors();
         reloadMultiInterceptors();
         reloadCallbackDecorators();
@@ -354,20 +353,22 @@ public class Infrastructure {
     public static void reloadUniInterceptors() {
         ServiceLoader<UniInterceptor> loader = ServiceLoader.load(UniInterceptor.class);
         List<UniInterceptor> interceptors = toInterceptorList(loader);
-        UNI_INTERCEPTORS = interceptors.toArray(UNI_INTERCEPTORS);
+        UNI_INTERCEPTORS = interceptors.toArray(new UniInterceptor[0]);
     }
 
     public static void reloadMultiInterceptors() {
         ServiceLoader<MultiInterceptor> loader = ServiceLoader.load(MultiInterceptor.class);
         List<MultiInterceptor> interceptors = toInterceptorList(loader);
-        MULTI_INTERCEPTORS = interceptors.toArray(MULTI_INTERCEPTORS);
+        MULTI_INTERCEPTORS = interceptors.toArray(new MultiInterceptor[0]);
     }
 
     public static void reloadCallbackDecorators() {
-        if (!DISABLE_CALLBACK_DECORATORS) {
+        if (DISABLE_CALLBACK_DECORATORS) {
+            CALLBACK_DECORATORS = new CallbackDecorator[0];
+        } else {
             ServiceLoader<CallbackDecorator> loader = ServiceLoader.load(CallbackDecorator.class);
             List<CallbackDecorator> interceptors = toInterceptorList(loader);
-            CALLBACK_DECORATORS = interceptors.toArray(CALLBACK_DECORATORS);
+            CALLBACK_DECORATORS = interceptors.toArray(new CallbackDecorator[0]);
         }
     }
 
