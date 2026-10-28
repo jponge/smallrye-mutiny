@@ -2,10 +2,12 @@ package guides.infrastructure;
 
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
+import io.smallrye.mutiny.infrastructure.InfrastructureConfiguration;
 import io.smallrye.mutiny.infrastructure.MutinyScheduler;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.Executor;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,5 +37,19 @@ public class InfrastructureTest {
 
         assertThat(Infrastructure.getDefaultExecutor()).isEqualTo(executor);
         assertThat(Infrastructure.getDefaultWorkerPool()).isInstanceOf(MutinyScheduler.class);
+    }
+
+    @Test
+    public void configure() {
+        Executor executor = Runnable::run;
+        // <configure>
+        Infrastructure.configure(new InfrastructureConfiguration()
+                .withDefaultExecutor(executor)
+                .withUniInterceptors(List.of())
+                .withMultiInterceptors(List.of())
+                .withCallbackDecorators(List.of()));
+        // </configure>
+
+        assertThat(Infrastructure.getDefaultExecutor()).isEqualTo(executor);
     }
 }
