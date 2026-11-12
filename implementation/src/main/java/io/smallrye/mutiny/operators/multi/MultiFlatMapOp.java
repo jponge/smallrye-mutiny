@@ -566,6 +566,7 @@ public final class MultiFlatMapOp<I, O> extends AbstractMultiOperator<I, O> {
         public void onFailure(Throwable failure) {
             Objects.requireNonNull(failure);
             done = true;
+            SUBSCRIPTION_UPDATER.set(this, Subscriptions.CANCELLED);
             parent.innerError(this, failure);
         }
 
